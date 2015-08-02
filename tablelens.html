@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+<title>Table Lens</title>
+<script type="text/javascript" src="d3/d3.js"></script>
+<style>
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+	.axis {
+  	  font: 10px sans-serif;
+	}
+</style>
+</head>
+
+<body>
+</body>
+<script type="text/javascript">
+	var width = 1300;
+	var height = 800;
+	var yaxisHeight = 600;
+	var padding = 0, yaxisMargin = 30, marginY = 40, marginX = 30, width_margin = 30;
+	var x = d3.scale.ordinal()
+			.rangeRoundBands([0,width - width_margin],01);
+	var y = d3.scale.linear()
+			.range([yaxisHeight,0]);
+	var global_baseballdata,baseballdata;
+	var svg;
+	var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient("top");
+	var arraylength = 24;
+	var humannum = 0;
+	var myScaleArray = new Array();
+	var yAxis = d3.svg.axis()
+			.scale(y)
+			.orient("left")
+			.ticks(0);
+	var axis_transform = 30;
+	var barheight = 0;
+	var clickX = 400;
+	var clickY = 400;
+	var topname = ["name","bat86","hits86","hRuns86","runs86","Runbat86","walk86","years","batA","hitsA","home_runsA","runsA","battedA","walksA", "league86E", "divi86E","team86E","pos86","putouts86","assits86","errors86","salary87","league87","team87",""];
+	var topname_class = [".name",".bat86",".hits86",".hRuns86",".runs86",".Runbat86",".walk86",".years",".batA",".hitsA",".home_runsA",".runsA",".battedA",".walksA", ".league86E", ".divi86E",".team86E",".pos86",".putouts86",".assits86",".errors86",".salary87",".league87",".team87",""];
+	var maxValue = [0,687,238,40,130,121,105,24,14053,4256,548,2165,1659,1566,
+	-1,//league86E
+	-2,//divi86E
+	-3,//team86E
+	-4,//pos86
+	1378,492,32,2460,
+	-5,//league87
+	-6 ];//team87
+	var attrWidth = (width - width_margin)/arraylength;
+	var max_salary = 2460;
+	var index = 0;
+	var focus_height = 30;
+	var focus_width = 100;
+	var focus_y = 0, focus_x = 0;
+	var focus_indexX = -1, focus_indexY = -1;
+	x.domain(topname.map(function(d){return d;}));
+	
+	for(var i=1;i<arraylength;i++){
+		if(maxValue[i]>0){
+			myScaleArray[i] = d3.scale.linear()
+			.range([0,attrWidth])
+			.domain([0,maxValue[i]]);
+		}else{
+			if(maxValue[i]==-1){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["A","N"])
+				.rangeBands([attrWidth/4,attrWidth]);
+			}
+			else if(maxValue[i]==-2){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["E","W"])
+				.rangeBands([attrWidth/4,attrWidth]);
+			}
+			else if(maxValue[i]==-3){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
+				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
+				"Tex.","Tor."])
+				.rangeBands([0,attrWidth]);
+			}
+			else if(maxValue[i]==-4){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["13","23","32","1B","1O","2B","2S","3B","3O","3S","C","CD","CF","CS",
+				"DH","DO","LF","O1","OD","OF","OS","RF","S3","SS","UT"])
+				.rangeBands([0,attrWidth]);
+			}
+			else if(maxValue[i]==-5){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["A","N"])
+				.rangeBands([attrWidth/4,attrWidth]);
+			}
+			else if(maxValue[i]==-6){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
+				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
+				"Tex.","Tor."])
+				.rangeBands([0,attrWidth]);
+			}
+		}
+	}	
+	//add svg
+	svg = d3.select("body").append("svg")
+	.attr("width",width)
+	.attr("height",height);	
+			
+	d3.csv("baseballdata.csv",function(baseballdata){
+		//keep updating with the data
+		global_baseballdata = baseballdata;
+		humannum = baseballdata.length;
+		barheight = yaxisHeight/humannum;
+		tablelens(baseballdata);
+	});
+	window.document.onclick = function(event){
+		clickX = event.clientX;
+		clickY = event.clientY;
+		tablelens(global_baseballdata);
+	}
+	//**********************************************************************************
+	function DOIHeight(y){
+		//not the original data
+		var doi_height = 0;
+		if(clickY != 0){
+			if((y<clickY)&&y>(clickY-barheight)){
+				//click location
+				doi_height = focus_height;
+			}else{
+				doi_height = (yaxisHeight - focus_height)/(humannum-1);
+			}
+		}else{
+			doi_height = yaxisHeight/humannum;
+		}
+		return doi_height;
+	};
+	function DOIY(y,i){
+		//not the original data
+		var doi_y = 0;
+		if(clickY != 0){
+			var barheight_change = (yaxisHeight - focus_height)/(humannum-1);
+			if((y<clickY)&&y>(clickY-barheight)){
+				//click location
+				doi_y = marginX + (barheight_change) * i;
+				focus_y = marginX + (barheight_change) * i;
+				focus_indexY = i;
+			}else if(y<=(clickY-barheight)){
+				doi_y = marginX + (barheight_change) * i;
+			}else{
+				doi_y = marginX + (i-1) * (barheight_change) + focus_height ;
+			}
+		}else{
+			doi_y = y;
+		}
+		return doi_y;
+	};
+	function DOIX(x,index){
+		var doi_x = 0;
+		if(clickX != 0){
+			var attr_width_change = (width - width_margin - focus_width)/(arraylength - 1);
+			if((x<clickX)&&(x>(clickX - attrWidth))){
+				doi_x = yaxisMargin + attr_width_change * index;
+				focus_x = doi_x;
+				focus_indexX = index;
+			}else if(x<=(clickX - attrWidth)){
+				doi_x = yaxisMargin + attr_width_change * index;
+			}else{
+				doi_x = yaxisMargin + attr_width_change * (index - 1) + focus_width;
+			}
+		}else{
+			doi_x = yaxisMargin + attrWidth * index;
+		}
+		return doi_x;
+	};
+	function DOIWidth(x){
+		var doi_width = 0;
+		if(clickX!=0){
+			if((x<clickX)&&(x>(clickX - attrWidth))){
+				doi_width = focus_width;
+			}else{
+				doi_width = (width - width_margin - focus_width)/(arraylength - 1);
+			}
+		}else{
+			doi_width = (width - width_margin)/(arraylength);
+		}
+		return doi_width;
+	};
+	//**********************************************************************************
+	function tablelens(baseballdata){
+		var baseball_man = baseballdata[0];
+		var x = 0, y = 0;
+		for(x in baseball_man){
+			//iterate for d to get the cols
+			if(index > 0){
+				var scale = myScaleArray[index];
+				svg.selectAll(topname[index])
+				.data(baseballdata)
+				.enter()
+				.append("rect")
+				.attr("x",DOIX(yaxisMargin + attrWidth * index,index))
+				.attr("y",function(d,i){
+					y = marginX + (padding + barheight) * i;
+					return DOIY(y,i);
+				})
+				.attr("height",DOIHeight(y))
+				.attr("width",function(d){
+					var width_change = DOIWidth(yaxisMargin + attrWidth * index);
+					scale.range([0,width_change]);
+					return scale(d[x]);
+				})
+				.attr("fill","steelblue")
+				.classed(topname_class,true)
+				.on("dblclick",function(d,i){
+					 d3.select(this)  
+                  	.attr("fill","yellow");  
+					clickX = d3.select(this)
+					.attr("x");
+					clickY = d3.select(this)
+					.attr("y");
+				});
+			}	
+			index++;
+		}
+		//*****************************************************************
+		//get the attribute of the baseball man according to the index
+		function getAttr(baseballman, focus_index){
+			var index = 0;
+			var attr;
+			for(x in baseballman){
+				if(index==focus_index){
+					attr = baseballman[x];
+				}
+				index++;
+			}
+			return attr;
+		}
+		//*****************************************************************
+		//add x line and text for focus area
+		if(focus_y!=0){
+			var baseballman = baseballdata[focus_indexY];
+			var attr = getAttr(baseballman, focus_indexX);
+			//add x line for top focus area
+			svg.append("g").append("line")
+			.attr("x1",axis_transform)
+			.attr("y1",focus_y)
+			.attr("x2",axis_transform + attrWidth * arraylength)
+			.attr("y2",focus_y)
+			.attr("stroke","black")
+			.attr("stroke-width",2);
+			//add x line for bottom focus area
+			svg.append("g").append("line")
+			.attr("x1",axis_transform)
+			.attr("y1",focus_y + focus_height)
+			.attr("x2",axis_transform + attrWidth * arraylength)
+			.attr("y2",focus_y + focus_height)
+			.attr("stroke","black")
+			.attr("stroke-width",2);
+			//add text to the focus area
+			svg.append("g").append("text")
+			.attr("x",focus_x + focus_width/3)
+			.attr("y",focus_y + (focus_height * 3)/4)
+			.attr("font-size",20)
+			.attr("font-family","simsun")
+			.text(attr);
+		}
+		
+		//add x line top
+		svg.append("g").append("line")
+		.attr("x1",axis_transform)
+		.attr("y1",marginX)
+		.attr("x2",axis_transform + attrWidth * arraylength)
+		.attr("y2",marginX)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		//add x line bottom
+		svg.append("g").append("line")
+		.attr("x1",axis_transform)
+		.attr("y1",marginX + yaxisHeight)
+		.attr("x2",axis_transform + attrWidth * arraylength)
+		.attr("y2",marginX + yaxisHeight)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		//add y line
+		svg.append("g").selectAll("line")
+		.data(topname)
+		.enter()
+		.append("line")
+		.attr("x1",function(d,i){
+			x = yaxisMargin + attrWidth * i;
+			return DOIX(x,i);
+		})
+		.attr("y1",axis_transform)
+		.attr("x2",function(d,i){
+			x = yaxisMargin + attrWidth * i;
+			return DOIX(x,i);
+		})
+		.attr("y2",axis_transform + yaxisHeight)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		//add xline text
+		var text = svg.append("g")
+		.selectAll("text")
+		.data(topname)
+		.enter()
+		.append("text")
+		//.attr("transform","rotate(-90)")
+		.attr("x",function(d,i){
+			x = yaxisMargin + attrWidth * i;
+			return DOIX(x,i);
+		})
+		.attr("y",27)
+		.attr("font-size",10)
+		.attr("font-family","simsun")
+		.text(function(d){return d;});
+	}
+	
+</script>
+</html>

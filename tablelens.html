@@ -88,50 +88,69 @@
 	var Press_Ctrl = false, Press_Shift = false, Mouse_Down = false;
 	var FocusRect;
 	var RectHeight, RectWidth;
+	var sortAscArray = new Array();
+	var sortIncArray = new Array();
+	var Asc_scale;
 	x.domain(topname.map(function(d){return d;}));
+	
 	for(var i=1;i<arraylength;i++){
+		var scale;
 		if(maxValue[i]>0){
-			myScaleArray[i] = d3.scale.linear()
+			scale = d3.scale.linear()
 			.range([0,attrWidth])
 			.domain([0,maxValue[i]]);
 		}else{
 			if(maxValue[i]==-1){
-				myScaleArray[i] = d3.scale.ordinal()
+				scale = d3.scale.ordinal()
 				.domain(["A","N"])
 				.rangeBands([attrWidth/4,attrWidth]);
 			}
 			else if(maxValue[i]==-2){
-				myScaleArray[i] = d3.scale.ordinal()
+				scale = d3.scale.ordinal()
 				.domain(["E","W"])
 				.rangeBands([attrWidth/4,attrWidth]);
 			}
 			else if(maxValue[i]==-3){
-				myScaleArray[i] = d3.scale.ordinal()
+				scale = d3.scale.ordinal()
 				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
 				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
 				"Tex.","Tor."])
 				.rangeBands([0,attrWidth]);
 			}
 			else if(maxValue[i]==-4){
-				myScaleArray[i] = d3.scale.ordinal()
+				scale = d3.scale.ordinal()
 				.domain(["13","23","32","1B","1O","2B","2S","3B","3O","3S","C","CD","CF","CS",
 				"DH","DO","LF","O1","OD","OF","OS","RF","S3","SS","UT"])
 				.rangeBands([0,attrWidth]);
 			}
 			else if(maxValue[i]==-5){
-				myScaleArray[i] = d3.scale.ordinal()
+				scale = d3.scale.ordinal()
 				.domain(["A","N"])
 				.rangeBands([attrWidth/4,attrWidth]);
 			}
 			else if(maxValue[i]==-6){
-				myScaleArray[i] = d3.scale.ordinal()
+				scale = d3.scale.ordinal()
 				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
 				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
 				"Tex.","Tor."])
 				.rangeBands([0,attrWidth]);
 			}
 		}
+		myScaleArray.push(scale);
 	}	
+	//*****************************************************************
+		//get the attribute of the baseball man according to the index
+		function getAttr(baseballman, focus_index){
+			var index = 0;
+			var attr;
+			for(x in baseballman){
+				if(index==focus_index){
+					attr = baseballman[x];
+				}
+				index++;
+			}
+			return attr;
+		}
 	//add svg
 	svg = d3.select("body").append("svg")
 	.attr("width",width)
@@ -139,12 +158,13 @@
 	//.call(zoom);
 	var container = svg.append("g");
 	
+	//**************************************************************
 	d3.csv("baseballdata.csv",function(baseballdata){
 		//keep updating with the data
 		global_baseballdata = baseballdata;
 		humannum = baseballdata.length;
 		barheight = yaxisHeight/humannum;
-		tablelens(baseballdata);
+		tablelens(global_baseballdata);
 	});
 	window.document.onkeydown = function(event){
 		var currDownKey = event.keyCode;
@@ -163,6 +183,10 @@
 		var currUpKey = event.keyCode;
 		if(currUpKey == 17){
 			Press_Ctrl = false;
+			global_baseballdata = global_baseballdata.sort(sortAscArray[0]);
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
 		}
 		if(currUpKey == 16){
 			Press_Shift = false;
@@ -460,19 +484,6 @@
 			index++;
 		}
 		//*****************************************************************
-		//get the attribute of the baseball man according to the index
-		function getAttr(baseballman, focus_index){
-			var index = 0;
-			var attr;
-			for(x in baseballman){
-				if(index==focus_index){
-					attr = baseballman[x];
-				}
-				index++;
-			}
-			return attr;
-		}
-		//*****************************************************************
 		//add x line and text for focus area
 		if(focus_y!=0){
 			//add x line for top focus area
@@ -637,6 +648,23 @@
 	//********************************************************
 	function zoomed() {
   		svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	}
+	//****************************************************************
+	//add Acsending sort method
+	for(var i=1;i<arraylength;i++){
+		Asc_scale = myScaleArray[i];
+		Asc_scale.range([0,attrWidth]);
+		function Asc(a,b){
+			return (Asc_scale(getAttr(a,i)) - Asc_scale(getAttr(b,i)));
+		}
+		sortAscArray.push(Asc);
+	}
+	//add Increasing sort method
+	for(var i=1;i<arraylength;i++){
+		function Inc(a,b){
+			return (myScaleArray[i](getAttr(b,i),i) - myScaleArray[i](getAttr(a,i),i));
+		}
+		sortIncArray.push(Inc);
 	}
 </script>
 </html>

@@ -4,8 +4,8 @@
 <head>
 <title>Table Lens</title>
 <script type="text/javascript" src="d3/d3.js"></script>
-<!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>-->
-<style>
+<script type="text/javascript" src="d3/ajax.js"></script>
+<style type="text/css">
 	.axis path,
 	.axis line {
 	  fill: none;
@@ -16,7 +16,7 @@
   	  font: 10px sans-serif;
 	}
 	.focus_rect rect {
-      stroke-width: 7px;
+      
     }
 	.focus_rect rect.dragging {
       fill: #FFF;
@@ -24,16 +24,73 @@
       stroke: brown;
 	  stroke-width: 7px;
     }
+	#container {     
+       margin-left:0px;
+	   margin-right:0px;
+       margin : 0 auto;
+    }
+     .skin {
+            width : 150px;
+            border : 1px solid gray;
+            padding : 0px;
+            visibility : hidden;
+            position : absolute;
+			background: #FFFFFF;
+        }
+     div.menuitems {
+       margin : 1px 0;
+     }
+     div.menuitems p {
+        margin: 0;
+		padding-left:4px;
+		padding-bottom:4px;
+     }
+     div.menuitems:hover {
+        background-color : #c0c0c0;
+     }
 </style>
 </head>
 
 <body>
+    <div id="menu" class="skin">
+        <div class="menuitems">
+            <p onClick="begin_focus(event);">焦点显示</p>
+        </div>
+        <div class="menuitems">
+			<p onClick="stop_focus(event);">取消焦点显示</p>
+        </div>
+        <hr>
+        <div class="menuitems">
+			<p onClick="expand_focus(event);">增大焦点范围</p>
+        </div>
+		 <div class="menuitems">
+			<p onClick="reduce_focus(event);">减小焦点范围</p>
+        </div>
+		<hr>
+		<div class="menuitems">
+			<p onClick="move_focus(event);">移动</p>
+        </div>
+		<hr>
+		<div class="menuitems">
+			<p onClick="sort_focus(event);">排序</p>
+        </div>
+		<hr>
+		<div class="menuitems">
+			<p onClick="column_operation(event);">选择列</p>
+        </div>
+		<div class="menuitems">
+			<p onClick="swap_column(event);">交换列</p>
+        </div>
+    </div>
+	<div id="container">      
+     <p></p>
+    </div>
 </body>
 <script type="text/javascript">
 	var width = 1300;
 	var height = 800;
 	var yaxisHeight = 600;
-	var padding = 0, yaxisMargin = 50,  marginX = 30, yaxisMarginName = 10;
+	var padding = 0, yaxisMargin = 50,  marginX = 80, marginXText = 75, yaxisMarginName = 10, marginXTextBottom = 50, marginXTextTop = 10, marginXPersonBottom = 700;
 	var x = d3.scale.ordinal()
 			.rangeRoundBands([0,width - yaxisMargin],01);
 	var y = d3.scale.linear()
@@ -52,7 +109,7 @@
 			.ticks(0);
 	var axis_transform = 30;
 	var barheight = 0, focusrRect_height = 5;
-	var first_clickX = 0, first_clickY = 0, clickX = 0, clickY = 0, click_downX, click_downY, click_upX, click_upY;
+	var first_clickX = 0, first_clickY = 0, clickX = 0, clickY = 0, click_downX, click_downY, click_upX, click_upY,rectbegin_x1 = 0, rectbegin_y1 = 0;
 	var topname = ["name","bat86","hits86","hRuns86","runs86","Runbat86","walk86","years","batA","hitsA","home_runsA","runsA","battedA","walksA", "league86E", "divi86E","team86E","pos86","putouts86","assits86","errors86","salary87","league87","team87",""];
 	var topname_class = [".name",".bat86",".hits86",".hRuns86",".runs86",".Runbat86",".walk86",".years",".batA",".hitsA",".home_runsA",".runsA",".battedA",".walksA", ".league86E", ".divi86E",".team86E",".pos86",".putouts86",".assits86",".errors86",".salary87",".league87",".team87",""];
 	var maxValue = [0,687,238,40,130,121,105,24,14053,4256,548,2165,1659,1566,
@@ -69,27 +126,42 @@
 	var index = 0;
 	var focus_height = 30, focus_width = 100;
 	var focus_y = 0, focus_x = 0;
-	var maxfocus_indexX = -1, minfocus_indexX = topname.length;
 	var attr_width_change = 0, barheight_change = 0;
 	var Exist_focus = false;
 	var xfocus_num = 0, yfocus_num = 0;
-	var focus_left = 0, focus_right = 0, focus_top = 0, focus_bottom = 0, threshold = 50;
+	var threshold = 50;
 	var lineArray = new Array();//use to hold the place for the line and text
 	var focusXArray = new Array();//store the focus X number
 	var focusYArray = new Array();//store the focus Y number
 	var focusX_number = -1,focusY_number = -1;
-	var focusX_right = 0, focusX_left = 0, focusY_top = 0, focusY_bottom = 0,
-		focusX_min = -1, focusX_max = -1, focusY_min = -1, focusY_max = -1;
+	var focusX_min = -1, focusX_max = -1, focusY_min = -1, focusY_max = -1;
 	var text_paddingX = 5,text_paddingY = 5; //used to find the appropriate position of the text
 	var name_sign = -50;
 	var zoom = d3.behavior.zoom()
 		.scaleExtent([1,10])
 		.on("zoom",zoomed);
-	var Press_Ctrl = false, Press_Shift = false, Mouse_Down = false, Mouse_DownSort = false;
+	var BeginFocus = false, StopFocus = false, ExpandFocus = false, ReduceFocus = false,
+	MoveFocus = false, SortFocus = false, FocusColumn = false, SwapColumn = false,
+	MouseDownMove = false, Mouse_DownSort = false, SelectDownMove = false, FirstClick = false;
+	var MoveFirstX = 0, MoveFirstY = 0;
 	var FocusRect;
-	var RectHeight, RectWidth;
+	var RectHeight = -1, RectWidth = -1, left_topX = -1, left_topY = -1;
 	var sortXNum = -1, downSequence = -1, upSequence = 1;
+	var category_width = 5;
+	var currentYNum = 0;
+	var container, menu;
+	var begin_drawLine = false;
+	var begin_x1 = 0, begin_y1 = 0;
+	var SelectedRectWidth = 0, SelectedRectHeight = 0;
+	var mappingArray = new Array();
+	var topY, top_middleY, bottom_middleY, leftX, left_middleX, right_middleX;
+	var x_right = yaxisMargin + attrWidth * (arraylength - 1);
 	x.domain(topname.map(function(d){return d;}));
+	for(var i=0;i<arraylength;i++){
+		mappingArray[i] = i;
+	}
+	mappingArray[1] = 2;
+	mappingArray[2] = 1;
 	for(var i=1;i<arraylength;i++){
 		if(maxValue[i]>0){
 			myScaleArray[i] = d3.scale.linear()
@@ -134,7 +206,9 @@
 		}
 	}	
 	//add svg
-	svg = d3.select("body").append("svg")
+	svg = d3.select("body")
+	.select("#container")
+	.append("svg")
 	.attr("width",width)
 	.attr("height",height);
 	//.call(zoom);
@@ -160,28 +234,8 @@
 		barheight = yaxisHeight/humannum;
 		tablelens(global_baseballdata);
 	});
-	window.document.onkeydown = function(event){
-		var currDownKey = event.keyCode;
-		if(currDownKey == 17){
-			//pressed ctrl to add the focus area
-			Press_Ctrl = true;
-			Press_Shift = false;
-		}
-		if(currDownKey == 16){
-			//press shift to shift the focus area
-			Press_Shift = true;
-			Press_Ctrl = false;
-		}
-	}
 	window.document.onkeyup = function(event){
 		var currUpKey = event.keyCode;
-		if(currUpKey == 17){
-			Press_Ctrl = false;
-		}
-		if(currUpKey == 16){
-			Press_Shift = false;
-			Press_Ctrl = false;
-		}
 		if((currUpKey == 38)&&(Exist_focus)&&(focusY_min>=1)){
 			//up
 			focusY_min--;
@@ -214,66 +268,317 @@
 	}
 	//mouse press down 
 	window.document.onmousedown = function(event){
-	//******************************************************************
-		if((Press_Shift)){
-			clickX = event.clientX;
-			clickY = event.clientY;
-			var left_topX = focusX_min * attr_width_change + yaxisMargin;
-			var left_topY = (focusY_min + 1) * barheight_change + marginX;
-			if((Math.abs(clickX - left_topX)<=30)&&(Math.abs(clickY - left_topY)<=30)){
-				svg.select("class","focus_rect").remove();
+	//*****************************************************************
+		if(ExpandFocus||ReduceFocus){
+			begin_x1 = event.layerX - 10;
+			begin_y1 = event.layerY - 15;
+			var IsIn = InFocusArea(begin_x1,begin_y1)
+			if(IsIn){
+				begin_drawLine = true;
 				svg.append("g")
-					.attr("class","focus_rect")
-					.append("rect")
-					.attr("x",left_topX)
-					.attr("y",left_topY)
-					.attr("height",RectHeight)
-					.attr("width",RectWidth)
-					.attr("opacity",0.3)
-					.attr("stroke","green")
-					.attr("stroke-width",7)
-					.attr("fill","gray");
-				Mouse_Down = true;
+				.attr("class","focus_line")
+				.append("line")
+				.attr("x1",begin_x1)
+				.attr("y1",begin_y1);
+			}
+		}
+	//******************************************************************
+		if(SortFocus){
+			begin_x1 = event.layerX - 10;
+			begin_y1 = event.layerY - 15;
+			begin_drawLine = true;
+			svg.append("g")
+			.attr("class","focus_line")
+			.append("line")
+			.attr("x1",begin_x1)
+			.attr("y1",begin_y1);
+		}
+	//******************************************************************
+		if((MoveFocus)){
+			clickX = event.layerX - 10;
+			clickY = event.layerY - 15;
+			left_topX = focusX_min * attr_width_change + yaxisMargin;
+			left_topY = (focusY_min + 1) * barheight_change + marginX;
+			if((clickX>=left_topX)&&(clickX<=(left_topX+RectWidth))&&(clickY>=left_topY)&&(clickY<=left_topY+RectHeight)){
+				MoveFirstX = clickX;
+				MoveFirstX = clickY;
+				MouseDownMove = true;
 			}
 		}
 	 //*******************************************************************
-	 	click_downX = event.clientX;
-		click_downY = event.clientY;
-		Mouse_DownSort = true;
+		 if(SortFocus){
+			click_downX = event.layerX - 10;
+			click_downY = event.layerY - 15;
+			Mouse_DownSort = true;	 
+		}
+	 //********************************************************************
+	 	if(SwapColumn){
+			swapbegin_x1 = event.layerX - 10;
+			swapbegin_y1 = event.layerY - 15;
+			var x = svg.select(".select_rect").attr("x");
+			var y = svg.select(".select_rect").attr("y");
+			if((swapbegin_x1>=x)&&(swapbegin_x1<=(x + width))&&(swapbegin_y1>=y)&&(swapbegin_y1<=(y+height))){
+					SelectDownMove = true;
+			}
+			
+		}
 	}
 	//mouse move
 	window.document.onmousemove = function(event){
+		if(begin_drawLine&&(begin_x1>0)&&(begin_y1>0)){
+			var drag_x = event.layerX - 10;
+			var drag_y = event.layerY - 15;
+			svg.select(".focus_line").remove();
+			
+			svg.append("g")
+			.attr("class","focus_line")
+			.append("line")
+			.attr("x1",begin_x1)
+			.attr("y1",begin_y1)
+			.attr("x2",drag_x)
+			.attr("y2",drag_y)
+			.attr("stroke","green")
+			.attr("stroke-width",4);
+		}
+		//******************************************************************
+		if((MouseDownMove)){
+			clickX = event.layerX - 10;
+			clickY = event.layerY - 15;
+			svg.select(".focus_rect").remove();
+			left_topX = clickX;
+			left_topY = clickY;
+			svg.append("g")
+				.attr("class","focus_rect")
+				.append("rect")
+				.attr("x",left_topX)
+				.attr("y",left_topY)
+				.attr("height",RectHeight)
+				.attr("width",RectWidth)
+				.attr("fill-opacity",0.3)
+				.attr("fill","gray")
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
+		}
+		//*******************************************************************
+		if(SelectDownMove){
+			var drag_x = event.layerX - 10;
+			var drag_y = event.layerY - 15;
+			svg.select(".select_rect").remove();
+			
+			svg.append("g")
+			.attr("class","select_rect")
+			.append("rect")
+			.attr("x",drag_x)
+			.attr("y",drag_y)
+			.attr("height",yaxisHeight)
+			.attr("width",focus_width)
+			.attr("fill","gray")
+			.attr("fill-opacity",0)
+			//.attr("opacity",0.1)
+			.attr("stroke","green")
+			.attr("stroke-width",4);
+			
+			svg.select(".to_rect").remove();
+			svg.append("g")
+			.attr("class","to_rect")
+			.append("rect")
+			.attr("x",computeCoordX(computeIndexX(drag_x)))
+			.attr("y",marginX)
+			.attr("height",yaxisHeight)
+			.attr("width",DOIWidth(computeIndexX(drag_x)))
+			.attr("fill-opacity",0)
+			.attr("stroke","orange")
+			.attr("stroke-width",4);
+		}
 	}
 	//mouse press up
 	window.document.onmouseup = function(event){
-		if((Mouse_Down)){
-			clickX = event.clientX;
-			clickY = event.clientY;
-			focusX_min = Math.floor((clickX - yaxisMargin)/attr_width_change);
+		if(SelectDownMove){
+			var swap_x = event.layerX - 10;
+			var swap_y = event.layerY - 15;
+			svg.select(".to_rect").remove();
+			svg.select(".select_rect").remove();
+			var originIndex = computeIndexX(swapbegin_x1);
+			var afterIndex = computeIndexX(swap_x);
+			if((originIndex<mappingArray.length)&&(afterIndex<mappingArray.length)){
+				var temp = mappingArray[afterIndex];
+				mappingArray[afterIndex] = mappingArray[originIndex];
+				mappingArray[originIndex] = temp;
+				index = 0;
+				svg.selectAll("*").remove();
+				tablelens(global_baseballdata);
+			}
+			SelectDownMove = false;
+		}
+		//***********************************************************************
+		if((MouseDownMove)){
+			focusX_min = Math.floor((left_topX - yaxisMargin)/attr_width_change);
 			focusX_max = focusX_min + xfocus_num - 1;
-			focusY_min = Math.floor((clickY - marginX)/barheight_change);
+			focusY_min = Math.floor((left_topY - marginX)/barheight_change);
 			focusY_max = focusY_min + yfocus_num - 1;
-			var left_topX = focusX_min * attr_width_change + yaxisMargin;
-			var left_topY = (focusY_min + 1) * barheight_change + marginX;
+			focusXArray.splice(0,focusXArray.length);  
+			focusYArray.splice(0,focusYArray.length); 
+			computeVarX();
+			computeVarY();
+			for(var i=focusX_min;i<=focusX_max;i++){
+				focusXArray.push(i);
+			}
+			for(var i=focusY_min;i<=focusY_max;i++){
+				focusYArray.push(i);
+			}
+			left_topX = computeCoordX(focusX_min);
+			left_topY = computeCoordY(focusY_min + 1);
+			svg.select(".focus_rect").remove();
 			svg.append("g")
-			.attr("class","focus_rect")
-			.append("rect")
-			.attr("x",left_topX)
-			.attr("y",left_topY)
-			.attr("height",RectHeight)
-			.attr("width",RectWidth)
-			.attr("fill","#FFF")
-			.attr("opacity",0.1)
-			.attr("stroke","red")
-			.attr("stroke-width",7);
-			Mouse_Down = false;
+				.attr("class","focus_rect")
+				.append("rect")
+				.attr("x",left_topX)
+				.attr("y",left_topY)
+				.attr("height",RectHeight)
+				.attr("width",RectWidth)
+				.attr("fill-opacity",0.3)
+				.attr("fill","gray")
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
+			MouseDownMove = false;
 			index = 0;
 			svg.selectAll("*").remove();
 			tablelens(global_baseballdata);
 		}
+	//****************************************************************************************
+		if(begin_drawLine&&ExpandFocus){
+			var end_x = event.layerX - 10;
+			var end_y = event.layerY - 15;
+			var differenceX = end_x - begin_x1;
+			var differenceY = end_y - begin_y1;
+			var abs_differenceX = Math.abs(differenceX);
+			var abs_differenceY = Math.abs(differenceY);
+			if((abs_differenceX > abs_differenceY)&&(abs_differenceX > 50)){
+				if(differenceX > 0){
+					//right x
+					//the later click is right
+					//constrain the max focus number
+					if((focusX_max + 1)<arraylength){
+						focusXArray.push(focusX_max + 1);
+						focusX_max = focusX_max + 1;
+						xfocus_num++;
+						computeVarX();
+					}
+				}else{
+					//left x
+					//the later click is left
+					if((focusX_min - 1)>0){
+						focusXArray.push(focusX_min - 1);
+						focusX_min = focusX_min - 1;
+						xfocus_num++;
+						computeVarX();
+					}
+				}
+			}else if((abs_differenceY > abs_differenceX)&&(abs_differenceY > 50)){
+				if(differenceY > 0){
+					//down y
+					//the later click is bottom
+					if((focusY_max + 1)<global_baseballdata.length){
+						focusYArray.push(focusY_max + 1);
+						focusY_max = focusY_max + 1;
+						yfocus_num++;
+						computeVarY();
+					}
+				}else{
+					//up y
+					//the later click is top
+					if((focusY_min - 1)>=0){
+						focusYArray.push(focusY_min - 1);
+						focusY_min = focusY_min - 1;
+						yfocus_num++;
+						computeVarY();
+					}
+				}
+			}
+			svg.select(".focus_line").remove();
+			begin_drawLine = false;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}
+		if(begin_drawLine&&SortFocus){
+			begin_drawLine = false;
+		}
+		if(begin_drawLine&&ReduceFocus){
+			var end_x = event.layerX - 10;
+			var end_y = event.layerY - 15;
+			var differenceX = end_x - begin_x1;
+			var differenceY = end_y - begin_y1;
+			var abs_differenceX = Math.abs(differenceX);
+			var abs_differenceY = Math.abs(differenceY);
+			if((abs_differenceX > abs_differenceY)&&(abs_differenceX > 50)){
+				if(differenceX > 0){
+					//right x
+					//the later click is right
+					//constrain the max focus number
+					if(xfocus_num > 0){
+						var minX_index = focusXArray.indexOf(focusX_min);
+						focusXArray.splice(minX_index,1);
+						focusX_min = focusX_min + 1;
+						xfocus_num--;
+						computeVarX();
+					}
+				}else{
+					//left x
+					//the later click is left
+					if(xfocus_num > 0){
+						var maxX_index = focusXArray.indexOf(focusX_max);
+						focusXArray.splice(maxX_index,1);
+						focusX_max = focusX_max - 1;
+						xfocus_num--;
+						computeVarX();
+					}
+				}
+				if(xfocus_num == 0){
+					yfocus_num = 0;
+					focusY_min = -1; 
+					focusY_max = -1;
+					focusYArray.splice(0,focusYArray.length);  
+				}
+			}else if((abs_differenceY > abs_differenceX)&&(abs_differenceY > 50)){
+				if(differenceY > 0){
+					//down y
+					//the later click is bottom
+					if(yfocus_num > 0){
+						var minY_index = focusYArray.indexOf(focusY_min);
+						focusYArray.splice(minY_index,1);
+						focusY_min = focusY_min + 1;
+						yfocus_num--;
+						computeVarY();
+					}
+				}else{
+					//up y
+					//the later click is top
+					if(yfocus_num > 0){
+						var maxY_index = focusYArray.indexOf(focusY_max);
+						focusYArray.splice(maxY_index,1);
+						focusY_max = focusY_max - 1;
+						yfocus_num--;
+						computeVarY();
+					}
+				}
+				if(yfocus_num == 0){
+					xfocus_num = 0;
+					focusX_min = -1; 
+					focusX_max = -1;
+					focusXArray.splice(0,focusXArray.length);  
+				}
+			}
+			svg.select(".focus_line").remove();
+			begin_drawLine = false;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}
+		//**********************************************************************************
 		if(Mouse_DownSort){
-			click_upX = event.clientX;
-			click_upY = event.clientY;
+			click_upX = event.layerX - 10;
+			click_upY = event.layerY - 15;
 			if((Math.abs(click_upX - click_downX)<20)&&(Math.abs(click_upY - click_downY)>60)){
 				//meet the condition of sorting
 				var avg_clickX =  (click_upX + click_downX)/2;
@@ -288,106 +593,276 @@
 			Mouse_DownSort = false;
 		}
 	}
+	//***************************************************************************************
+	function InFocusArea(clickX,clickY){
+		var in_focusarea = false;
+		if((xfocus_num>0)&&(yfocus_num>0)){
+			var minX = yaxisMargin + attr_width_change * focusX_min - 50;
+			var maxX = minX + xfocus_num * focus_width + 50;
+			var minY = marginX + barheight_change * focusY_min - 50;
+			var maxY = minY + yfocus_num * focus_height + 50;
+			if((clickX>=minX)&&(clickX<=maxX)&&(clickY>=minY)&&(clickY<=maxY)){
+				in_focusarea = true;
+			}
+		}
+		return in_focusarea;
+	}
+	//***************************************************************************************
+	//the parameter is the X coordinate, and the return value is the column index selected
 	function ComputeSortX(avg_clickX){
 		var SortXNum;
-		attr_width_change = (width - yaxisMargin - focus_width * xfocus_num)/(arraylength - xfocus_num);
 		var leftX = yaxisMargin;
 		var left_middleX = yaxisMargin + focusX_min * attr_width_change;
 		var right_middleX = yaxisMargin + focusX_min * attr_width_change + xfocus_num * focus_width;
-		if(avg_clickX <= left_middleX){
-			SortXNum = Math.ceil((avg_clickX - leftX)/attr_width_change);
+		if(xfocus_num == 0){
+			SortXNum = Math.floor((avg_clickX - leftX)/attrWidth);
+		}else if(avg_clickX <= left_middleX){
+			SortXNum = Math.floor((avg_clickX - leftX)/attr_width_change);
 		}else if(avg_clickX <= right_middleX){
-			SortXNum = Math.ceil((avg_clickX - left_middleX)/focus_width) + focusX_min -1;
+			SortXNum = Math.floor((avg_clickX - left_middleX)/focus_width) + focusX_min;
 		}else{
-			SortXNum = Math.ceil((avg_clickX - right_middleX)/attr_width_change) + focusX_max -1;
+			SortXNum = Math.ceil((avg_clickX - right_middleX)/attr_width_change) + focusX_max;
 		}
 		return SortXNum;
 	}
 	window.document.onclick = function(event){
 		var btnNum = event.button;
 		//*********************************************************************
-		if((btnNum == 0)&&(Press_Ctrl)){
-			clickX = event.clientX;
-			clickY = event.clientY;
-			if(!Exist_focus){
-				first_clickX = event.clientX;
-				focusX_number = Math.floor((first_clickX - marginX)/attrWidth);
-				focusX_max = focusX_number;
-				focusX_min = focusX_number;
-				if(focusX_number!=0){
-					focusXArray.push(focusX_number);
-				}
-				first_clickY = event.clientY;
-				focusY_number = Math.floor((first_clickY-yaxisMargin)/barheight);
-				focusY_max = focusY_number;
-				focusY_min = focusY_number;
-				if(focusX_number!=0){
-					focusYArray.push(focusY_number);
-				}
-				focus_top++;
+		if(FocusColumn){
+			var click_x = event.layerX - 10;
+			var column_indexX = computeIndexX(click_x);
+			if(focusXArray.indexOf(column_indexX)==-1){
+				Exist_focus = true;
 				xfocus_num++;
-				yfocus_num++;
+				computeVarX();
+				if(column_indexX<focusX_min||(focusX_min < 0)){
+					focusX_min = column_indexX;
+				}
+				if(column_indexX>focusX_max){
+					focusX_max = column_indexX;
+				}
+				focusXArray.push(column_indexX);
+				computeVarX();
+				//******************************************
+				index = 0;
+				svg.selectAll("*").remove();
+				tablelens(global_baseballdata);
+				svg.select(".select_rect").remove();
+				svg.append("g")
+				.attr("class","select_rect")
+				.append("rect")
+				.attr("x",computeCoordX(column_indexX))
+				.attr("y",marginX)
+				.attr("height",yaxisHeight)
+				.attr("width",focus_width)
+				.attr("fill-opacity",0)
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
 			}else{
-				/*DvalueX is positive, the later click is right; 
-				DvalueX id negative, the later click is left*/
-				var DvalueX = clickX - first_clickX;
-				var abs_DvalueX = Math.abs(DvalueX);
-				/*DvalueY is positive, the later click is bottom;
-				DvalueY is negative, the later click is top*/
-				var DvalueY = clickY - first_clickY;
-				var abs_DvalueY = Math.abs(DvalueY);
-				if((abs_DvalueX > abs_DvalueY)&&(abs_DvalueX >= threshold)){
-					//if the late click is bigger in horizontal than vertical
-					if(DvalueX >= 0){
-						//the later click is right
-						focusX_right++;
-						//constrain the max focus number
-						if((focusX_max + 1)<arraylength){
-							focusXArray.push(focusX_max + 1);
-							focus_right++;
-							focusX_max = focusX_max + 1;
-							xfocus_num++;
-						}
-					}else{
-						//the later click is left
-						focusX_left++;
-						if((focusX_min - 1)>0){
-							focusXArray.push(focusX_min - 1);
-							focus_left++;
-							focusX_min = focusX_min - 1;
-							xfocus_num++;
-						}
+				index = 0;
+				svg.selectAll("*").remove();
+				tablelens(global_baseballdata);
+				svg.select(".select_rect").remove();
+				svg.append("g")
+				.attr("class","select_rect")
+				.append("rect")
+				.attr("x",computeCoordX(column_indexX))
+				.attr("y",marginX)
+				.attr("height",yaxisHeight)
+				.attr("width",focus_width)
+				.attr("fill-opacity",0)
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
+			}
+		}
+		//*********************************************************************
+		if((btnNum == 0)&&(BeginFocus)){
+			clickX = event.layerX - 10;
+			clickY = event.layerY - 15;
+			if((!ExpandFocus)){
+				first_clickX = event.layerX;
+				first_clickY = event.layerY;
+				focusX_number = computeIndexX(first_clickX);
+				if(focusX_max<0){
+					focusX_max = focusX_number;
+					focusX_min = focusX_number;
+				}else{
+					if(focusX_number>focusX_max){
+						focusX_max = focusX_number;
 					}
-				}else if((abs_DvalueY > abs_DvalueX)&&(abs_DvalueY >= threshold)){
-					//if the late click is bigger in vertical than horizontal
-					if(DvalueY >= 0){
-						//the later click is bottom
-						focus_top++;
-						focusY_top++;
-						if((focusY_max + 1)<global_baseballdata.length){
-							focusYArray.push(focusY_max + 1);
-							focusY_max = focusY_max + 1;
-							yfocus_num++;
-						}
-					}else{
-						//the later click is top
-						focus_bottom++;
-						focusY_bottom++;
-						if((focusY_min - 1)>=0){
-							focusYArray.push(focusY_min - 1);
-							focusY_min = focusY_min - 1;
-							yfocus_num++;
-						}
+					if(focusX_number<focusX_min){
+						focusX_min = focusX_number;
 					}
 				}
+				for(var i=focusX_min;i<=focusX_max;i++){
+					if(i!=0&&(focusXArray.indexOf(i)==-1)){
+						focusXArray.push(i);
+						xfocus_num++;
+						computeVarX();
+					}
+				}
+				//focusY_number = Math.floor((first_clickY-yaxisMargin)/barheight);
+				focusY_number = currentYNum;
+				if(focusY_max<0){
+					focusY_max = focusY_number;
+					focusY_min = focusY_number;
+				}else{
+					if(focusY_number>focusY_max){
+						focusY_max = focusY_number;
+					}
+					if(focusY_number<focusY_min){
+						focusY_min = focusY_number;
+					}
+				}
+				for(var i=focusY_min;i<=focusY_max;i++){
+					if(i!=0&&(focusYArray.indexOf(i)==-1)){
+						focusYArray.push(i);
+						yfocus_num++;
+						computeVarY();
+					}
+				}
+				Exist_focus = true;
 			}
-			Exist_focus = true;
 			//left click event 
 			index = 0;
 			svg.selectAll("*").remove();
 			tablelens(global_baseballdata);
 		}
 	}
+	//*****************************************************************************
+	container = document.getElementById('container');   
+    menu = document.getElementById('menu');
+	//*******************************************************************************
+	//the parameter is the x coordinate, return the index column of x
+	function computeIndexX(avg_clickX){
+		var SortXNum;
+		var leftX = yaxisMargin;
+		var left_middleX = yaxisMargin + focusX_min * attr_width_change;
+		var right_middleX = yaxisMargin + (focusX_max + 1 - xfocus_num) * attr_width_change + xfocus_num * focus_width;
+		if(xfocus_num == 0){
+			SortXNum = Math.floor((avg_clickX - leftX)/attrWidth);
+		}else if(avg_clickX <= left_middleX){
+			SortXNum = Math.floor((avg_clickX - leftX)/attr_width_change);
+		}else if(avg_clickX <= right_middleX){
+			var temp_x = left_middleX;
+			var belong_index = 0;
+			for(var i=focusX_min;i<=focusX_max;i++){
+				if(focusXArray.indexOf(i)==-1){
+					if((avg_clickX>=temp_x)&&(avg_clickX<=(temp_x+attr_width_change))){
+						belong_index = i;
+						break;
+					}else{
+						temp_x = temp_x + attr_width_change;
+					}
+				}else{
+					if((avg_clickX>=temp_x)&&(avg_clickX<=(temp_x+focus_width))){
+						belong_index = i;
+						break;
+					}else{
+						temp_x = temp_x + focus_width;
+					}
+				}
+			}
+			SortXNum = belong_index;
+		}else{
+			SortXNum = Math.ceil((avg_clickX - right_middleX)/attr_width_change) + focusX_max;
+		}
+		return SortXNum;
+	}
+	//*************************************************************************************
+	//the parameter is the index of x return the coordinate of x column
+	function computeCoordX(indexX){
+		var coordX = 0;
+		if(xfocus_num == 0){
+			coordX = yaxisMargin + indexX * attrWidth;
+		}else if(indexX<=focusX_min){
+			coordX = yaxisMargin + indexX * attr_width_change;
+		}else if(indexX <= focusX_max){
+			var temp_coordX = left_middleX;
+			for(var i=focusX_min;i<focusX_max;i++){
+				if(focusXArray.indexOf(i)==-1){
+					temp_coordX = temp_coordX + attr_width_change;
+				}else{
+					temp_coordX = temp_coordX + focus_width;
+				}
+				if(i == (indexX - 1)){
+					coordX = temp_coordX;
+					break;
+				}
+			}
+		}else{
+			coordX = right_middleX + (indexX - focusX_max - 1) * attr_width_change;
+		}
+		return coordX;
+	}
+	function computeVarX(){
+		attr_width_change = (width - yaxisMargin - focus_width * xfocus_num)/(arraylength - xfocus_num);
+		leftX = yaxisMargin;
+		left_middleX = yaxisMargin + focusX_min * attr_width_change;
+		right_middleX = yaxisMargin + (focusX_max + 1 - xfocus_num) * attr_width_change + xfocus_num * focus_width;
+	}
+	function computeVarY(){
+		barheight_change = (yaxisHeight - focus_height * yfocus_num)/(humannum - yfocus_num);
+		topY = marginX;
+		top_middleY = marginX + focusY_min * barheight_change;
+		bottom_middleY = marginX + (focusY_max + 1 - yfocus_num) * barheight_change + yfocus_num * focus_height;
+	}
+	//*************************************************************************************
+	//parameter: index of y
+	//return data: coordinate Y of corresponding index y
+	function computeCoordY(indexY){
+		var coordY = 0;
+		if(yfocus_num == 0){
+			coordY = marginX + indexY * barheight;
+		}else if(indexY <= focusY_min){
+			coordY = marginX + indexY * barheight_change;
+		}else if(indexY <= focusY_max){
+			var temp_coordY = top_middleY;
+			for(var i=focusY_min;i<focusY_max;i++){
+				if(focusYArray.indexOf(i)==-1){
+					temp_coordY = temp_coordY + barheight_change;
+				}else{
+					temp_coordY = temp_coordY + focus_height;
+				}
+				if(i == (indexY - 1)){
+					coordY = temp_coordY;
+					break;
+				}
+			}
+		}else{
+			coordY = bottom_middleY + (indexY - focusY_max - 1) * barheight_change;
+		}
+		return coordY;
+	}
+	//*************************************************************************************
+    //show the option menu
+    function showMenu() {
+        var evt = window.event || arguments[0];
+        //get the click option and compute the position of the option 
+        var rightedge = container.clientWidth+evt.layerX;
+        var bottomedge = container.clientHeight-evt.layerY;
+        //the condition that the rightedge is less than the menu width
+        if (rightedge < menu.offsetWidth)                
+            menu.style.left = container.scrollLeft + evt.layerX - menu.offsetWidth + "px";             
+        else
+            menu.style.left = container.scrollLeft + evt.layerX + "px";
+        //the condition that the bottomedge was less than the menu offsetHeight
+        if (bottomedge < menu.offsetHeight)
+            menu.style.top = container.scrollTop + evt.layerY - menu.offsetHeight + "px";
+        else
+            menu.style.top = container.scrollTop + evt.layerY  + "px";
+        //make the menu visible
+        menu.style.visibility = "visible";              
+        LTEvent.addListener(menu,"contextmenu",LTEvent.cancelBubble);
+    }
+    //make the menu hidden
+    function hideMenu() {
+        menu.style.visibility = 'hidden';
+    }                               
+    LTEvent.addListener(container,"contextmenu",LTEvent.cancelBubble);
+    LTEvent.addListener(container,"contextmenu",showMenu);
+    LTEvent.addListener(document,"click",hideMenu);                     
+	//*******************************************************************************
 	//*****************************************************************************
 	function SortData(sortXNum, sortSequence){
 		var scale;
@@ -512,11 +987,11 @@
   		d3.select(this).classed("dragging", false);
 	}
 	//**********************************************************************************
-	function DOIHeight(i){
+	function DOIHeight(index){
 		//not the original data
 		var doi_height = 0;
 		if(Exist_focus){
-			if((i<=focusY_max)&&(i>=focusY_min)){
+			if(focusYArray.indexOf(index)!=-1){
 				//click location
 				doi_height = focus_height;
 			}else{
@@ -527,51 +1002,10 @@
 		}
 		return doi_height;
 	};
-	function DOIY(i){
-		var doi_y = 0;
-		if(Exist_focus){
-			barheight_change = (yaxisHeight - focus_height * yfocus_num)/(humannum - yfocus_num);
-			if((i<=focusY_max)&&(i>=focusY_min)){
-				doi_y = marginX + (barheight_change) * focusY_min + focus_height * (i - focusY_min);
-				focus_y = doi_y;//focus_y is the bottom of focus_area
-			}else if(i<=focusY_min){
-				doi_y = marginX + (barheight_change) * i;
-			}else{
-				doi_y = marginX + (i - yfocus_num) * (barheight_change) + (focus_height * yfocus_num);
-			}
-		}else{
-			doi_y = marginX + (padding + barheight) * i;;
-		}
-		return doi_y;
-	};
-	function DOIX(index){
-		var doi_x = 0;
-		if(Exist_focus){
-			attr_width_change = (width - yaxisMargin - focus_width * xfocus_num)/(arraylength - xfocus_num);
-			if((index > focusX_min)&&(index <= focusX_max)){
-				doi_x = yaxisMargin + attr_width_change * focusX_min + focus_width * (index - focusX_min);
-			}else if(index <= focusX_min){
-				if(index == name_sign){
-					doi_x = yaxisMarginName;
-				}else{
-					doi_x = yaxisMargin + index * attr_width_change;
-				}
-			}else{
-				doi_x = yaxisMargin + attr_width_change * (index - xfocus_num) + focus_width * xfocus_num;
-			}
-		}else{
-			if(index == name_sign){
-				doi_x = yaxisMarginName;
-			}else{
-				doi_x = yaxisMargin + attrWidth * index;
-			}
-		}
-		return doi_x;
-	};
 	function DOIWidth(index){
 		var doi_width = 0;
 		if(Exist_focus){
-			if((index >= focusX_min)&&(index <= focusX_max)){
+			if(focusXArray.indexOf(index)!=-1){
 				doi_width = focus_width;
 			}else{
 				doi_width = attr_width_change;
@@ -581,6 +1015,34 @@
 		}
 		return doi_width;
 	};
+	function addPersonText(){
+		//get the selected person
+		svg.selectAll(".person")
+		.remove();
+		var baseball_man = global_baseballdata[currentYNum];
+		var text_y = marginXPersonBottom - text_paddingY;
+		for(var i=0;i<arraylength;i++){
+			var attr = getAttr(baseball_man, i);
+			var text_x = 0;
+			if(i == 0){
+				text_x = text_paddingX;
+			}else{
+				text_x = computeCoordX(i) + text_paddingX;
+			}
+			svg.append("g").append("text")
+			.attr("x",text_x)
+			.attr("y",text_y)
+			.attr("class","person")
+			.attr("font-size",15)
+			.attr("font-family","simsun")
+			.text(attr);
+		}
+	}
+	function removePersonText(){
+		//remove the selected person text
+		svg.selectAll(".person")
+		.remove();
+	}
 	//**********************************************************************************
 	function tablelens(baseballdata){
 		var baseball_man = baseballdata[0];
@@ -589,108 +1051,153 @@
 			//iterate for d to get the cols
 			if(index > 0){
 				var scale = myScaleArray[index];
-				svg.selectAll(topname[index])
+				svg.selectAll(topname[mappingArray[index]])
 				.data(baseballdata)
 				.enter()
 				.append("rect")
-				.attr("x",DOIX(index))
+				.attr("class",topname[mappingArray[index]])
+				.attr("x",function(d){
+					var x_change = computeCoordX(mappingArray[index]);
+					var width_change = DOIWidth(mappingArray[index]);
+					if(maxValue[mappingArray[index]]<0){
+						scale.rangeBands([0,width_change]);
+						x_change = x_change + scale(d[x]);
+					}
+					return x_change;
+				})
 				.attr("y",function(d,i){				
-					return DOIY(i);
+					return computeCoordY(i);
 				})
 				.attr("height",DOIHeight(i))
 				.attr("width",function(d){
-					var width_change = DOIWidth(index);
-					if(maxValue[index]>0){
+					var width_change = DOIWidth(mappingArray[index]);
+					var width = 0;
+					if(maxValue[mappingArray[index]]>0){
 						scale.range([0,width_change]);
+						width = scale(d[x]);
 					}else{
-						scale.rangeBands([0,width_change]);
+						width = category_width;
 					}
-					return scale(d[x]);
+					return width;
 				})
-				.attr("fill","steelblue")
+				.attr("fill",function(d){
+					var color = "steelblue";
+					return color;
+				})
 				.classed(topname_class,true)
 				.on("dblclick",function(d,i){
 					 d3.select(this)  
-                  	.attr("fill","yellow");  
+                  	.attr("fill","red");  
 					clickX = d3.select(this)
 					.attr("x");
 					clickY = d3.select(this)
 					.attr("y");
+				})
+				.on("mouseover",function(d,i){
+					currentYNum = i;
+					d3.select(this)
+					.attr("fill","orange");
+					addPersonText();
+				})
+				.on("mouseout",function(d){
+					d3.select(this)
+					.transition()
+					.duration(50)
+					.attr("fill","steelblue");
+					removePersonText();
 				});
 			}	
 			index++;
 		}
 		//*****************************************************************
 		//add x line and text for focus area
-		if(focus_y!=0){
-			//add x line for top focus area
-			for(i=focusY_min;i<=focusY_max;i++){
-					svg.append("g")
-					.append("line")
-					.attr("x1",yaxisMarginName)
-					.attr("y1",DOIY(i))
-					.attr("x2",yaxisMargin + attrWidth * (arraylength - 1))
-					.attr("y2",DOIY(i))
-					.attr("stroke","gray")
-					.attr("stroke-width",1);
-					//add x line for bottom focus area
-					svg.append("g").append("line")
-					.attr("x1",yaxisMarginName)
-					.attr("y1",DOIY(i+1))
-					.attr("x2",yaxisMargin + attrWidth * (arraylength - 1))
-					.attr("y2",DOIY(i+1))
-					.attr("stroke","gray")
-					.attr("stroke-width",1);
-			}
-			//add attribute text to the focus
+		//add x line for top focus area
+		for(i=focusY_min;i<=focusY_max;i++){
+			//if(focusYArray.indexOf(i)!=-1){
+				svg.append("g")
+				.append("line")
+				.attr("x1",yaxisMarginName)
+				.attr("y1",computeCoordY(i))
+				.attr("x2",x_right)
+				.attr("y2",computeCoordY(i))
+				.attr("stroke","gray")
+				.attr("stroke-width",1);
+			//add x line for bottom focus area
+			svg.append("g").append("line")
+				.attr("x1",yaxisMarginName)
+				.attr("y1",computeCoordY(i+1))
+				.attr("x2",x_right)
+				.attr("y2",computeCoordY(i+1))
+				.attr("stroke","gray")
+				.attr("stroke-width",1);
+			//}
+		}
+		//add attribute text to the focus
+		if((focusY_min>=0)&&(focusX_min>=0)){
 			for(var i=focusY_min;i<=focusY_max;i++){
-				var baseballman = baseballdata[i];
-				var text_y = DOIY(i+1) - text_paddingY;
+			//if(focusYArray.indexOf(i)!=-1){
+				var baseballman = global_baseballdata[i];
+				var text_y = computeCoordY(i+1) - text_paddingY;
 				for(var j=focusX_min;j<=focusX_max;j++){
-					var attr = getAttr(baseballman, j);
-					var scale = myScaleArray[j];
-					if(maxValue[j]>0){
-						scale.range([0,focus_width]);
-					}else{
-						scale.rangeBands([0,focus_width]);
+					//if(focusXArray.indexOf(j)!=-1){
+							var attr = getAttr(baseballman, j);
+							var scale = myScaleArray[j];
+							if(maxValue[j]>0){
+								scale.range([0,focus_width]);
+							}else{
+								scale.rangeBands([0,focus_width]);
+							}
+							var text_x = computeCoordX(j) + text_paddingX;
+							svg.append("g").append("text")
+							.attr("x",text_x)
+							.attr("y",text_y)
+							.attr("font-size",20)
+							.attr("font-family","simsun")
+							.text(attr);
+							//add rect
+							svg.append("g").append("rect")
+							.attr("x",computeCoordX(j))
+							.attr("y",computeCoordY(i))
+							.attr("height",focusrRect_height)
+							.attr("width",scale(attr))
+							.attr("fill","red");
+							//add rect
+							svg.append("g")
+								.attr("class","focus_rect")
+								.append("rect")
+								.attr("x",computeCoordX(j))
+								.attr("y",computeCoordY(i))
+								.attr("height",focus_height)
+								.attr("width",focus_width)
+								.attr("fill-opacity",0)
+								.attr("stroke","orange")
+								.attr("stroke-width",4);
+						//}
 					}
-					
-					var text_x = DOIX(j) + text_paddingX;
-					svg.append("g").append("text")
-					.attr("x",text_x)
-					.attr("y",text_y)
-					.attr("font-size",20)
-					.attr("font-family","simsun")
-					.text(attr);
-					//add rect
-					svg.append("g").append("rect")
-					.attr("x",DOIX(j))
-					.attr("y",DOIY(i))
-					.attr("height",focusrRect_height)
-					.attr("width",scale(attr))
-					.attr("fill","red");
-				}
+				//}
 			}
-			//add name text to the focus
-			for(var i=focusY_min;i<=focusY_max;i++){
+		}		
+		//add name text to the focus
+		for(var i=focusY_min;i<=focusY_max;i++){
+			//if(focusYArray.indexOf(i)!=-1){
 				var baseballman = baseballdata[i];
-				var text_y = focus_y - (i - focusY_min - 2/3) * focus_height;
+				var text_y = computeCoordY(i + 1) - text_paddingY;
 				var text_x = yaxisMarginName;
 				var name = getAttr(baseballman, 0);
 				svg.append("g").append("text")
-					.attr("x",text_x)
-					.attr("y",text_y)
-					.attr("font-size",10)
-					.attr("font-family","simsun")
-					.text(name);
-			}
+				.attr("x",text_x)
+				.attr("y",text_y)
+				.attr("font-size",13)
+				.attr("font-family","simsun")
+				.text(name);
+			//}
 		}
 		
 		//add x line top
 		svg.append("g").append("line")
 		.attr("x1",yaxisMarginName)
 		.attr("y1",marginX)
-		.attr("x2",yaxisMargin + attrWidth * (arraylength - 1))
+		.attr("x2",x_right)
 		.attr("y2",marginX)
 		.attr("stroke","black")
 		.attr("stroke-width",2);
@@ -699,38 +1206,51 @@
 		svg.append("g").append("line")
 		.attr("x1",yaxisMarginName)
 		.attr("y1",marginX + yaxisHeight)
-		.attr("x2",yaxisMargin + attrWidth * (arraylength - 1))
+		.attr("x2",x_right)
 		.attr("y2",marginX + yaxisHeight)
 		.attr("stroke","black")
 		.attr("stroke-width",2);
 		
+		var draw_x = 0;
 		//add y line
 		svg.append("g").selectAll("line")
 		.data(topname)
 		.enter()
 		.append("line")
 		.attr("x1",function(d,i){
-			x = yaxisMargin + attrWidth * i;
-			var final_x = 0;
 			if(i==0){
-				final_x = DOIX(name_sign);
+				draw_x = yaxisMarginName;
 			}else{
-				final_x = DOIX(i);
+				draw_x = computeCoordX(i);
 			}
-			return final_x;
+			return draw_x;
 		})
-		.attr("y1",marginX)
+		.attr("y1",function(d,i){
+			var y1 = 0;
+			if(i<=1||i==(topname.length-1)){
+				y1 = marginXTextTop;
+			}else{
+				y1 = marginX;
+			}
+			return y1;
+		})
 		.attr("x2",function(d,i){
-			x = yaxisMargin + attrWidth * i;
-			var final_x = -1;
 			if(i==0){
-				final_x = DOIX(name_sign);
+				draw_x = yaxisMarginName;
 			}else{
-				final_x = DOIX(i);
+				draw_x = computeCoordX(i);
 			}
-			return final_x;
+			return draw_x;
 		})
-		.attr("y2",marginX + yaxisHeight)
+		.attr("y2",function(d,i){
+			var y2 = 0;
+			if(i<=1||i==(topname.length-1)){
+				y2 = marginXPersonBottom;
+			}else{
+				y2 = marginX + yaxisHeight;
+			}
+			return y2;
+		})
 		.attr("stroke","black")
 		.attr("stroke-width",2);
 		
@@ -745,19 +1265,53 @@
 			x = yaxisMargin + attrWidth * i;
 			var final_x = 0;
 			if(i==0){
-				final_x = DOIX(name_sign);
+				final_x = computeCoordX(name_sign);
 			}else{
-				final_x = DOIX(i);
+				final_x = computeCoordX(i);
 			}
 			return final_x;
 		})
-		.attr("y",27)
-		.attr("font-size",10)
+		.attr("y",marginXText)
+		.attr("font-size",function(d,i){
+			//if((i>=focusX_min)&&(i<=focusX_max)){
+			if(focusXArray.indexOf(i)!=-1){
+				return 20;
+			}else{
+				return 10;
+			}
+		})
 		.attr("font-family","simsun")
-		.text(function(d){return d;});
+		.text(function(d,i){
+			return topname[mappingArray[i]];
+		});
+		//*********************add text of the selected column************
+		svg.append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginXTextBottom)
+		.attr("x2",x_right)
+		.attr("y2",marginXTextBottom)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
 		
-		var left_topX = focusX_min * attr_width_change + yaxisMargin;
-		var left_topY = focusY_min * barheight_change + marginX;
+		svg.append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginXTextTop)
+		.attr("x2",x_right)
+		.attr("y2",marginXTextTop)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		//****************************************************************
+		//*********************add text of the selected person************
+		svg.append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginXPersonBottom)
+		.attr("x2",x_right)
+		.attr("y2",marginXPersonBottom)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		//****************************************************************		
+		left_topX = focusX_min * attr_width_change + yaxisMargin;
+		left_topY = focusY_min * barheight_change + marginX;
 		RectHeight = focus_height * yfocus_num;
 		RectWidth = focus_width * xfocus_num;
 		var d = new Object();
@@ -768,23 +1322,144 @@
     	.on("dragstart", dragstarted)
     	.on("drag", dragged)
     	.on("dragend", dragended);
-		//append rect to the focus area
-		FocusRect = svg.append("g")
-			.attr("class","focus_rect")
-			.append("rect")
-			.attr("x",left_topX)
-			.attr("y",left_topY)
-			.attr("height",RectHeight)
-			.attr("width",RectWidth)
-			.attr("fill","#FFF")
-			.attr("opacity",0.1)
-			.attr("stroke","red")
-			.attr("stroke-width",7);
-			//.call(drag);
 	}
 	//********************************************************
 	function zoomed() {
   		svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	}
+	function begin_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = true;
+		FirstClick = true;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function stop_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = true;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+		focusX_number = -1;
+		focusY_number = -1;
+		focusX_min = -1;
+		focusX_max = -1; 
+		focusY_min = -1; 
+		focusY_max = -1;
+		xfocus_num = 0; 
+		yfocus_num = 0;
+		focusXArray.splice(0,focusXArray.length);  
+		focusYArray.splice(0,focusYArray.length);  
+		Exist_focus = false;
+		index = 0;
+		svg.selectAll("*").remove();
+		tablelens(global_baseballdata);
+	}
+	function expand_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = true;
+		StopFocus = false;
+		ExpandFocus = true;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function reduce_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = true; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function move_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		//change the color of the focus_rect
+		svg.select(".focus_rect").remove();
+		svg.append("g")
+		.attr("class","focus_rect")
+		.append("rect")
+		.attr("x",left_topX)
+		.attr("y",left_topY)
+		.attr("height",RectHeight)
+		.attr("width",RectWidth)
+		.attr("fill-opacity",0.3)
+		.attr("fill","gray")
+		.attr("stroke","orange")
+		.attr("stroke-width",4);
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = true;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function sort_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = true;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function column_operation(event){
+		//the column selection
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = true;
+		SwapColumn = false; 
+	}
+	function swap_column(event){
+		//swap column operation
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = true; 
 	}
 </script>
 </html>

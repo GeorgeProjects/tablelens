@@ -224,12 +224,12 @@ $(function(){
 	var select_focus = false;
 	var baseballman1;
 	var text_paddingX = 5, text_paddingY = 5;
-	var down_Name = true, down_Bat86 = true, down_Hit86 = true, down_HRuns86 = true, down_Runs86 = true, down_Runbat86 = true;
+	var down_Name = true, down_Bat86 = true, down_Hit86 = true, down_HRuns86 = true, down_Runs86 = true, down_Runbat86 = true, down_all = true;
 	var e = d3.rgb(13,2,111);		//red
 	var d = d3.rgb(114,99,252);		
 	var c = d3.rgb(192,192,192);	//white
-	var b = d3.rgb(230,170,228);	
-	var a = d3.rgb(150,46,150);		//blue
+	var b = d3.rgb(217,205,62);	
+	var a = d3.rgb(220,115,58);		//blue
 	var blue = d3.rgb(255,0,0);
 	var green = d3.rgb(0,255,0);
 	var cs_array = new Array();
@@ -577,15 +577,17 @@ $(function(){
 					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
 				}
 			}
-			stopNumArray[(4 - FirstSelectRectNum)] = Math.floor((InRectYMax - cs_moveY)/InRectHeight * 100);
-			renderColor();
-			computeColorRect();
-			renderCSRect();
-			renderCSText();
+			var point_num = Math.floor((InRectYMax - cs_moveY)/InRectHeight * 100);
+			stopNumArray[(4 - FirstSelectRectNum)] = point_num;
+			cs_array[(4 - FirstSelectRectNum)] = point_num/100;
 			svg.selectAll("*").remove();
 			tablelens(render_baseballdata);
 			cs_coord[FirstSelectRectNum] = cs_moveY;
-			renderCSRect();
+			renderCSText();
+			renderColor();
+			computeColorRect();
+			computeFilter();
+			computeSelectRect();
 			moveSR = false;
 			FirstSelectRectNum = -1;
 		}
@@ -611,9 +613,9 @@ $(function(){
 			}
 			filter_coord[FirstSelectFilterNum] = filter_moveY;
 			if(FirstSelectFilterNum == 0){
-				humannum_max = Math.floor((InRectHeight - filter_moveY + InRectYMin)/InRectHeight * humannum_sum);　
+					humannum_max = Math.floor((InRectHeight - filter_moveY + InRectYMin)/InRectHeight * humannum_sum);　			
 			}else{
-				humannum_min = Math.floor((InRectHeight - filter_moveY + InRectYMin)/InRectHeight * humannum_sum);
+					humannum_min = Math.floor((InRectHeight - filter_moveY + InRectYMin)/InRectHeight * humannum_sum);
 			}
 			computeBarHeight();
 			/*svg.selectAll("*").remove();
@@ -814,7 +816,7 @@ $(function(){
 			.attr("fill","gray");
 		});
 	}
-	//*******************************************************
+	//*************************************************************************
 	function computeSelectRect(){
 		svg_color.selectAll(".select_rect_text").remove();
 		svg_color.selectAll(".select_rect_text")
@@ -918,7 +920,6 @@ $(function(){
 	//*************************************************************************
 	function computeColorRect(){
 		svg_color.selectAll("rect").remove();
-		//添加一个矩形，并应用线性渐变
 		svg_color.append("g")
 		.attr("class","color_rect")
 		.append("rect")
@@ -931,6 +932,14 @@ $(function(){
 	}
 	//*************************************************************************
 	function renderCSText(){
+		for(var i=0;i<minValue.length;i++){
+			var difference = Math.floor((maxValue[i] - minValue[i]));
+			quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
+			quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
+			quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
+			quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
+			quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+		}
 		NamePArray.splice(0,NamePArray.length);
 		NamePArray.push(quarter4Value[sortIndex]+"");
 		NamePArray.push(quarter3Value[sortIndex]+"");
@@ -952,53 +961,6 @@ $(function(){
 			.attr("font-family","simsun")
 			.text(function(d){
 				return d;
-			});
-	}
-	//*************************************************************************
-	function renderCSRect(){
-		svg_color.selectAll(".select_rect").remove();
-		svg_color.selectAll(".select_rect")
-			.append("g")
-			.data(cs_array)
-			.enter()
-			.append("circle")
-			.attr("class","select_rect")
-			.attr("cx",(InRectXMin - 15))
-			.attr("cy",function(d,i){
-				return cs_coord[i];
-			})
-			.attr("r",10)
-			.on("mouseover",function(d,i){
-				d3.select(this)
-				.attr("fill","orange");
-				FirstSelectRectNum = i;
-				FirstSelectFilterNum = -1;
-			})
-			.on("mouseout",function(d){
-				d3.select(this)
-				.attr("fill","gray");
-			});
-		svg_color.selectAll(".filter_circle").remove();
-		svg_color.selectAll(".filter_circle")
-			.append("g")
-			.data(filter_array)
-			.enter()
-			.append("circle")
-			.attr("class","filter_circle")
-			.attr("cx",(InRectXMin - 46))
-			.attr("cy",function(d,i){
-				return filter_coord[i];
-			})
-			.attr("r",8)
-			.on("mouseover",function(d,i){
-				d3.select(this)
-				.attr("fill","orange");
-				FirstSelectFilterNum = i;
-				FirstSelectRectNum = -1;
-			})
-			.on("mouseout",function(d){
-				d3.select(this)
-				.attr("fill","gray");
 			});
 	}
 	//*************************************************************
@@ -1048,10 +1010,12 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.bat86 - b.bat86;
 				});
+				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.bat86 - a.bat86;
 				});
+				down_all = false;
 			}
 			computeMinMax();
 			computeVarY();
@@ -1060,10 +1024,12 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.hits86 - b.hits86;
 				});
+				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.hits86 - a.hits86;
 				});
+				down_all = false;
 			}
 			computeMinMax();
 			computeVarY();
@@ -1072,10 +1038,12 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.hRuns86 - b.hRuns86;
 				});
+				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.hRuns86 - a.hRuns86;
 				});
+				down_all = false;
 			}
 			computeMinMax();
 			computeVarY();
@@ -1084,10 +1052,12 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.runs86 - b.runs86;
 				});
+				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.runs86 - a.runs86;
 				});
+				down_all = false;
 			}
 			computeMinMax();
 			computeVarY();
@@ -1096,10 +1066,12 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.Runbat86 - b.Runbat86;
 				});
+				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.Runbat86 - a.Runbat86;
 				});
+				down_all = false;
 			}
 			computeMinMax();
 			computeVarY();
@@ -1357,11 +1329,13 @@ $(function(){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return a.name - b.name;
 			});
+			down_all = true;
 			down_Name = false;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return b.name - a.name;
 			});
+			down_all = false;
 			down_Name = true;
 		}
 		sortIndex = 0;
@@ -1375,11 +1349,13 @@ $(function(){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return a.bat86 - b.bat86;
 			});
+			down_all = true;
 			down_Bat86 = false;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return b.bat86 - a.bat86;
 			});
+			down_all = false;
 			down_Bat86 = true;
 		}
 		sortIndex = 1;
@@ -1393,11 +1369,13 @@ $(function(){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return a.hits86 - b.hits86;
 			});
+			down_all = true;
 			down_Hit86 = false;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return b.hits86 - a.hits86;
 			});
+			down_all = false;
 			down_Hit86 = true;
 		}
 		sortIndex = 2;
@@ -1411,11 +1389,13 @@ $(function(){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return a.hRuns86 - b.hRuns86;
 			});
+			down_all = true;
 			down_HRuns86 = false;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return b.hRuns86 - a.hRuns86;
 			});
+			down_all = false;
 			down_HRuns86 = true;
 		}
 		sortIndex = 3;
@@ -1429,11 +1409,13 @@ $(function(){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return a.runs86 - b.runs86;
 			});
+			down_all = true;
 			down_Runs86 = false;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return b.runs86 - a.runs86;
 			});
+			down_all = false;
 			down_Runs86 = true;
 		}
 		sortIndex = 4;
@@ -1447,11 +1429,13 @@ $(function(){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return a.Runbat86 - b.Runbat86;
 			});
+			down_all = true;
 			down_Runbat86 = false;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return b.Runbat86 - a.Runbat86;
 			});
+			down_all = false;
 			down_Runbat86 = true;
 		}
 		sortIndex = 5;
@@ -1606,6 +1590,7 @@ $(function(){
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
 			}
+			renderCSText();
 			renderColor();
 			computeColorRect();
 			computeFilter();
@@ -1622,6 +1607,7 @@ $(function(){
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
 			}
+			renderCSText();
 			renderColor();
 			computeColorRect();
 			computeFilter();
@@ -1638,6 +1624,7 @@ $(function(){
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
 			}
+			renderCSText();
 			renderColor();
 			computeColorRect();
 			computeFilter();
@@ -1657,13 +1644,14 @@ $(function(){
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
 			}
+			renderCSText();
 			renderColor();
 			computeColorRect();
 			computeFilter();
 			computeSelectRect();
 		}else if(checkedItems[0].value=="percentile2"){
-			var index1 = Math.floor(render_baseballdata.length * 0.3);
-			var index2 = Math.floor(render_baseballdata.length * 0.6);
+			var index1 = Math.floor(render_baseballdata.length * 0.5);
+			var index2 = Math.floor(render_baseballdata.length * 0.7);
 			var index3 = Math.floor(render_baseballdata.length * 0.9);
 			cs_array[0] = 0.00;
 			cs_array[1] = getAttr(render_baseballdata[index1],sortIndex)/maxValue[sortIndex];
@@ -1676,6 +1664,7 @@ $(function(){
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
 			}
+			renderCSText();
 			renderColor();
 			computeColorRect();
 			computeFilter();

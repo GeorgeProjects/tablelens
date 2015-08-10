@@ -2,1168 +2,217 @@
 <meta charset="utf-8">
 <html>
 <head>
-<title>Tablelens Demo</title>
+<title>Table Lens</title>
 <script type="text/javascript" src="d3/d3.js"></script>
-<link rel="stylesheet" type="text/css" href="d3/jquery.multiselect.css" />
-<link rel="stylesheet" type="text/css" href="d3/style.css" />
-<link rel="stylesheet" type="text/css" href="d3/prettify.css" />
-<link rel="stylesheet" type="text/css" href="d3/jquery-ui.css" />
-<script type="text/javascript" src="d3/jquery.js"></script>
-<script type="text/javascript" src="d3/jquery-ui.min.js"></script>
-<script type="text/javascript" src="d3/jquery.multiselect.js"></script>
-<script type="text/javascript" src="d3/prettify.js"></script>
-<script type="text/javascript">
-$(function(){
-	//$("body").css("zoom","80%");
-	$("select#multiple").multiselect({
-		selectedList: 1
-	});
-	$("select#multiple").multiselect({
-   		selectedText: function(numChecked, numTotal, checkedItems){
-			 ChangeAttr(numChecked,checkedItems);
-     		 return numChecked + ' of ' + numTotal + ' checked';
-  		 }
-	});
-	$("select#single").multiselect({
-		multiple: false,
-		header: "Select an sort-option",
-		noneSelectedText: "SortOption",
-		selectedList: 1
-	});
-	$("select#single").multiselect({
-   		selectedText: function(numChecked, numTotal, checkedItems){
-			 ChangeSort(checkedItems);
-			 return checkedItems[0].value;
-  		 }
-	});
-	$("select#group").multiselect({
-		multiple: false,
-		header: "Select an Color-Option",
-		noneSelectedText: "ColorOption",
-		selectedList: 1
-	});
-	
-});
-</script>
-<style>
-	#outer{
-		background:white;
+<script type="text/javascript" src="d3/ajax.js"></script>
+<style type="text/css">
+	.axis path,
+	.axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
 	}
-	#color_control{
-		float:left;
+	.axis {
+  	  font: 10px sans-serif;
 	}
-	.select_rect{
- 		 fill-opacity: 0.3;
- 		 stroke: black;
- 		 stroke-width: 1.5px;
-	}
-	.filter_circle{
-		 fill-opacity:0.7;
-		 stroke:white;
-		 stroke-width:1.5px;
-	}
-	#inner{
-		overflow-y:auto;
-		overflow-x:hidden;
-		position:relative;
-		background:white;
-	}
-	#attr1,#attr2,#attr3,#attr4,#attr5,#attr6{
-		position:relative;
-	}
-	#control_button{
-		margin: auto;
-  		position: absolute;
-  		top: 0; left: 0; bottom: 0; right: 0;
-	}
-	#multiple{
-		float:left;
-	}
-	#single{
-		float:left;
-		position:relative;
-	}
-	#group{
-		float:left;
-		position:relative;
-	}
-	#resetSelect{
-		margin-top:10px;
-		padding-left:30px;
-		padding-right:30px;
-		float:left;
-	}
-	#removeselected{
-		margin-top:10px;
-		padding-left:30px;
-		padding-right:30px;
-		float:left;
-		position:relative;
-	}
-	#removeothers{
-		margin-top:10px;
-		float:left;
-		padding-left:30px;
-		padding-right:30px;
-		position:relative;
-	}
-	#resetfilter{
-		/*display:inline;*/
-		margin-top:10px;
-		float:left;
-		padding-left:30px;
-		padding-right:30px;
-		position:relative;
-	}
+	.focus_rect rect {
+      
+    }
+	.focus_rect rect.dragging {
+      fill: #FFF;
+	  opacity:1;
+      stroke: brown;
+	  stroke-width: 7px;
+    }
+	#container {     
+       margin-left:0px;
+	   margin-right:0px;
+       margin : 0 auto;
+    }
+     .skin {
+            width : 150px;
+            border : 1px solid gray;
+            padding : 0px;
+            visibility : hidden;
+            position : absolute;
+			background: #FFFFFF;
+        }
+     div.menuitems {
+       margin : 1px 0;
+     }
+     div.menuitems p {
+        margin: 0;
+		padding-left:4px;
+		padding-bottom:4px;
+     }
+     div.menuitems:hover {
+        background-color : #c0c0c0;
+     }
 </style>
 </head>
+
 <body>
-<div id = "outer">
-	<div id="color_control">
-	</div>
-	<button id="attr1" onClick="sortName();">name</button>
-	<button id="attr2" onClick="sortBat86();">bat86</button>
-	<button id="attr3" onClick="sortHit86();">hits86</button>
-	<button id="attr4" onClick="sortHRuns86();">hRuns86</button>
-	<button id="attr5" onClick="sortRuns86();">runs86</button>
-	<button id="attr6" onClick="sortRunbat86();">Runbat86</button>
-  	<div id="inner"> 
+    <div id="menu" class="skin">
+        <div class="menuitems">
+            <p onClick="begin_focus(event);">焦点显示</p>
+        </div>
+        <div class="menuitems">
+			<p onClick="stop_focus(event);">取消焦点显示</p>
+        </div>
+        <hr>
+        <div class="menuitems">
+			<p onClick="expand_focus(event);">增大焦点范围</p>
+        </div>
+		 <div class="menuitems">
+			<p onClick="reduce_focus(event);">减小焦点范围</p>
+        </div>
+		<hr>
+		<div class="menuitems">
+			<p onClick="move_focus(event);">移动</p>
+        </div>
+		<hr>
+		<div class="menuitems">
+			<p onClick="sort_focus(event);">排序</p>
+        </div>
+		<hr>
+		<div class="menuitems">
+			<p onClick="column_operation(event);">选择列</p>
+        </div>
+		<div class="menuitems">
+			<p onClick="swap_column(event);">交换列</p>
+        </div>
     </div>
-	<div id="control_button">
-	<!--***************************************************************-->
-	<form id="multiple">
-	<select multiple="multiple" id="multiple" style="width:100px; top:5px;">
-	<option value="option1">Bat86</option>
-	<option value="option2">Hit86</option>
-	<option value="option3">HRuns86</option>
-	<option value="option4">Run86</option>
-	<option value="option5">RunBat86</option>
-	</select>
-	</form>
-	<!--****************************************************************-->
-	<form id = "single">
-		<select name="demo" id="single" style="width:100px; top:5px;">
-		<option value="Bat86">Bat86</option>
-		<option value="Hit86">Hit86</option>
-		<option value="HRuns86">HRuns86</option>
-		<option value="Run86">Run86</option>
-		<option value="RunBat86">RunBat86</option>
-		</select>
-	</form>
-	<!--*****************************************************************-->
-	<form>
-	<select name="example-optgroup"  id="group" size="5">
-		<optgroup label="Group One">
-			<option value="option1">uniformly with 1/5-sized parts</option>
-			<option value="option2">uniformly with 1/4-sized parts</option>
-			<option value="option3">uniformly with 1/3-sized parts</option>
-		</optgroup>
-		<optgroup label="Group Two">
-			<option value="option4">10,50,90 percentiles</option>
-			<option value="option5">25,50,75 percentiles</option>
-			<option value="option6">5,25,75,95 percentiles</option>
-		</optgroup>
-	</select>
-	</form>
-	<button id="resetSelect" onClick="resetSelection();">  Reset Selection  </button>
-	<button id="removeselected" onClick="removeSelected();">  Remove Selected  </button>
-	<button id="removeothers" onClick="removeOthers();">  Remove Others  </button>
-	<button id="resetfilter" onClick="resetfilter();">  Reset Filters  </button>
-	</div>
-</div>  
+	<div id="container">      
+     <p></p>
+    </div>
 </body>
 <script type="text/javascript">
-	//outer rect
-	var svgHeight = 550,svgXMin = 100,svgWidth = 1300 - 2 * svgXMin,svgXMax,svgYMin = 0,scgYMax;
-	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
-	//inner rect
-	var InRectXMin = tableMarginLeftX;
-	var InRectYMin = tableMarginTopY;
-	var InRectWidth = svgWidth - tableMarginLeftX;
-	var InRectHeight = svgHeight - tableMarginBottomY - tableMarginTopY;
-	var InRectXMax = InRectXMin + InRectWidth;
-	var InRectYMax = InRectYMin + InRectHeight;
-	var ChangeRectHeight = InRectHeight;
-	//inner svg 
-	var baseballdata, render_baseballdata;
-	var AttrNameArray = new Array();
-	var AttrArray = ["name","bat86","hits86","hRuns86","runs86","Runbat86","num"];//
-	var DisplayArray = new Array();
-	DisplayArray.push(0);
-	DisplayArray.push(1);
-	DisplayArray.push(2);
-	DisplayArray.push(3);
-	DisplayArray.push(4);
-	DisplayArray.push(5);
-	var AttrArray = new Array();
-	var AttrAllArray = [0,1,2,3,4,5,6];
-	var ButtonArray = new Array();
-	ButtonArray.push("attr1");
-	ButtonArray.push("attr2");
-	ButtonArray.push("attr3");
-	ButtonArray.push("attr4");
-	ButtonArray.push("attr5");
-	ButtonArray.push("attr6");
-	var AttrNum = 6, AttrAllNum = 6;
-	//the number of the people recorded
-	var humannum_sum = 322;
-	var humannum = 322;
-	var humannum_min = 0, humannum_max = 322;
-	var svg, svg_color;
-	var button_width = InRectWidth/AttrNum;
-	var ScaleArray = new Array();
-	var FocusArray = new Array();
-	var yfocus_num = 0, focusY_min = -1, focusY_max = -1, top_middleY = 0, bottom_middleY = 0;
-	var barheight = 1, focus_height = 20;
-	var currentYNum = -1;
-	var top_middleY = 0, bottom_middleY = 0;
-	var total_event;
-	var beginY_index = 0, afterY_index, beginY, afterY, upY_index;
-	var select_focus = false;
-	var baseballman1;
-	var text_paddingX = 5, text_paddingY = 5;
-	var down_Name = true, down_Bat86 = true, down_Hit86 = true, down_HRuns86 = true, down_Runs86 = true, down_Runbat86 = true;
-	var e = d3.rgb(255,60,60);		//red
-	var d = d3.rgb(250,68,7);		
-	var c = d3.rgb(192,192,192);	//white
-	var b = d3.rgb(109,117,250);	
-	var a = d3.rgb(60,60,255);		//blue
-	var blue = d3.rgb(255,0,0);
-	var green = d3.rgb(0,255,0);
-	var cs_array = new Array();
-	var cs_name = ["cs1","cs2","cs3","cs4","cs5"];
-	var cs_coord = new Array();
-	cs_coord[0] = InRectYMin + 0.02 * InRectHeight;
-	cs_coord[1] = InRectYMin + 0.25 * InRectHeight;
-	cs_coord[2] = InRectYMin + 0.5  * InRectHeight;
-	cs_coord[3] = InRectYMin + 0.75 * InRectHeight;
-	cs_coord[4] = InRectYMin + 0.96 * InRectHeight;
-	cs_array[0] = 0.00;
-	cs_array[1] = 0.25;
-	cs_array[2] = 0.5;
-	cs_array[3] = 0.75;
-	cs_array[4] = 1;
-	var minValue = [0,16,1,0,0,0,1]
-	var maxValue = [0,687,238,40,130,121,322];
-	var quarter0Value = new Array();
-	var quarter1Value = new Array();
-	var quarter2Value = new Array();
-	var quarter3Value = new Array();
-	var quarter4Value = new Array();
-	for(var i=0;i<minValue.length;i++){
-		var difference = Math.floor((maxValue[i] - minValue[i]));
-		quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
-		quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
-		quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
-		quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
-		quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+	var width = 1300;
+	var height = 800;
+	var yaxisHeight = 600;
+	var padding = 0, yaxisMargin = 50,  marginX = 80, marginXText = 75, yaxisMarginName = 10, marginXTextBottom = 50, marginXTextTop = 10, marginXPersonBottom = 700;
+	var x = d3.scale.ordinal()
+			.rangeRoundBands([0,width - yaxisMargin],01);
+	var y = d3.scale.linear()
+			.range([yaxisHeight,0]);
+	var global_baseballdata,baseballdata;
+	var svg;
+	var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient("top");
+	//record the number of the rows
+	var humannum = 0;
+	var myScaleArray = new Array();
+	var yAxis = d3.svg.axis()
+			.scale(y)
+			.orient("left")
+			.ticks(0);
+	var axis_transform = 30;
+	var barheight = 0, focusrRect_height = 5;
+	var first_clickX = 0, first_clickY = 0, clickX = 0, clickY = 0, click_downX, click_downY, click_upX, click_upY,rectbegin_x1 = 0, rectbegin_y1 = 0;
+	var topname = ["name","bat86","hits86","hRuns86","runs86","Runbat86","walk86","years","batA","hitsA","home_runsA","runsA","battedA","walksA", "league86E", "divi86E","team86E","pos86","putouts86","assits86","errors86","salary87","league87","team87",""];
+	var topname_class = [".name",".bat86",".hits86",".hRuns86",".runs86",".Runbat86",".walk86",".years",".batA",".hitsA",".home_runsA",".runsA",".battedA",".walksA", ".league86E", ".divi86E",".team86E",".pos86",".putouts86",".assits86",".errors86",".salary87",".league87",".team87",""];
+	var maxValue = [0,687,238,40,130,121,105,24,14053,4256,548,2165,1659,1566,
+	-1,//league86E
+	-2,//divi86E
+	-3,//team86E
+	-4,//pos86
+	1378,492,32,2460,
+	-5,//league87
+	-6 ];//team87
+	var arraylength = topname.length;
+	var attrWidth = (width - yaxisMargin)/arraylength;
+	// iterate global variable
+	var index = 0;
+	var focus_height = 30, focus_width = 100;
+	var focus_y = 0, focus_x = 0;
+	var attr_width_change = 0, barheight_change = 0;
+	var Exist_focus = false;
+	var xfocus_num = 0, yfocus_num = 0;
+	var threshold = 50;
+	var lineArray = new Array();//use to hold the place for the line and text
+	var focusXArray = new Array();//store the focus X number
+	var focusYArray = new Array();//store the focus Y number
+	var focusX_number = -1,focusY_number = -1;
+	var focusX_min = -1, focusX_max = -1, focusY_min = -1, focusY_max = -1;
+	var text_paddingX = 5,text_paddingY = 5; //used to find the appropriate position of the text
+	var name_sign = -50;
+	var zoom = d3.behavior.zoom()
+		.scaleExtent([1,10])
+		.on("zoom",zoomed);
+	var BeginFocus = false, StopFocus = false, ExpandFocus = false, ReduceFocus = false,
+	MoveFocus = false, SortFocus = false, FocusColumn = false, SwapColumn = false,
+	MouseDownMove = false, Mouse_DownSort = false, SelectDownMove = false, FirstClick = false;
+	var MoveFirstX = 0, MoveFirstY = 0;
+	var FocusRect;
+	var RectHeight = -1, RectWidth = -1, left_topX = -1, left_topY = -1;
+	var sortXNum = -1, downSequence = -1, upSequence = 1;
+	var category_width = 5;
+	var currentYNum = 0;
+	var container, menu;
+	var begin_drawLine = false;
+	var begin_x1 = 0, begin_y1 = 0;
+	var SelectedRectWidth = 0, SelectedRectHeight = 0;
+	var mappingArray = new Array();
+	var topY, top_middleY, bottom_middleY, leftX, left_middleX, right_middleX;
+	var x_right = yaxisMargin + attrWidth * (arraylength - 1);
+	x.domain(topname.map(function(d){return d;}));
+	for(var i=0;i<arraylength;i++){
+		mappingArray[i] = i;
 	}
-	var filter_array = new Array();
-	var filter_name = ["filter1","filter2"];
-	filter_array.push(0.04);
-	filter_array.push(0.96);
-	var selectRectNum = -1;
-	var FirstSelectFilterNum = -1, FirstSelectRectNum = -1;
-	var moveFilter = false, moveSR = false;
-	var filter_coord = new Array();
-	filter_coord[0] = InRectYMin + 0.04 * InRectHeight;
-	filter_coord[1] = InRectYMin + 0.96 * InRectHeight;
-	var sortIndex = 1;
-	var middleValue = new Array();
-	var stop_num1 = 0, stop_num2 = 25, stop_num3 = 50, stop_num4 = 75, stop_num5 = 100;
-	var NamePArray = new Array();
-	var defs, linearGradient;
-	NamePArray.push(quarter4Value[sortIndex]+"");
-	NamePArray.push(quarter3Value[sortIndex]+"");
-	NamePArray.push(quarter2Value[sortIndex]+"");
-	NamePArray.push(quarter1Value[sortIndex]+"");
-	NamePArray.push(quarter0Value[sortIndex]+"");
-	for(var i=0;i<5;i++){
-		middleValue[i] = minValue[sortIndex] + cs_array[i] * (maxValue[sortIndex] - minValue[sortIndex]);
-	}
-	for(var i=0;i<AttrAllNum;i++){
-		ScaleArray[i] = d3.scale.linear()
-			.range([0,button_width - 10])
+	mappingArray[1] = 2;
+	mappingArray[2] = 1;
+	for(var i=1;i<arraylength;i++){
+		if(maxValue[i]>0){
+			myScaleArray[i] = d3.scale.linear()
+			.range([0,attrWidth])
 			.domain([0,maxValue[i]]);
-	}
-	d3.csv("baseballman.csv",function(baseballman){
-		//keep updating with the data
-		/*render_baseballdata = new Array();
-		for(var i=0;i<baseballman.length;i++){
-			render_baseballdata[i] = baseballman[i];
-		}
-		baseballdata = new Array();
-		for(var i=0;i<baseballman.length;i++){
-			baseballdata[i] = baseballman[i];
-		}*/
-		render_baseballdata = baseballman;
-		baseballdata = render_baseballdata;
-		baseballman1 = baseballdata[0];
-		for(attribute in baseballman1){
-			AttrNameArray.push(attribute);
-		}
-		sortIndex = 1;
-		sortBat86();
-		barheight = InRectHeight/humannum;
-		focus_height = 20;
-		tablelens(render_baseballdata);
-	});
-	d3.select("#outer")
-	.style("margin-left", svgXMin+"px")
-	.style("margin-top", svgYMin+"px")
-	.style("height", svgHeight+"px")
-	.style("width", svgWidth+"px");
-	
-	d3.select("#color_control")
-	.style("left", "0px")
-	.style("top", InRectYMin + "px")
-	.style("height", svgHeight+"px")
-	.style("width", InRectXMin+"px");
-	
-	d3.select("#inner")
-	.style("left", "0px")
-	.style("top", "0px")
-	.style("margin-left","0px")
-	.style("height", InRectHeight+"px")
-	.style("width", InRectWidth+"px");
-	
-	d3.select("#control_button")
-	.style("left", "0px")
-	.style("top", (InRectHeight + 40) + "px")
-	.style("height", (80) +"px")
-	.style("width", (InRectWidth - 320)+"px");
-	
-	d3.select("#attr1")
-	.style("height",tableMarginTopY+"px")
-	.style("width",button_width +"px")
-	.style("margin-left","0px")
-	.style("margin-right","0px");
-	
-	computeButtonWidth();
-
-	svg = d3.select("#inner")
-	.append("svg")
-	.attr("width",InRectWidth)
-	.attr("height",InRectHeight);
-	
-	svg_color = d3.select("#color_control")
-	.append("svg")
-	.attr("width",InRectWidth/2)
-	.attr("height",svgHeight);
-	
-	defs = svg_color.append("defs");
-	linearGradient = defs.append("linearGradient")
-						.attr("id","linearColor")
-						.attr("x1","0%")
-						.attr("y1","0%")
-						.attr("x2","0%")
-						.attr("y2","100%");
-	var stopArray = new Array();
-	var stopNumArray = [stop_num1,stop_num2,stop_num3,stop_num4,stop_num5];
-	var colorArray = [a,b,c,d,e];
-	for(var i=0;i<5;i++){
-		stopArray[i] = linearGradient.append("stop")
-				.attr("offset",stopNumArray[i]+"%")
-				.style("stop-color",colorArray[i].toString());
-	}
-	var drag = d3.behavior.drag()
-    .origin(function(d) { return d; })
-    .on("dragstart", dragstarted)
-    .on("drag", dragged)
-    .on("dragend", dragended);
-	
-	//添加一个矩形，并应用线性渐变
-	svg_color.append("g")
-	.attr("class","color_rect")
-	.append("rect")
-	.attr("x", InRectXMin - 45)
-	.attr("y", InRectYMin)
-	.attr("width", 30)
-	.attr("height", InRectHeight)
-	.style("fill","url(#" + linearGradient.attr("id") + ")");
-	
-	svg_color.selectAll(".select_rect_text")
-	.append("g")
-	.data(NamePArray)
-	.enter()
-	.append("text")
-	.attr("class","select_rect_text")
-	.attr("x",(InRectXMin - 30))
-	.attr("y",function(d,i){
-		return cs_coord[i]+8.5;
-	})
-	.attr("font-size",9)
-	.attr("font-family","simsun")
-	.text(function(d){
-		return d;
-	});
-	
-	svg_color.selectAll(".select_rect")
-	.append("g")
-	.data(cs_array)
-	.enter()
-	.append("rect")
-	.attr("class","select_rect")
-	.attr("x",(InRectXMin - 35))
-	.attr("y",function(d,i){
-		return cs_coord[i];
-	})
-	.attr("width",30)
-	.attr("height",10)
-	.on("mouseover",function(d,i){
-		d3.select(this)
-		.attr("fill","orange");
-		FirstSelectRectNum = i;
-	})
-	.on("mouseout",function(d){
-		d3.select(this)
-		.attr("fill","gray");
-	});
-	
-	svg_color.selectAll(".filter_circle")
-	.append("g")
-	.data(filter_array)
-	.enter()
-	.append("circle")
-	.attr("class","filter_circle")
-	.attr("cx",(InRectXMin - 46))
-	.attr("cy",function(d,i){
-		return filter_coord[i];
-	})
-	.attr("r",8)
-	.on("mouseover",function(d,i){
-		d3.select(this)
-		.attr("fill","orange");
-		FirstSelectFilterNum = i;
-	})
-	.on("mouseout",function(d){
-		d3.select(this)
-		.attr("fill","gray");
-	});
-	//****************************************************************
-	//select focus by click or drag some area
-	window.document.onmousedown = function(event){
-		var begin_clickX = event.clientX;
-		var begin_clickY = event.clientY;
-		beginY = event.layerY;
-		beginY_index = computeIndexY(beginY);
-		if((begin_clickX>250)&&(begin_clickX<InRectXMax)&&(begin_clickY>InRectYMin)&&(begin_clickY<InRectYMax)){
-			select_focus = true;
-		}
-		if(FirstSelectFilterNum!=-1){
-			moveFilter = true;
-			SelectFilterNum = FirstSelectFilterNum;
-		}
-		if(FirstSelectRectNum!=-1){
-			moveSR = true;
-		}
-	}
-	window.document.onmousemove = function(event){
-		var filter_moveY = event.layerY;
-		var cs_moveY = event.layerY;
-		if(moveSR){
-			moveFilter = false;
-			if(FirstSelectRectNum == 0){
-				if(cs_moveY > cs_coord[1] - 15){
-					cs_moveY = cs_coord[1] - 15;
-				}
-				if(cs_moveY<InRectYMin){
-					cs_moveY = InRectYMin;
-				}
-			}else if(FirstSelectRectNum == (cs_coord.length -1)){
-				if(cs_moveY>InRectYMax - 15){
-					cs_moveY = InRectYMax - 15;
-				}
-				if(cs_moveY<cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
-				}
-			}else{
-				if(cs_moveY > cs_coord[FirstSelectRectNum + 1] - 15){
-					cs_moveY = cs_coord[FirstSelectRectNum + 1] - 15;
-				}
-				if(cs_moveY < cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
-				}
-			}
-			cs_coord[FirstSelectRectNum] = cs_moveY;
-			svg_color.selectAll(".select_rect_text").remove();
-			svg_color.selectAll(".select_rect_text")
-			.append("g")
-			.data(NamePArray)
-			.enter()
-			.append("text")
-			.attr("class","select_rect_text")
-			.attr("x",(InRectXMin - 30))
-			.attr("y",function(d,i){
-				return cs_coord[i]+8.5;
-			})
-			.attr("font-size",9)
-			.attr("font-family","simsun")
-			.text(function(d){
-				return d;
-			});
-			svg_color.selectAll(".select_rect").remove();
-			svg_color.selectAll(".select_rect")
-			.append("g")
-			.data(cs_array)
-			.enter()
-			.append("rect")
-			.attr("class","select_rect")
-			.attr("x",(InRectXMin - 35))
-			.attr("y",function(d,i){
-				return cs_coord[i];
-			})
-			.attr("width",30)
-			.attr("height",10)
-			.on("mouseover",function(d,i){
-				d3.select(this)
-				.attr("fill","orange");
-				FirstSelectRectNum = i;
-			})
-			.on("mouseout",function(d){
-				d3.select(this)
-				.attr("fill","gray");
-			});
-		}
-		//**********************************************************
-		if(moveFilter){
-			moveSR = false;
-			FocusArray.splice(0,FocusArray.length);
-			yfocus_num = 0;
-			if(FirstSelectFilterNum == 0){
-				if(filter_moveY>filter_coord[1] - 15){
-					filter_moveY = filter_coord[1] - 15;
-				}
-				if(filter_moveY<InRectYMin){
-					filter_moveY = InRectYMin;
-				}
-			}else{
-				if(filter_moveY>InRectYMax){
-					filter_moveY = InRectYMax;
-				}
-				if(filter_moveY<filter_coord[0] + 15){
-					filter_moveY = filter_coord[0] + 15;
-				}
-			}
-			filter_coord[FirstSelectFilterNum] = filter_moveY;
-			svg_color.selectAll(".filter_circle").remove();
-			svg_color.selectAll(".filter_circle")
-				.append("g")
-				.data(filter_array)
-				.enter()
-				.append("circle")
-				.attr("class","filter_circle")
-				.attr("cx",(InRectXMin - 46))
-				.attr("cy",function(d,i){
-					return filter_coord[i];
-				})
-				.attr("r",8)
-				.on("mouseover",function(d,i){
-					d3.select(this)
-					.attr("fill","orange");
-					FirstSelectFilterNum = i;
-				})
-				.on("mouseout",function(d){
-					d3.select(this)
-					.attr("fill","gray");
-				});
-		}	
-		//*************************************************************
-		if(select_focus){
-			var moveY = event.layerY;
-			var beginSmall = true;
-			svg.select(".focus_rect").remove();
-			if((beginY - moveY)>0){
-				svg.append("g")
-				.attr("class","focus_rect")
-				.append("rect")
-				.attr("x",0)
-				.attr("y",moveY)
-				.attr("height",(beginY - moveY))
-				.attr("width",InRectWidth)
-				.attr("fill-opacity",0.2)
-				.attr("fill","gray")
-				.attr("stroke","gray")
-				.attr("stroke-width",1);
-			}else{
-				svg.append("g")
-				.attr("class","focus_rect")
-				.append("rect")
-				.attr("x",0)
-				.attr("y",beginY)
-				.attr("height",(moveY - beginY))
-				.attr("width",InRectWidth)
-				.attr("fill-opacity",0.2)
-				.attr("fill","gray")
-				.attr("stroke","gray")
-				.attr("stroke-width",1);
-			}
-		}
-	}
-	window.document.onmouseup = function(event){
-		var upY = event.layerY;
-		var filter_moveY = event.layerY;
-		var cs_moveY = event.layerY;
-		if(moveSR){
-			moveFilter = false;
-			if(FirstSelectRectNum == 0){
-				if(cs_moveY > cs_coord[1] - 15){
-					cs_moveY = cs_coord[1] - 15;
-				}
-				if(cs_moveY<InRectYMin){
-					cs_moveY = InRectYMin;
-				}
-			}else if(FirstSelectRectNum == (cs_coord.length -1)){
-				if(cs_moveY>InRectYMax){
-					cs_moveY = InRectYMax - 15;
-				}
-				if(cs_moveY<cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
-				}
-			}else{
-				if(cs_moveY > cs_coord[FirstSelectRectNum + 1] - 15){
-					cs_moveY = cs_coord[FirstSelectRectNum + 1] - 15;
-				}
-				if(cs_moveY < cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
-				}
-			}
-			stopNumArray[(4 - FirstSelectRectNum)] = Math.floor((InRectYMax - cs_moveY)/InRectHeight * 100);
-			renderColor();
-			computeColorRect();
-			renderCSRect();
-			renderCSText();
-			svg.selectAll("*").remove();
-			tablelens(render_baseballdata);
-			cs_coord[FirstSelectRectNum] = cs_moveY;
-			renderCSRect();
-			moveSR = false;
-			FirstSelectRectNum = -1;
-		}
-		//*****************************************
-		if(moveFilter){
-			moveSR = false;
-			FocusArray.splice(0,FocusArray.length);
-			yfocus_num = 0;
-			if(FirstSelectFilterNum == 0){
-				if(filter_moveY>filter_coord[1] - 15){
-					filter_moveY = filter_coord[1] - 15;
-				}
-				if(filter_moveY<InRectYMin){
-					filter_moveY = InRectYMin;
-				}
-			}else{
-				if(filter_moveY>InRectYMax){
-					filter_moveY = InRectYMax;
-				}
-				if(filter_moveY<filter_coord[0] + 15){
-					filter_moveY = filter_coord[0] + 15;
-				}
-			}
-			filter_coord[FirstSelectFilterNum] = filter_moveY;
-			if(FirstSelectFilterNum == 0){
-				humannum_max = Math.floor((InRectHeight - filter_moveY + InRectYMin)/InRectHeight * humannum_sum);　
-			}else{
-				humannum_min = Math.floor((InRectHeight - filter_moveY + InRectYMin)/InRectHeight * humannum_sum);
-			}
-			computeBarHeight();
-			/*svg.selectAll("*").remove();
-			tablelens(render_baseballdata);*/
-			svg_color.selectAll(".filter_circle").remove();
-			svg_color.selectAll(".filter_circle")
-				.append("g")
-				.data(filter_array)
-				.enter()
-				.append("circle")
-				.attr("class","filter_circle")
-				.attr("cx",(InRectXMin - 46))
-				.attr("cy",function(d,i){
-					return filter_coord[i];
-				})
-				.attr("r",8)
-				.on("mouseover",function(d,i){
-					d3.select(this)
-					.attr("fill","orange");
-					FirstSelectFilterNum = i;
-				})
-				.on("mouseout",function(d){
-					d3.select(this)
-					.attr("fill","gray");
-				});
-			moveFilter = false;
-			FirstSelectFilterNum = -1;
-		}
-		//******************************************************************************
-		var btnNum = event.button;
-		if(btnNum == 0){
-			if(currentYNum > 0){
-				//*********************************
-				var num = render_baseballdata[currentYNum].num;
-				if(FocusArray.indexOf(num)==-1){
-					FocusArray.push(num);
-					yfocus_num++;
-					if(focusY_max<0){
-						focusY_max = currentYNum;
-						focusY_min = currentYNum;
-					}else{
-						if(currentYNum>focusY_max){
-							focusY_max = currentYNum;
-						}
-						if(currentYNum<focusY_min){
-							focusY_min = currentYNum;
-						}
-					}
-				}
-				computeVarY();
-				svg.selectAll("*").remove();
-				tablelens(render_baseballdata);
-		}	
-		//******************************************************************************
-		var up_clickY = event.clientY;
-		if(up_clickY<30){
-			beginY_index = -1;
-		}
-		upY_index = computeIndexY(upY);
-		if(select_focus){
-			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
-				for(var i=beginY_index;i<=upY_index;i++){
-					var num = render_baseballdata[i].num;
-					if(FocusArray.indexOf(num)==-1){
-						FocusArray.push(num);
-						yfocus_num++;
-						if(focusY_max<0){
-							focusY_max = i;
-							focusY_min = i;
-						}else{
-							if(i>focusY_max){
-								focusY_max = i;
-							}else if(i < focusY_min){
-								focusY_min = i;
-							}
-						}
-					}
-				}
-			}else if((beginY_index>=0)&&((beginY_index - upY_index)>3)){
-				for(var i=upY_index;i<=beginY_index;i++){
-					var num = render_baseballdata[i].num;
-					if(FocusArray.indexOf(num)!=-1){
-						var n = FocusArray.indexOf(num);
-						FocusArray.splice(n,1);
-						yfocus_num--;
-						if(i==focusY_max){
-							focusY_max = i-1;
-						}else if(i==focusY_min){
-							focusY_min = i+1;
-						}
-					}
-				}
-			}
-		}
-		select_focus = false;
-		svg.select(".focus_rect").remove();
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	//******************************************************
-	window.document.onclick = function(event){
-		total_event = event;
-		svg.select(".focus_rect").remove();
-		var btnNum = event.button;
-		if(btnNum == 0){
-			if(currentYNum > 0){
-				//*********************************
-				var num = render_baseballdata[currentYNum].num;
-				if(FocusArray.indexOf(num)==-1){
-					FocusArray.push(num);
-					yfocus_num++;
-					if(focusY_max<0){
-						focusY_max = currentYNum;
-						focusY_min = currentYNum;
-					}else{
-						if(currentYNum>focusY_max){
-							focusY_max = currentYNum;
-						}
-						if(currentYNum<focusY_min){
-							focusY_min = currentYNum;
-						}
-					}
-				}
-				computeVarY();
-				svg.selectAll("*").remove();
-				tablelens(render_baseballdata);
-			}
-		}
-		//***********************************************
-			select_focus = false;
-			if(select_focus){
-				var upY = event.layerY;
-				var upY_index = computeIndexY(upY);
-				if(beginY_index <= upY_index ){
-					for(var i=beginY_index;i<=upY_index;i++){
-						var num = baseballdata[i].num;
-						if(FocusArray.indexOf(num)==-1){
-							FocusArray.push(num);
-							yfocus_num++;
-							if(focusY_max<0){
-								focusY_max = i;
-								focusY_min = i;
-							}else{
-								if(i>focusY_max){
-									focusY_max = i;
-								}else if(i < focusY_min){
-									focusY_min = i;
-								}
-							}
-						}
-					}
-				}else{
-					for(var i=upY_index;i<=beginY_index;i++){
-						var num = baseballdata[i].num;
-						if(FocusArray.indexOf(num)!=-1){
-							var n = FocusArray.indexOf(num);
-							FocusArray.splice(n,1);
-							yfocus_num--;
-							if(i==focusY_max){
-								focusY_max = i-1;
-							}else if(i==focusY_min){
-								focusY_min = i+1;
-							}
-						}
-					}
-				}
-				svg.select(".focus_rect").remove();
-				computeVarY();
-				svg.selectAll("*").remove();
-				tablelens(baseballdata);
-			}
-		 }
-	}
-	function computeButtonWidth(){
-		button_width = InRectWidth/AttrNum;
-		for(var i=0;i<AttrAllNum;i++){
-			ScaleArray[i] = d3.scale.linear()
-				.range([0,button_width - 10])
-				.domain([0,maxValue[i]]);
-		}
-		for(var i=0;i<AttrAllNum;i++){
-			if(DisplayArray.indexOf(i)!=-1){
-				d3.select("#"+ButtonArray[i])
-				.style("height",tableMarginTopY+"px")
-				.style("width",button_width +"px")
-				.style("margin-left","-3px");
-			}
-		}
-		for(var i=0;i<AttrAllNum;i++){
-			if(DisplayArray.indexOf(i)==-1){
-				d3.select("#"+ButtonArray[i])
-				.style("display","none");
-			}else{
-				d3.select("#"+ButtonArray[i])
-				.style("display","inline");
-			}
-		}
-	}
-	function computeBarHeight(){
-		humannum = humannum_max - humannum_min;
-		render_baseballdata = baseballdata.slice(humannum_min,humannum_max);
-		barheight = InRectHeight/humannum;
-		focus_height = 20;
-	}
-	//rerender the color of the histogram and the rect
-	function renderColor(){
-			svg_color.select("defs").remove();
-			svg_color.select("defs")
-			.select("linearGradient")
-			.remove();
-			defs = svg_color.append("defs");
-			linearGradient = defs.append("linearGradient")
-						.attr("id","linearColor")
-						.attr("x1","0%")
-						.attr("y1","100%")
-						.attr("x2","0%")
-						.attr("y2","0%");
-			for(var i=0;i<5;i++){
-				stopArray[i] = linearGradient.append("stop")
-				.attr("offset",stopNumArray[i]+"%")
-				.style("stop-color",colorArray[4-i].toString());
-			}
-			for(var i=0;i<minValue.length;i++){
-				var difference = Math.floor((maxValue[i] - minValue[i]));
-				quarter0Value[i] = Math.floor(minValue[i] + difference * stopNumArray[0]/100);
-				quarter1Value[i] = Math.floor(minValue[i] + difference * stopNumArray[1]/100);
-				quarter2Value[i] = Math.floor(minValue[i] + difference * stopNumArray[2]/100);
-				quarter3Value[i] = Math.floor(minValue[i] + difference * stopNumArray[3]/100);
-				quarter4Value[i] = Math.floor(minValue[i] + difference * stopNumArray[4]/100);
-			}
-	}
-	//*************************************************************************
-	function computeColorRect(){
-		svg_color.selectAll("rect").remove();
-		//添加一个矩形，并应用线性渐变
-		svg_color.append("g")
-		.attr("class","color_rect")
-		.append("rect")
-		.attr("x", InRectXMin - 45)
-		.attr("y", InRectYMin)
-		.attr("width", 30)
-		.attr("height", InRectHeight)
-		.style("fill","url(#" + linearGradient.attr("id") + ")");
-		
-	}
-	//*************************************************************************
-	function renderCSText(){
-		NamePArray.splice(0,NamePArray.length);
-		NamePArray.push(quarter4Value[sortIndex]+"");
-		NamePArray.push(quarter3Value[sortIndex]+"");
-		NamePArray.push(quarter2Value[sortIndex]+"");
-		NamePArray.push(quarter1Value[sortIndex]+"");
-		NamePArray.push(quarter0Value[sortIndex]+"");
-		svg_color.selectAll(".select_rect_text").remove();
-		svg_color.selectAll(".select_rect_text")
-			.append("g")
-			.data(NamePArray)
-			.enter()
-			.append("text")
-			.attr("class","select_rect_text")
-			.attr("x",(InRectXMin - 30))
-			.attr("y",function(d,i){
-				return cs_coord[i]+8.5;
-			})
-			.attr("font-size",9)
-			.attr("font-family","simsun")
-			.text(function(d){
-				return d;
-			});
-	}
-	//*************************************************************************
-	function renderCSRect(){
-		svg_color.selectAll(".select_rect").remove();
-		svg_color.selectAll(".select_rect")
-			.append("g")
-			.data(cs_array)
-			.enter()
-			.append("rect")
-			.attr("class","select_rect")
-			.attr("x",(InRectXMin - 35))
-			.attr("y",function(d,i){
-				return cs_coord[i];
-			})
-			.attr("width",30)
-			.attr("height",10)
-			.on("mouseover",function(d,i){
-				d3.select(this)
-				.attr("fill","orange");
-				FirstSelectRectNum = i;
-			})
-			.on("mouseout",function(d){
-				d3.select(this)
-				.attr("fill","gray");
-			});
-		svg_color.selectAll(".filter_circle").remove();
-		svg_color.selectAll(".filter_circle")
-			.append("g")
-			.data(filter_array)
-			.enter()
-			.append("circle")
-			.attr("class","filter_circle")
-			.attr("cx",(InRectXMin - 46))
-			.attr("cy",function(d,i){
-				return filter_coord[i];
-			})
-			.attr("r",8)
-			.on("mouseover",function(d,i){
-				d3.select(this)
-				.attr("fill","orange");
-				FirstSelectFilterNum = i;
-			})
-			.on("mouseout",function(d){
-				d3.select(this)
-				.attr("fill","gray");
-			});
-	}
-	//*************************************************************
-	function computeVarY(){
-		top_middleY = focusY_min * barheight;
-		bottom_middleY = (focusY_max + 1 - yfocus_num) * barheight + yfocus_num * focus_height;
-		ChangeRectHeight = InRectHeight + yfocus_num *(focus_height - barheight);
-	}
-	function computeColor(value,index){
-		var compute4 = d3.interpolate(a,b);
-		var linear4 = d3.scale.linear()
-				.domain([quarter4Value[index],quarter3Value[index]])
-				.range([0,1]);
-		var compute3 = d3.interpolate(b,c);
-		var linear3 = d3.scale.linear()
-				.domain([quarter3Value[index],quarter2Value[index]])
-				.range([0,1]);
-		var compute2 = d3.interpolate(c,d);
-		var linear2 = d3.scale.linear()
-				.domain([quarter2Value[index],quarter1Value[index]])
-				.range([0,1]);
-		var compute1 = d3.interpolate(d,e);
-		var linear1 = d3.scale.linear()
-				.domain([quarter1Value[index],quarter0Value[index]])
-				.range([0,1]);
-		if(value>=quarter4Value[index]){
-			return a;
-		}
-		if((value>=quarter3Value[index])&&(value<=quarter4Value[index])){
-			return compute4(linear4(value));
-		}
-		else if((value>quarter2Value[index])&&(value<=quarter3Value[index])){
-			return compute3(linear3(value));
-		}
-		else if((value>quarter1Value[index])&&(value<=quarter2Value[index])){
-			return compute2(linear2(value));
-		}
-		else if((value>quarter0Value[index])&&(value<=quarter1Value[index])){
-			return compute1(linear1(value));
 		}else{
-			return e;
-		}
-	}
-	//**************************************************************
-	function tablelens(render1_baseballdata){
-		svg = d3.select("#inner")
-		.select("svg")
-		.attr("width",InRectWidth)
-		.attr("height",ChangeRectHeight);
-		var minCoordY = computeCoordY(humannum_min);
-		var index = 0;
-		var real_index = 1;
-		var baseball_man = render_baseballdata[0];
-		for(x in baseball_man){
-			if(index > 0 && index < AttrAllNum){
-				if(DisplayArray.indexOf(index)!=-1){
-					var scale = ScaleArray[index];
-					svg.selectAll(AttrArray[index])
-					.data(render_baseballdata)
-					.enter()
-					.append("rect")
-					.attr("x",function(d,i){
-						return button_width * (real_index);
-					})
-					.attr("y",function(d,i){				
-						return computeCoordY(i);
-					})
-					.attr("height",function(d,i){
-						return DOIHeight(i);
-					})
-					.attr("width",function(d){
-						return scale(d[x]);
-					})
-					//.attr("fill","steelblue")
-					.classed(AttrArray[index],true)
-					.style("fill",function(d,i){
-						//if(index == sortIndex){
-						var color = computeColor(getAttr(d,sortIndex),sortIndex);
-						return  color;
-						//}else{
-						//	return "steelblue";
-						//}
-					})
-					.on("mouseover",function(d,i){
-						currentYNum = i;
-					})
-					.on("mouseout",function(d){
-						currentYNum = -1;
-					});
-					real_index++;
-				}
+			if(maxValue[i]==-1){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["A","N"])
+				.rangeBands([attrWidth/4,attrWidth]);
 			}
-			index++;
-		}
-		//*********************************************************
-		for(var i=0;i<FocusArray.length;i++){
-			var indexY = computeRealIndexY(FocusArray[i]);
-			var focusx_top = computeCoordY(indexY);
-			var focusx_bottom = focusx_top + focus_height;
-			svg.append("g")
-			.append("line")
-			.attr("x1",0)
-			.attr("x2",InRectWidth)
-			.attr("y1",focusx_top)
-			.attr("y2",focusx_top)
-			.attr("stroke","gray")
-			.attr("stroke-width",1);
-		//*************************************************
-			svg.append("g")
-			.append("line")
-			.attr("x1",0)
-			.attr("x2",InRectWidth)
-			.attr("y1",focusx_bottom)
-			.attr("y2",focusx_bottom)
-			.attr("stroke","gray")
-			.attr("stroke-width",1);
-		//*************************************************
-			var baseballman = render_baseballdata[indexY];
-			var index = 0;
-			var real_index = 0;
-			for(x in baseballman){
-				if(DisplayArray.indexOf(index)!=-1){
-					var attr = baseballman[x];
-					svg.append("g")
-					.append("text")
-					.attr("x",(button_width * real_index + text_paddingX))
-					.attr("y",focusx_bottom - text_paddingY)
-					.attr("class","person")
-					.attr("font-size",15)
-					.attr("font-family","simsun")
-					.text(baseballman[x]);
-					real_index++;
-				}
-				index++;
+			else if(maxValue[i]==-2){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["E","W"])
+				.rangeBands([attrWidth/4,attrWidth]);
+			}
+			else if(maxValue[i]==-3){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
+				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
+				"Tex.","Tor."])
+				.rangeBands([0,attrWidth]);
+			}
+			else if(maxValue[i]==-4){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["13","23","32","1B","1O","2B","2S","3B","3O","3S","C","CD","CF","CS",
+				"DH","DO","LF","O1","OD","OF","OS","RF","S3","SS","UT"])
+				.rangeBands([0,attrWidth]);
+			}
+			else if(maxValue[i]==-5){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["A","N"])
+				.rangeBands([attrWidth/4,attrWidth]);
+			}
+			else if(maxValue[i]==-6){
+				myScaleArray[i] = d3.scale.ordinal()
+				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
+				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
+				"Tex.","Tor."])
+				.rangeBands([0,attrWidth]);
 			}
 		}
-		//*********************************************************
-		/*svg.append("g").selectAll("line")
-		.data(AttrAllArray)
-		.enter()
-		.append("line")
-		.attr("x1",function(d,i){
-			return (button_width) * (i);
-		})
-		.attr("x2",function(d,i){
-			return (button_width) * (i);
-		})
-		.attr("y1",0)
-		.attr("y2",InRectHeight)
-		.attr("stroke","black")
-		.attr("stroke-width",2);
-		
-		svg.append("g")
-		.append("line")
-		.attr("x1",0)
-		.attr("x2",InRectWidth)
-		.attr("y1",InRectHeight)
-		.attr("y2",InRectHeight)
-		.attr("stroke","black")
-		.attr("stroke-width",4);*/
-		//*********************************************************
-/*		if((focusY_min>=0)&&(focusY_max>=0)){
-			for(var i=focusY_min;i<=focusY_max;i++){
-				var num = baseballdata[i].num;
-				if(FocusArray.indexOf(num)!=-1){
-					var baseballman = baseballdata[i];
-					var index = 0;
-					var text_y = computeCoordY(i+1-humannum_min);
-					for(x in baseballman){
-						var attr = baseballman[x];
-						svg.append("g")
-						.append("text")
-						.attr("x",(button_width * index + text_paddingX))
-						.attr("y",text_y - text_paddingY)
-						.attr("class","person")
-						.attr("font-size",15)
-						.attr("font-family","simsun")
-						.text(baseballman[x]);
-						index++;
-					}
-				}
-			}
-		}
-*/	}
+	}	
+	//add svg
+	svg = d3.select("body")
+	.select("#container")
+	.append("svg")
+	.attr("width",width)
+	.attr("height",height);
+	//.call(zoom);
+	var container = svg.append("g");
 	//*****************************************************************
 	//get the attribute of the baseball man according to the index
 	function getAttr(baseballman, focus_index){
@@ -1178,36 +227,600 @@ $(function(){
 		}
 		return attr;
 	}
-	function computeRealIndexY(lastAttrY){
-		var indexY = 0;
-		for(var i=0;i<render_baseballdata.length;i++){
-			if(lastAttrY == render_baseballdata[i].num){
-				indexY = i;
-				break;
+	d3.csv("baseballdata.csv",function(baseballdata){
+		//keep updating with the data
+		global_baseballdata = baseballdata;
+		humannum = baseballdata.length;
+		barheight = yaxisHeight/humannum;
+		tablelens(global_baseballdata);
+	});
+	window.document.onkeyup = function(event){
+		var currUpKey = event.keyCode;
+		if((currUpKey == 38)&&(Exist_focus)&&(focusY_min>=1)){
+			//up
+			focusY_min--;
+			focusY_max--;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}else if((currUpKey == 40)&&(Exist_focus)&&(focusY_max<(humannum-1))){
+			//down
+			focusY_min++;
+			focusY_max++;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}else if((currUpKey == 37)&&(Exist_focus)&&(focusX_min>=1)){
+			//left
+			focusX_min--;
+			focusX_max--;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}else if((currUpKey == 39)&&(Exist_focus)&&(focusX_max<(arraylength-1))){
+			//right
+			focusX_min++;
+			focusX_max++;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}
+	}
+	//mouse press down 
+	window.document.onmousedown = function(event){
+	//*****************************************************************
+		if(ExpandFocus||ReduceFocus){
+			begin_x1 = event.layerX - 10;
+			begin_y1 = event.layerY - 15;
+			var IsIn = InFocusArea(begin_x1,begin_y1)
+			if(IsIn){
+				begin_drawLine = true;
+				svg.append("g")
+				.attr("class","focus_line")
+				.append("line")
+				.attr("x1",begin_x1)
+				.attr("y1",begin_y1);
 			}
 		}
-		return indexY;
+	//******************************************************************
+		if(SortFocus){
+			begin_x1 = event.layerX - 10;
+			begin_y1 = event.layerY - 15;
+			begin_drawLine = true;
+			svg.append("g")
+			.attr("class","focus_line")
+			.append("line")
+			.attr("x1",begin_x1)
+			.attr("y1",begin_y1);
+		}
+	//******************************************************************
+		if((MoveFocus)){
+			clickX = event.layerX - 10;
+			clickY = event.layerY - 15;
+			left_topX = focusX_min * attr_width_change + yaxisMargin;
+			left_topY = (focusY_min + 1) * barheight_change + marginX;
+			if((clickX>=left_topX)&&(clickX<=(left_topX+RectWidth))&&(clickY>=left_topY)&&(clickY<=left_topY+RectHeight)){
+				MoveFirstX = clickX;
+				MoveFirstX = clickY;
+				MouseDownMove = true;
+			}
+		}
+	 //*******************************************************************
+		 if(SortFocus){
+			click_downX = event.layerX - 10;
+			click_downY = event.layerY - 15;
+			Mouse_DownSort = true;	 
+		}
+	 //********************************************************************
+	 	if(SwapColumn){
+			swapbegin_x1 = event.layerX - 10;
+			swapbegin_y1 = event.layerY - 15;
+			var x = svg.select(".select_rect").attr("x");
+			var y = svg.select(".select_rect").attr("y");
+			if((swapbegin_x1>=x)&&(swapbegin_x1<=(x + width))&&(swapbegin_y1>=y)&&(swapbegin_y1<=(y+height))){
+					SelectDownMove = true;
+			}
+			
+		}
 	}
-	//**********************************************************
-	function computeCoordYAll(indexY){
-		var minY = computeCoordY(humannum_min);
-		var coordY = computeCoordY(indexY + humannum_min);
-		return coordY - minY;
+	//mouse move
+	window.document.onmousemove = function(event){
+		if(begin_drawLine&&(begin_x1>0)&&(begin_y1>0)){
+			var drag_x = event.layerX - 10;
+			var drag_y = event.layerY - 15;
+			svg.select(".focus_line").remove();
+			
+			svg.append("g")
+			.attr("class","focus_line")
+			.append("line")
+			.attr("x1",begin_x1)
+			.attr("y1",begin_y1)
+			.attr("x2",drag_x)
+			.attr("y2",drag_y)
+			.attr("stroke","green")
+			.attr("stroke-width",4);
+		}
+		//******************************************************************
+		if((MouseDownMove)){
+			clickX = event.layerX - 10;
+			clickY = event.layerY - 15;
+			svg.select(".focus_rect").remove();
+			left_topX = clickX;
+			left_topY = clickY;
+			svg.append("g")
+				.attr("class","focus_rect")
+				.append("rect")
+				.attr("x",left_topX)
+				.attr("y",left_topY)
+				.attr("height",RectHeight)
+				.attr("width",RectWidth)
+				.attr("fill-opacity",0.3)
+				.attr("fill","gray")
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
+		}
+		//*******************************************************************
+		if(SelectDownMove){
+			var drag_x = event.layerX - 10;
+			var drag_y = event.layerY - 15;
+			svg.select(".select_rect").remove();
+			
+			svg.append("g")
+			.attr("class","select_rect")
+			.append("rect")
+			.attr("x",drag_x)
+			.attr("y",drag_y)
+			.attr("height",yaxisHeight)
+			.attr("width",focus_width)
+			.attr("fill","gray")
+			.attr("fill-opacity",0)
+			//.attr("opacity",0.1)
+			.attr("stroke","green")
+			.attr("stroke-width",4);
+			
+			svg.select(".to_rect").remove();
+			svg.append("g")
+			.attr("class","to_rect")
+			.append("rect")
+			.attr("x",computeCoordX(computeIndexX(drag_x)))
+			.attr("y",marginX)
+			.attr("height",yaxisHeight)
+			.attr("width",DOIWidth(computeIndexX(drag_x)))
+			.attr("fill-opacity",0)
+			.attr("stroke","orange")
+			.attr("stroke-width",4);
+		}
 	}
+	//mouse press up
+	window.document.onmouseup = function(event){
+		if(SelectDownMove){
+			var swap_x = event.layerX - 10;
+			var swap_y = event.layerY - 15;
+			svg.select(".to_rect").remove();
+			svg.select(".select_rect").remove();
+			var originIndex = computeIndexX(swapbegin_x1);
+			var afterIndex = computeIndexX(swap_x);
+			if((originIndex<mappingArray.length)&&(afterIndex<mappingArray.length)){
+				var temp = mappingArray[afterIndex];
+				mappingArray[afterIndex] = mappingArray[originIndex];
+				mappingArray[originIndex] = temp;
+				index = 0;
+				svg.selectAll("*").remove();
+				tablelens(global_baseballdata);
+			}
+			SelectDownMove = false;
+		}
+		//***********************************************************************
+		if((MouseDownMove)){
+			focusX_min = Math.floor((left_topX - yaxisMargin)/attr_width_change);
+			focusX_max = focusX_min + xfocus_num - 1;
+			focusY_min = Math.floor((left_topY - marginX)/barheight_change);
+			focusY_max = focusY_min + yfocus_num - 1;
+			focusXArray.splice(0,focusXArray.length);  
+			focusYArray.splice(0,focusYArray.length); 
+			computeVarX();
+			computeVarY();
+			for(var i=focusX_min;i<=focusX_max;i++){
+				focusXArray.push(i);
+			}
+			for(var i=focusY_min;i<=focusY_max;i++){
+				focusYArray.push(i);
+			}
+			left_topX = computeCoordX(focusX_min);
+			left_topY = computeCoordY(focusY_min + 1);
+			svg.select(".focus_rect").remove();
+			svg.append("g")
+				.attr("class","focus_rect")
+				.append("rect")
+				.attr("x",left_topX)
+				.attr("y",left_topY)
+				.attr("height",RectHeight)
+				.attr("width",RectWidth)
+				.attr("fill-opacity",0.3)
+				.attr("fill","gray")
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
+			MouseDownMove = false;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}
+	//****************************************************************************************
+		if(begin_drawLine&&ExpandFocus){
+			var end_x = event.layerX - 10;
+			var end_y = event.layerY - 15;
+			var differenceX = end_x - begin_x1;
+			var differenceY = end_y - begin_y1;
+			var abs_differenceX = Math.abs(differenceX);
+			var abs_differenceY = Math.abs(differenceY);
+			if((abs_differenceX > abs_differenceY)&&(abs_differenceX > 50)){
+				if(differenceX > 0){
+					//right x
+					//the later click is right
+					//constrain the max focus number
+					if((focusX_max + 1)<arraylength){
+						focusXArray.push(focusX_max + 1);
+						focusX_max = focusX_max + 1;
+						xfocus_num++;
+						computeVarX();
+					}
+				}else{
+					//left x
+					//the later click is left
+					if((focusX_min - 1)>0){
+						focusXArray.push(focusX_min - 1);
+						focusX_min = focusX_min - 1;
+						xfocus_num++;
+						computeVarX();
+					}
+				}
+			}else if((abs_differenceY > abs_differenceX)&&(abs_differenceY > 50)){
+				if(differenceY > 0){
+					//down y
+					//the later click is bottom
+					if((focusY_max + 1)<global_baseballdata.length){
+						focusYArray.push(focusY_max + 1);
+						focusY_max = focusY_max + 1;
+						yfocus_num++;
+						computeVarY();
+					}
+				}else{
+					//up y
+					//the later click is top
+					if((focusY_min - 1)>=0){
+						focusYArray.push(focusY_min - 1);
+						focusY_min = focusY_min - 1;
+						yfocus_num++;
+						computeVarY();
+					}
+				}
+			}
+			svg.select(".focus_line").remove();
+			begin_drawLine = false;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}
+		if(begin_drawLine&&SortFocus){
+			begin_drawLine = false;
+		}
+		if(begin_drawLine&&ReduceFocus){
+			var end_x = event.layerX - 10;
+			var end_y = event.layerY - 15;
+			var differenceX = end_x - begin_x1;
+			var differenceY = end_y - begin_y1;
+			var abs_differenceX = Math.abs(differenceX);
+			var abs_differenceY = Math.abs(differenceY);
+			if((abs_differenceX > abs_differenceY)&&(abs_differenceX > 50)){
+				if(differenceX > 0){
+					//right x
+					//the later click is right
+					//constrain the max focus number
+					if(xfocus_num > 0){
+						var minX_index = focusXArray.indexOf(focusX_min);
+						focusXArray.splice(minX_index,1);
+						focusX_min = focusX_min + 1;
+						xfocus_num--;
+						computeVarX();
+					}
+				}else{
+					//left x
+					//the later click is left
+					if(xfocus_num > 0){
+						var maxX_index = focusXArray.indexOf(focusX_max);
+						focusXArray.splice(maxX_index,1);
+						focusX_max = focusX_max - 1;
+						xfocus_num--;
+						computeVarX();
+					}
+				}
+				if(xfocus_num == 0){
+					yfocus_num = 0;
+					focusY_min = -1; 
+					focusY_max = -1;
+					focusYArray.splice(0,focusYArray.length);  
+				}
+			}else if((abs_differenceY > abs_differenceX)&&(abs_differenceY > 50)){
+				if(differenceY > 0){
+					//down y
+					//the later click is bottom
+					if(yfocus_num > 0){
+						var minY_index = focusYArray.indexOf(focusY_min);
+						focusYArray.splice(minY_index,1);
+						focusY_min = focusY_min + 1;
+						yfocus_num--;
+						computeVarY();
+					}
+				}else{
+					//up y
+					//the later click is top
+					if(yfocus_num > 0){
+						var maxY_index = focusYArray.indexOf(focusY_max);
+						focusYArray.splice(maxY_index,1);
+						focusY_max = focusY_max - 1;
+						yfocus_num--;
+						computeVarY();
+					}
+				}
+				if(yfocus_num == 0){
+					xfocus_num = 0;
+					focusX_min = -1; 
+					focusX_max = -1;
+					focusXArray.splice(0,focusXArray.length);  
+				}
+			}
+			svg.select(".focus_line").remove();
+			begin_drawLine = false;
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}
+		//**********************************************************************************
+		if(Mouse_DownSort){
+			click_upX = event.layerX - 10;
+			click_upY = event.layerY - 15;
+			if((Math.abs(click_upX - click_downX)<20)&&(Math.abs(click_upY - click_downY)>60)){
+				//meet the condition of sorting
+				var avg_clickX =  (click_upX + click_downX)/2;
+				//sortXNum = Math.floor((avg_clickX - yaxisMargin)/attrWidth);
+				sortXNum = ComputeSortX(avg_clickX);
+				if((click_upY - click_downY)>0){
+					SortData(sortXNum,downSequence);
+				}else{
+					SortData(sortXNum,upSequence);
+				}
+			}
+			Mouse_DownSort = false;
+		}
+	}
+	//***************************************************************************************
+	function InFocusArea(clickX,clickY){
+		var in_focusarea = false;
+		if((xfocus_num>0)&&(yfocus_num>0)){
+			var minX = yaxisMargin + attr_width_change * focusX_min - 50;
+			var maxX = minX + xfocus_num * focus_width + 50;
+			var minY = marginX + barheight_change * focusY_min - 50;
+			var maxY = minY + yfocus_num * focus_height + 50;
+			if((clickX>=minX)&&(clickX<=maxX)&&(clickY>=minY)&&(clickY<=maxY)){
+				in_focusarea = true;
+			}
+		}
+		return in_focusarea;
+	}
+	//***************************************************************************************
+	//the parameter is the X coordinate, and the return value is the column index selected
+	function ComputeSortX(avg_clickX){
+		var SortXNum;
+		var leftX = yaxisMargin;
+		var left_middleX = yaxisMargin + focusX_min * attr_width_change;
+		var right_middleX = yaxisMargin + focusX_min * attr_width_change + xfocus_num * focus_width;
+		if(xfocus_num == 0){
+			SortXNum = Math.floor((avg_clickX - leftX)/attrWidth);
+		}else if(avg_clickX <= left_middleX){
+			SortXNum = Math.floor((avg_clickX - leftX)/attr_width_change);
+		}else if(avg_clickX <= right_middleX){
+			SortXNum = Math.floor((avg_clickX - left_middleX)/focus_width) + focusX_min;
+		}else{
+			SortXNum = Math.ceil((avg_clickX - right_middleX)/attr_width_change) + focusX_max;
+		}
+		return SortXNum;
+	}
+	window.document.onclick = function(event){
+		var btnNum = event.button;
+		//*********************************************************************
+		if(FocusColumn){
+			var click_x = event.layerX - 10;
+			var column_indexX = computeIndexX(click_x);
+			if(focusXArray.indexOf(column_indexX)==-1){
+				Exist_focus = true;
+				xfocus_num++;
+				computeVarX();
+				if(column_indexX<focusX_min||(focusX_min < 0)){
+					focusX_min = column_indexX;
+				}
+				if(column_indexX>focusX_max){
+					focusX_max = column_indexX;
+				}
+				focusXArray.push(column_indexX);
+				computeVarX();
+				//******************************************
+				index = 0;
+				svg.selectAll("*").remove();
+				tablelens(global_baseballdata);
+				svg.select(".select_rect").remove();
+				svg.append("g")
+				.attr("class","select_rect")
+				.append("rect")
+				.attr("x",computeCoordX(column_indexX))
+				.attr("y",marginX)
+				.attr("height",yaxisHeight)
+				.attr("width",focus_width)
+				.attr("fill-opacity",0)
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
+			}else{
+				index = 0;
+				svg.selectAll("*").remove();
+				tablelens(global_baseballdata);
+				svg.select(".select_rect").remove();
+				svg.append("g")
+				.attr("class","select_rect")
+				.append("rect")
+				.attr("x",computeCoordX(column_indexX))
+				.attr("y",marginX)
+				.attr("height",yaxisHeight)
+				.attr("width",focus_width)
+				.attr("fill-opacity",0)
+				.attr("stroke","orange")
+				.attr("stroke-width",4);
+			}
+		}
+		//*********************************************************************
+		if((btnNum == 0)&&(BeginFocus)){
+			clickX = event.layerX - 10;
+			clickY = event.layerY - 15;
+			if((!ExpandFocus)){
+				first_clickX = event.layerX;
+				first_clickY = event.layerY;
+				focusX_number = computeIndexX(first_clickX);
+				if(focusX_max<0){
+					focusX_max = focusX_number;
+					focusX_min = focusX_number;
+				}else{
+					if(focusX_number>focusX_max){
+						focusX_max = focusX_number;
+					}
+					if(focusX_number<focusX_min){
+						focusX_min = focusX_number;
+					}
+				}
+				for(var i=focusX_min;i<=focusX_max;i++){
+					if(i!=0&&(focusXArray.indexOf(i)==-1)){
+						focusXArray.push(i);
+						xfocus_num++;
+						computeVarX();
+					}
+				}
+				//focusY_number = Math.floor((first_clickY-yaxisMargin)/barheight);
+				focusY_number = currentYNum;
+				if(focusY_max<0){
+					focusY_max = focusY_number;
+					focusY_min = focusY_number;
+				}else{
+					if(focusY_number>focusY_max){
+						focusY_max = focusY_number;
+					}
+					if(focusY_number<focusY_min){
+						focusY_min = focusY_number;
+					}
+				}
+				for(var i=focusY_min;i<=focusY_max;i++){
+					if(i!=0&&(focusYArray.indexOf(i)==-1)){
+						focusYArray.push(i);
+						yfocus_num++;
+						computeVarY();
+					}
+				}
+				Exist_focus = true;
+			}
+			//left click event 
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
+		}
+	}
+	//*****************************************************************************
+	container = document.getElementById('container');   
+    menu = document.getElementById('menu');
+	//*******************************************************************************
+	//the parameter is the x coordinate, return the index column of x
+	function computeIndexX(avg_clickX){
+		var SortXNum;
+		var leftX = yaxisMargin;
+		var left_middleX = yaxisMargin + focusX_min * attr_width_change;
+		var right_middleX = yaxisMargin + (focusX_max + 1 - xfocus_num) * attr_width_change + xfocus_num * focus_width;
+		if(xfocus_num == 0){
+			SortXNum = Math.floor((avg_clickX - leftX)/attrWidth);
+		}else if(avg_clickX <= left_middleX){
+			SortXNum = Math.floor((avg_clickX - leftX)/attr_width_change);
+		}else if(avg_clickX <= right_middleX){
+			var temp_x = left_middleX;
+			var belong_index = 0;
+			for(var i=focusX_min;i<=focusX_max;i++){
+				if(focusXArray.indexOf(i)==-1){
+					if((avg_clickX>=temp_x)&&(avg_clickX<=(temp_x+attr_width_change))){
+						belong_index = i;
+						break;
+					}else{
+						temp_x = temp_x + attr_width_change;
+					}
+				}else{
+					if((avg_clickX>=temp_x)&&(avg_clickX<=(temp_x+focus_width))){
+						belong_index = i;
+						break;
+					}else{
+						temp_x = temp_x + focus_width;
+					}
+				}
+			}
+			SortXNum = belong_index;
+		}else{
+			SortXNum = Math.ceil((avg_clickX - right_middleX)/attr_width_change) + focusX_max;
+		}
+		return SortXNum;
+	}
+	//*************************************************************************************
+	//the parameter is the index of x return the coordinate of x column
+	function computeCoordX(indexX){
+		var coordX = 0;
+		if(xfocus_num == 0){
+			coordX = yaxisMargin + indexX * attrWidth;
+		}else if(indexX<=focusX_min){
+			coordX = yaxisMargin + indexX * attr_width_change;
+		}else if(indexX <= focusX_max){
+			var temp_coordX = left_middleX;
+			for(var i=focusX_min;i<focusX_max;i++){
+				if(focusXArray.indexOf(i)==-1){
+					temp_coordX = temp_coordX + attr_width_change;
+				}else{
+					temp_coordX = temp_coordX + focus_width;
+				}
+				if(i == (indexX - 1)){
+					coordX = temp_coordX;
+					break;
+				}
+			}
+		}else{
+			coordX = right_middleX + (indexX - focusX_max - 1) * attr_width_change;
+		}
+		return coordX;
+	}
+	function computeVarX(){
+		attr_width_change = (width - yaxisMargin - focus_width * xfocus_num)/(arraylength - xfocus_num);
+		leftX = yaxisMargin;
+		left_middleX = yaxisMargin + focusX_min * attr_width_change;
+		right_middleX = yaxisMargin + (focusX_max + 1 - xfocus_num) * attr_width_change + xfocus_num * focus_width;
+	}
+	function computeVarY(){
+		barheight_change = (yaxisHeight - focus_height * yfocus_num)/(humannum - yfocus_num);
+		topY = marginX;
+		top_middleY = marginX + focusY_min * barheight_change;
+		bottom_middleY = marginX + (focusY_max + 1 - yfocus_num) * barheight_change + yfocus_num * focus_height;
+	}
+	//*************************************************************************************
+	//parameter: index of y
+	//return data: coordinate Y of corresponding index y
 	function computeCoordY(indexY){
-		//indexY = computeRealIndexY(indexY);
 		var coordY = 0;
-		//alert(index);
 		if(yfocus_num == 0){
-			coordY = indexY * barheight;
+			coordY = marginX + indexY * barheight;
 		}else if(indexY <= focusY_min){
-			coordY = indexY * barheight;
+			coordY = marginX + indexY * barheight_change;
 		}else if(indexY <= focusY_max){
 			var temp_coordY = top_middleY;
 			for(var i=focusY_min;i<focusY_max;i++){
-				var num = render_baseballdata[i].num;
-				if(FocusArray.indexOf(num)==-1){
-					temp_coordY = temp_coordY + barheight;
+				if(focusYArray.indexOf(i)==-1){
+					temp_coordY = temp_coordY + barheight_change;
 				}else{
 					temp_coordY = temp_coordY + focus_height;
 				}
@@ -1217,291 +830,636 @@ $(function(){
 				}
 			}
 		}else{
-			coordY = bottom_middleY + (indexY - focusY_max - 1) * barheight;
+			coordY = bottom_middleY + (indexY - focusY_max - 1) * barheight_change;
 		}
 		return coordY;
 	}
-	//**********************************************************
-	function computeIndexY(CoordY){
-		var IndexY = 0;
-		if(yfocus_num == 0){
-			IndexY = Math.floor(CoordY/barheight);
-		}else if(CoordY<=top_middleY){
-			IndexY = Math.floor(CoordY/barheight);
-		}else if(CoordY<=bottom_middleY){
-			var temp_y = top_middleY;
-			var belong_index = 0;
-			for(var i=focusY_min;i<=focusY_max;i++){
-				var num = render_baseballdata[i].num;
-				if(FocusArray.indexOf(num)==-1){
-					if((CoordY>=temp_y)&&(CoordY<=(temp_y+barheight))){
-						belong_index = i;
-						break;
+	//*************************************************************************************
+    //show the option menu
+    function showMenu() {
+        var evt = window.event || arguments[0];
+        //get the click option and compute the position of the option 
+        var rightedge = container.clientWidth+evt.layerX;
+        var bottomedge = container.clientHeight-evt.layerY;
+        //the condition that the rightedge is less than the menu width
+        if (rightedge < menu.offsetWidth)                
+            menu.style.left = container.scrollLeft + evt.layerX - menu.offsetWidth + "px";             
+        else
+            menu.style.left = container.scrollLeft + evt.layerX + "px";
+        //the condition that the bottomedge was less than the menu offsetHeight
+        if (bottomedge < menu.offsetHeight)
+            menu.style.top = container.scrollTop + evt.layerY - menu.offsetHeight + "px";
+        else
+            menu.style.top = container.scrollTop + evt.layerY  + "px";
+        //make the menu visible
+        menu.style.visibility = "visible";              
+        LTEvent.addListener(menu,"contextmenu",LTEvent.cancelBubble);
+    }
+    //make the menu hidden
+    function hideMenu() {
+        menu.style.visibility = 'hidden';
+    }                               
+    LTEvent.addListener(container,"contextmenu",LTEvent.cancelBubble);
+    LTEvent.addListener(container,"contextmenu",showMenu);
+    LTEvent.addListener(document,"click",hideMenu);                     
+	//*******************************************************************************
+	//*****************************************************************************
+	function SortData(sortXNum, sortSequence){
+		var scale;
+		var backNum = 0;
+			if(maxValue[sortXNum]==-1){
+				scale = d3.scale.ordinal()
+				.domain(["A","N"])
+				.rangeBands([attrWidth/4,attrWidth]);
+				global_baseballdata = global_baseballdata.sort(function(a,b){
+					if(sortSequence == downSequence){
+						backNum = (scale(getAttr(a,sortXNum)) - scale(getAttr(b,sortXNum)));
 					}else{
-						temp_y = temp_y + barheight;
+						backNum = (scale(getAttr(b,sortXNum)) - scale(getAttr(a,sortXNum)));
 					}
-				}else{
-					if((CoordY>=temp_y)&&(CoordY<=(temp_y+focus_height))){
-						belong_index = i;
-						break;
+					return backNum;
+				});
+			}
+			else if(maxValue[sortXNum]==-2){
+				scale = d3.scale.ordinal()
+				.domain(["E","W"])
+				.rangeBands([attrWidth/4,attrWidth]);
+				global_baseballdata = global_baseballdata.sort(function(a,b){
+					if(sortSequence == downSequence){
+						backNum = (scale(getAttr(a,sortXNum)) - scale(getAttr(b,sortXNum)));
 					}else{
-						temp_y = temp_y + focus_height;
+						backNum = (scale(getAttr(b,sortXNum)) - scale(getAttr(a,sortXNum)));
 					}
-				}
+					return backNum;
+				});
 			}
-			IndexY = belong_index;
-		}else{
-			IndexY = Math.ceil((CoordY - bottom_middleY)/barheight) + focusY_max;
-		}
-		return IndexY;
-	}
-	//**********************************************************
-	function DOIHeight(index){
-		//not the original data
-		var doi_height = 0;
-		var num = render_baseballdata[index].num;
-		if(FocusArray.indexOf(num)!=-1){
-			//click location
-			doi_height = focus_height;
-		}else{
-			doi_height = barheight;
-		}
-		return doi_height;
-	};
-	//***********************************************************
-	function sortName(){
-		if(down_Name){
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return a.name - b.name;
-			});
-			down_Name = false;
-		}else{
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return b.name - a.name;
-			});
-			down_Name = true;
-		}
-		computeMinMax();
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	function sortBat86(){
-		if(down_Bat86){
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return a.bat86 - b.bat86;
-			});
-			down_Bat86 = false;
-		}else{
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return b.bat86 - a.bat86;
-			});
-			down_Bat86 = true;
-		}
-		computeMinMax();
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	function sortHit86(){
-		if(down_Hit86){
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return a.hits86 - b.hits86;
-			});
-			down_Hit86 = false;
-		}else{
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return b.hits86 - a.hits86;
-			});
-			down_Hit86 = true;
-		}
-		computeMinMax();
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	function sortHRuns86(){
-		if(down_HRuns86){
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return a.hRuns86 - b.hRuns86;
-			});
-			down_HRuns86 = false;
-		}else{
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return b.hRuns86 - a.hRuns86;
-			});
-			down_HRuns86 = true;
-		}
-		computeMinMax();
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	function sortRuns86(){
-		if(down_Runs86){
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return a.runs86 - b.runs86;
-			});
-			down_Runs86 = false;
-		}else{
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return b.runs86 - a.runs86;
-			});
-			down_Runs86 = true;
-		}
-		computeMinMax();
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	function sortRunbat86(){
-		if(down_Runbat86){
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return a.Runbat86 - b.Runbat86;
-			});
-			down_Runbat86 = false;
-		}else{
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return b.Runbat86 - a.Runbat86;
-			});
-			down_Runbat86 = true;
-		}
-		computeMinMax();
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	function computeMinMax(){
-		 focusY_min = 322;
-		 focusY_max = -1;
-		 for(var i=humannum_min;i<humannum_max;i++){
-		 	var num = baseballdata[i].num;
-			if(FocusArray.indexOf(num)!=-1){
-				if(i<focusY_min){
-					focusY_min = i;
-				}
-				if(i>focusY_max){
-					focusY_max = i;
-				}
+			else if(maxValue[sortXNum]==-3){
+				scale = d3.scale.ordinal()
+				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
+				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
+				"Tex.","Tor."])
+				.rangeBands([0,attrWidth]);
+				global_baseballdata = global_baseballdata.sort(function(a,b){
+					if(sortSequence == downSequence){
+						if((scale(getAttr(a,sortXNum)) - scale(getAttr(b,sortXNum)))>0){
+							backNum = 1;
+						}else if((scale(getAttr(a,sortXNum)) - scale(getAttr(b,sortXNum)))<0){
+							backNum = -1;
+						}else{
+							backNum = 0;
+						}
+					}else{
+						if((scale(getAttr(b,sortXNum)) - scale(getAttr(a,sortXNum)))>0){
+							backNum = 1;
+						}else if((scale(getAttr(b,sortXNum)) - scale(getAttr(a,sortXNum)))<0){
+							backNum = -1;
+						}else{
+							backNum = 0;
+						}
+					}
+					return backNum;
+				});
 			}
-		 }
+			else if(maxValue[sortXNum]==-4){
+				scale = d3.scale.ordinal()
+				.domain(["13","23","32","1B","1O","2B","2S","3B","3O","3S","C","CD","CF","CS",
+				"DH","DO","LF","O1","OD","OF","OS","RF","S3","SS","UT"])
+				.rangeBands([0,attrWidth]);
+				global_baseballdata = global_baseballdata.sort(function(a,b){
+					if(sortSequence == downSequence){
+						backNum = (scale(getAttr(a,sortXNum)) - scale(getAttr(b,sortXNum)));
+					}else{
+						backNum = (scale(getAttr(b,sortXNum)) - scale(getAttr(a,sortXNum)));
+					}
+					return backNum;
+				});
+			}
+			else if(maxValue[sortXNum]==-5){
+				scale = d3.scale.ordinal()
+				.domain(["A","N"])
+				.rangeBands([attrWidth/4,attrWidth]);
+				global_baseballdata = global_baseballdata.sort(function(a,b){
+					if(sortSequence == downSequence){
+						backNum = (scale(getAttr(a,sortXNum)) - scale(getAttr(b,sortXNum)));
+					}else{
+						backNum = (scale(getAttr(b,sortXNum)) - scale(getAttr(a,sortXNum)));
+					}
+					return backNum;
+				});
+			}
+			else if(maxValue[sortXNum]==-6){
+				scale = d3.scale.ordinal()
+				.domain(["Atl.","Bal.","Bos.","Cal.","Chi.","Cin.","Cle.","Det.","Hou.","K.C.",
+				"L.A.","Mil.","Min.","Mon.","N.Y.","Oak.","Phi.","Pit.","S.D.","S.F.","Sea.","St.L.",
+				"Tex.","Tor."])
+				.rangeBands([0,attrWidth]);
+				global_baseballdata = global_baseballdata.sort(function(a,b){
+					if(sortSequence == downSequence){
+						backNum = (scale(getAttr(a,sortXNum)) - scale(getAttr(b,sortXNum)));
+					}else{
+						backNum = (scale(getAttr(b,sortXNum)) - scale(getAttr(a,sortXNum)));
+					}
+					return backNum;
+				});
+			}else{
+				global_baseballdata = global_baseballdata.sort(function(a,b){
+					if(sortSequence == downSequence){
+						backNum = (getAttr(a,sortXNum) - getAttr(b,sortXNum));
+					}else{
+						backNum = (getAttr(b,sortXNum) - getAttr(a,sortXNum));
+					}
+					return backNum;
+				});	
+			}
+			index = 0;
+			svg.selectAll("*").remove();
+			tablelens(global_baseballdata);
 	}
-	//************************************************************
+	//**************************************************************************************
 	function dragstarted(d) {
- 		d3.event.sourceEvent.stopPropagation();
+  		d3.event.sourceEvent.stopPropagation();
   		d3.select(this).classed("dragging", true);
 	}
-	function dragged(d){
+	function dragged(d) {
   		d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
 	}
 	function dragended(d) {
   		d3.select(this).classed("dragging", false);
 	}
-	//************************************************************
-	//reset the data seleted
-	function resetSelection(){
-		FocusArray.splice(0,FocusArray.length);
-		yfocus_num = 0;
-		focusY_min = -1;
-		focusY_max = -1;
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	//remove the data seleted
-	function removeSelected(){
-		for(var i=0;i<render_baseballdata.length;i++){
-			if(FocusArray.indexOf(render_baseballdata[i].num)!=-1){
-				render_baseballdata.splice(i,1);
-				i--;
+	//**********************************************************************************
+	function DOIHeight(index){
+		//not the original data
+		var doi_height = 0;
+		if(Exist_focus){
+			if(focusYArray.indexOf(index)!=-1){
+				//click location
+				doi_height = focus_height;
+			}else{
+				doi_height = (yaxisHeight - focus_height)/(humannum - yfocus_num);
 			}
+		}else{
+			doi_height = yaxisHeight/humannum;
 		}
-		FocusArray.splice(0,FocusArray.length);
-		yfocus_num = 0;
-		focusY_min = -1;
-		focusY_max = -1;
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	//remove other data
-	function removeOthers(){
-		for(var i=0;i<render_baseballdata.length;i++){
-			if(FocusArray.indexOf(render_baseballdata[i].num)==-1){
-				render_baseballdata.splice(i,1);
-				i--;
+		return doi_height;
+	};
+	function DOIWidth(index){
+		var doi_width = 0;
+		if(Exist_focus){
+			if(focusXArray.indexOf(index)!=-1){
+				doi_width = focus_width;
+			}else{
+				doi_width = attr_width_change;
 			}
+		}else{
+			doi_width = (width - yaxisMargin)/(arraylength);
 		}
-		FocusArray.splice(0,FocusArray.length);
-		yfocus_num = 0;
-		focusY_min = -1;
-		focusY_max = -1;
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
-	}
-	//remove filters
-	function resetfilter(){
-		render_baseballdata = baseballdata.concat();
-		FocusArray.splice(0,FocusArray.length);
-		yfocus_num = 0;
-		focusY_min = -1;
-		focusY_max = -1;
-		computeVarY();
-		humannum_min = 0;
-		humannum_max = 322;
-		svg.selectAll("*").remove();
-		tablelens(baseballdata);
-	}
-	//change the AttrNum
-	function ChangeAttr(numChecked,checkedItems){
-		AttrNum = numChecked + 1;
-		DisplayArray = new Array();
-		DisplayArray.push(0);
-		for(var i=0;i<checkedItems.length;i++){
-			if(checkedItems[i].value=="option1"){
-				DisplayArray.push(i+1);
+		return doi_width;
+	};
+	function addPersonText(){
+		//get the selected person
+		svg.selectAll(".person")
+		.remove();
+		var baseball_man = global_baseballdata[currentYNum];
+		var text_y = marginXPersonBottom - text_paddingY;
+		for(var i=0;i<arraylength;i++){
+			var attr = getAttr(baseball_man, i);
+			var text_x = 0;
+			if(i == 0){
+				text_x = text_paddingX;
+			}else{
+				text_x = computeCoordX(i) + text_paddingX;
 			}
-			if(checkedItems[i].value=="option2"){
-				DisplayArray.push(i+1);
-			}
-			if(checkedItems[i].value=="option3"){
-				DisplayArray.push(i+1);
-			}
-			if(checkedItems[i].value=="option4"){
-				DisplayArray.push(i+1);
-			}
-			if(checkedItems[i].value=="option5"){
-				DisplayArray.push(i+1);
-			}
+			svg.append("g").append("text")
+			.attr("x",text_x)
+			.attr("y",text_y)
+			.attr("class","person")
+			.attr("font-size",15)
+			.attr("font-family","simsun")
+			.text(attr);
 		}
-		computeButtonWidth();
-		svg.selectAll("*").remove();
-		tablelens(render_baseballdata);
 	}
-	//change the sort num
-	function ChangeSort(checkedItems){
-		if(checkedItems[0].value=="Bat86"){
-			sortIndex = 1;
-			svg.selectAll("*").remove();
-			tablelens(render_baseballdata);
-		}else if(checkedItems[0].value=="Hit86"){
-			sortIndex = 2;
-			svg.selectAll("*").remove();
-			tablelens(render_baseballdata);
-		}else if(checkedItems[0].value=="HRuns86"){
-			sortIndex = 3;
-			svg.selectAll("*").remove();
-			tablelens(render_baseballdata);
-		}else if(checkedItems[0].value=="Run86"){
-			sortIndex = 4;
-			svg.selectAll("*").remove();
-			tablelens(render_baseballdata);
-		}else if(checkedItems[0].value=="RunBat86"){
-			sortIndex = 5;
-			svg.selectAll("*").remove();
-			tablelens(render_baseballdata);
+	function removePersonText(){
+		//remove the selected person text
+		svg.selectAll(".person")
+		.remove();
+	}
+	//**********************************************************************************
+	function tablelens(baseballdata){
+		var baseball_man = baseballdata[0];
+		var x = 0, y = 0;
+		for(x in baseball_man){
+			//iterate for d to get the cols
+			if(index > 0){
+				var scale = myScaleArray[index];
+				svg.selectAll(topname[mappingArray[index]])
+				.data(baseballdata)
+				.enter()
+				.append("rect")
+				.attr("class",topname[mappingArray[index]])
+				.attr("x",function(d){
+					var x_change = computeCoordX(mappingArray[index]);
+					var width_change = DOIWidth(mappingArray[index]);
+					if(maxValue[mappingArray[index]]<0){
+						scale.rangeBands([0,width_change]);
+						x_change = x_change + scale(d[x]);
+					}
+					return x_change;
+				})
+				.attr("y",function(d,i){				
+					return computeCoordY(i);
+				})
+				.attr("height",DOIHeight(i))
+				.attr("width",function(d){
+					var width_change = DOIWidth(mappingArray[index]);
+					var width = 0;
+					if(maxValue[mappingArray[index]]>0){
+						scale.range([0,width_change]);
+						width = scale(d[x]);
+					}else{
+						width = category_width;
+					}
+					return width;
+				})
+				.attr("fill",function(d){
+					var color = "steelblue";
+					return color;
+				})
+				.classed(topname_class,true)
+				.on("dblclick",function(d,i){
+					 d3.select(this)  
+                  	.attr("fill","red");  
+					clickX = d3.select(this)
+					.attr("x");
+					clickY = d3.select(this)
+					.attr("y");
+				})
+				.on("mouseover",function(d,i){
+					currentYNum = i;
+					d3.select(this)
+					.attr("fill","orange");
+					addPersonText();
+				})
+				.on("mouseout",function(d){
+					d3.select(this)
+					.transition()
+					.duration(50)
+					.attr("fill","steelblue");
+					removePersonText();
+				});
+			}	
+			index++;
 		}
+		//*****************************************************************
+		//add x line and text for focus area
+		//add x line for top focus area
+		for(i=focusY_min;i<=focusY_max;i++){
+			//if(focusYArray.indexOf(i)!=-1){
+				svg.append("g")
+				.append("line")
+				.attr("x1",yaxisMarginName)
+				.attr("y1",computeCoordY(i))
+				.attr("x2",x_right)
+				.attr("y2",computeCoordY(i))
+				.attr("stroke","gray")
+				.attr("stroke-width",1);
+			//add x line for bottom focus area
+			svg.append("g").append("line")
+				.attr("x1",yaxisMarginName)
+				.attr("y1",computeCoordY(i+1))
+				.attr("x2",x_right)
+				.attr("y2",computeCoordY(i+1))
+				.attr("stroke","gray")
+				.attr("stroke-width",1);
+			//}
+		}
+		//add attribute text to the focus
+		if((focusY_min>=0)&&(focusX_min>=0)){
+			for(var i=focusY_min;i<=focusY_max;i++){
+			//if(focusYArray.indexOf(i)!=-1){
+				var baseballman = global_baseballdata[i];
+				var text_y = computeCoordY(i+1) - text_paddingY;
+				for(var j=focusX_min;j<=focusX_max;j++){
+					//if(focusXArray.indexOf(j)!=-1){
+							var attr = getAttr(baseballman, j);
+							var scale = myScaleArray[j];
+							if(maxValue[j]>0){
+								scale.range([0,focus_width]);
+							}else{
+								scale.rangeBands([0,focus_width]);
+							}
+							var text_x = computeCoordX(j) + text_paddingX;
+							svg.append("g").append("text")
+							.attr("x",text_x)
+							.attr("y",text_y)
+							.attr("font-size",20)
+							.attr("font-family","simsun")
+							.text(attr);
+							//add rect
+							svg.append("g").append("rect")
+							.attr("x",computeCoordX(j))
+							.attr("y",computeCoordY(i))
+							.attr("height",focusrRect_height)
+							.attr("width",scale(attr))
+							.attr("fill","red");
+							//add rect
+							svg.append("g")
+								.attr("class","focus_rect")
+								.append("rect")
+								.attr("x",computeCoordX(j))
+								.attr("y",computeCoordY(i))
+								.attr("height",focus_height)
+								.attr("width",focus_width)
+								.attr("fill-opacity",0)
+								.attr("stroke","orange")
+								.attr("stroke-width",4);
+						//}
+					}
+				//}
+			}
+		}		
+		//add name text to the focus
+		for(var i=focusY_min;i<=focusY_max;i++){
+			//if(focusYArray.indexOf(i)!=-1){
+				var baseballman = baseballdata[i];
+				var text_y = computeCoordY(i + 1) - text_paddingY;
+				var text_x = yaxisMarginName;
+				var name = getAttr(baseballman, 0);
+				svg.append("g").append("text")
+				.attr("x",text_x)
+				.attr("y",text_y)
+				.attr("font-size",13)
+				.attr("font-family","simsun")
+				.text(name);
+			//}
+		}
+		
+		//add x line top
+		svg.append("g").append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginX)
+		.attr("x2",x_right)
+		.attr("y2",marginX)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		//add x line bottom
+		svg.append("g").append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginX + yaxisHeight)
+		.attr("x2",x_right)
+		.attr("y2",marginX + yaxisHeight)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		var draw_x = 0;
+		//add y line
+		svg.append("g").selectAll("line")
+		.data(topname)
+		.enter()
+		.append("line")
+		.attr("x1",function(d,i){
+			if(i==0){
+				draw_x = yaxisMarginName;
+			}else{
+				draw_x = computeCoordX(i);
+			}
+			return draw_x;
+		})
+		.attr("y1",function(d,i){
+			var y1 = 0;
+			if(i<=1||i==(topname.length-1)){
+				y1 = marginXTextTop;
+			}else{
+				y1 = marginX;
+			}
+			return y1;
+		})
+		.attr("x2",function(d,i){
+			if(i==0){
+				draw_x = yaxisMarginName;
+			}else{
+				draw_x = computeCoordX(i);
+			}
+			return draw_x;
+		})
+		.attr("y2",function(d,i){
+			var y2 = 0;
+			if(i<=1||i==(topname.length-1)){
+				y2 = marginXPersonBottom;
+			}else{
+				y2 = marginX + yaxisHeight;
+			}
+			return y2;
+		})
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		//add xline text
+		var text = svg.append("g")
+		.selectAll("text")
+		.data(topname)
+		.enter()
+		.append("text")
+		//.attr("transform","rotate(-90)")
+		.attr("x",function(d,i){
+			x = yaxisMargin + attrWidth * i;
+			var final_x = 0;
+			if(i==0){
+				final_x = computeCoordX(name_sign);
+			}else{
+				final_x = computeCoordX(i);
+			}
+			return final_x;
+		})
+		.attr("y",marginXText)
+		.attr("font-size",function(d,i){
+			//if((i>=focusX_min)&&(i<=focusX_max)){
+			if(focusXArray.indexOf(i)!=-1){
+				return 20;
+			}else{
+				return 10;
+			}
+		})
+		.attr("font-family","simsun")
+		.text(function(d,i){
+			return topname[mappingArray[i]];
+		});
+		//*********************add text of the selected column************
+		svg.append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginXTextBottom)
+		.attr("x2",x_right)
+		.attr("y2",marginXTextBottom)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		svg.append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginXTextTop)
+		.attr("x2",x_right)
+		.attr("y2",marginXTextTop)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		//****************************************************************
+		//*********************add text of the selected person************
+		svg.append("line")
+		.attr("x1",yaxisMarginName)
+		.attr("y1",marginXPersonBottom)
+		.attr("x2",x_right)
+		.attr("y2",marginXPersonBottom)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		//****************************************************************		
+		left_topX = focusX_min * attr_width_change + yaxisMargin;
+		left_topY = focusY_min * barheight_change + marginX;
+		RectHeight = focus_height * yfocus_num;
+		RectWidth = focus_width * xfocus_num;
+		var d = new Object();
+		d.x = left_topX;
+		d.y = left_topY;
+		var drag = d3.behavior.drag()
+    	.origin(d)
+    	.on("dragstart", dragstarted)
+    	.on("drag", dragged)
+    	.on("dragend", dragended);
+	}
+	//********************************************************
+	function zoomed() {
+  		svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	}
+	function begin_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = true;
+		FirstClick = true;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function stop_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = true;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+		focusX_number = -1;
+		focusY_number = -1;
+		focusX_min = -1;
+		focusX_max = -1; 
+		focusY_min = -1; 
+		focusY_max = -1;
+		xfocus_num = 0; 
+		yfocus_num = 0;
+		focusXArray.splice(0,focusXArray.length);  
+		focusYArray.splice(0,focusYArray.length);  
+		Exist_focus = false;
+		index = 0;
+		svg.selectAll("*").remove();
+		tablelens(global_baseballdata);
+	}
+	function expand_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = true;
+		StopFocus = false;
+		ExpandFocus = true;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function reduce_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = true; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function move_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		//change the color of the focus_rect
+		svg.select(".focus_rect").remove();
+		svg.append("g")
+		.attr("class","focus_rect")
+		.append("rect")
+		.attr("x",left_topX)
+		.attr("y",left_topY)
+		.attr("height",RectHeight)
+		.attr("width",RectWidth)
+		.attr("fill-opacity",0.3)
+		.attr("fill","gray")
+		.attr("stroke","orange")
+		.attr("stroke-width",4);
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = true;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function sort_focus(event){
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = true;
+		FocusColumn = false;
+		SwapColumn = false; 
+	}
+	function column_operation(event){
+		//the column selection
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = true;
+		SwapColumn = false; 
+	}
+	function swap_column(event){
+		//swap column operation
+		event.stopPropagation();
+        event.preventDefault();
+		hideMenu();
+		BeginFocus = false;
+		StopFocus = false;
+		ExpandFocus = false;
+		ReduceFocus = false; 
+		MoveFocus = false;
+		SortFocus = false;
+		FocusColumn = false;
+		SwapColumn = true; 
 	}
 </script>
 </html>

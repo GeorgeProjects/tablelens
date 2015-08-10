@@ -27,13 +27,14 @@ $(function(){
 	$("select#single").multiselect({
 		multiple: false,
 		header: "Select an sort-option",
-		noneSelectedText: "SortOption",
+		noneSelectedText: "option",
 		selectedList: 1
 	});
 	$("select#single").multiselect({
    		selectedText: function(numChecked, numTotal, checkedItems){
 			 ChangeSort(checkedItems);
-			 return checkedItems[0].value;
+			 //return checkedItems[0].value;
+			 return "option";
   		 }
 	});
 	$("select#grouping").multiselect({
@@ -178,6 +179,7 @@ $(function(){
 	//outer rect
 	var svgHeight = 550,svgXMin = 100,svgWidth = 1300 - 2 * svgXMin,svgXMax,svgYMin = 0,scgYMax;
 	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
+	var ColorXMin = 120, ColorXMax = 180, ColorYMin = 10, ColorYMax = 580;
 	//inner rect
 	var InRectXMin = tableMarginLeftX;
 	var InRectYMin = tableMarginTopY;
@@ -235,11 +237,11 @@ $(function(){
 	var cs_array = new Array();
 	var cs_name = ["cs1","cs2","cs3","cs4","cs5"];
 	var cs_coord = new Array();
-	cs_coord[0] = InRectYMin + 0.02 * InRectHeight;
+	cs_coord[0] = InRectYMin + 0.00 * InRectHeight;
 	cs_coord[1] = InRectYMin + 0.25 * InRectHeight;
 	cs_coord[2] = InRectYMin + 0.5  * InRectHeight;
 	cs_coord[3] = InRectYMin + 0.75 * InRectHeight;
-	cs_coord[4] = InRectYMin + 0.96 * InRectHeight;
+	cs_coord[4] = InRectYMin + 1.00 * InRectHeight;
 	cs_array[0] = 0.00;
 	cs_array[1] = 0.25;
 	cs_array[2] = 0.5;
@@ -262,14 +264,14 @@ $(function(){
 	}
 	var filter_array = new Array();
 	var filter_name = ["filter1","filter2"];
-	filter_array.push(0.04);
-	filter_array.push(0.96);
+	filter_array.push(0.00);
+	filter_array.push(1.00);
 	var selectRectNum = -1;
 	var FirstSelectFilterNum = -1, FirstSelectRectNum = -1;
 	var moveFilter = false, moveSR = false;
 	var filter_coord = new Array();
-	filter_coord[0] = InRectYMin + 0.04 * InRectHeight;
-	filter_coord[1] = InRectYMin + 0.96 * InRectHeight;
+	filter_coord[0] = InRectYMin + 0.00 * InRectHeight;
+	filter_coord[1] = InRectYMin + 1.00 * InRectHeight;
 	var sortIndex = 1;
 	var middleValue = new Array();
 	var stop_num1 = 0, stop_num2 = 25, stop_num3 = 50, stop_num4 = 75, stop_num5 = 100;
@@ -305,6 +307,7 @@ $(function(){
 			AttrNameArray.push(attribute);
 		}
 		sortIndex = 1;
+		SortFunction();
 		barheight = InRectHeight/humannum;
 		focus_height = 20;
 		tablelens(render_baseballdata);
@@ -373,7 +376,6 @@ $(function(){
     .on("drag", dragged)
     .on("dragend", dragended);
 	
-	//添加一个矩形，并应用线性渐变
 	svg_color.append("g")
 	.attr("class","color_rect")
 	.append("rect")
@@ -389,11 +391,11 @@ $(function(){
 	.enter()
 	.append("text")
 	.attr("class","select_rect_text")
-	.attr("x",(InRectXMin - 30))
+	.attr("x",(InRectXMin - 23))
 	.attr("y",function(d,i){
-		return cs_coord[i]+8.5;
+		return cs_coord[i]+5.5;
 	})
-	.attr("font-size",9)
+	.attr("font-size",12)
 	.attr("font-family","simsun")
 	.text(function(d){
 		return d;
@@ -403,18 +405,18 @@ $(function(){
 	.append("g")
 	.data(cs_array)
 	.enter()
-	.append("rect")
+	.append("circle")
 	.attr("class","select_rect")
-	.attr("x",(InRectXMin - 35))
-	.attr("y",function(d,i){
+	.attr("cx",(InRectXMin - 15))
+	.attr("cy",function(d,i){
 		return cs_coord[i];
 	})
-	.attr("width",30)
-	.attr("height",10)
+	.attr("r",10)
 	.on("mouseover",function(d,i){
 		d3.select(this)
 		.attr("fill","orange");
 		FirstSelectRectNum = i;
+		FirstSelectFilterNum = -1;
 	})
 	.on("mouseout",function(d){
 		d3.select(this)
@@ -436,6 +438,7 @@ $(function(){
 		d3.select(this)
 		.attr("fill","orange");
 		FirstSelectFilterNum = i;
+		FirstSelectRectNum = -1;
 	})
 	.on("mouseout",function(d){
 		d3.select(this)
@@ -451,12 +454,14 @@ $(function(){
 		if((begin_clickX>250)&&(begin_clickX<InRectXMax)&&(begin_clickY>InRectYMin)&&(begin_clickY<InRectYMax)){
 			select_focus = true;
 		}
-		if(FirstSelectFilterNum!=-1){
+		if(FirstSelectFilterNum!=-1&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)&&(begin_clickY<ColorYMax)&&(begin_clickY>ColorYMin)){
 			moveFilter = true;
+			moveSR = false;
 			SelectFilterNum = FirstSelectFilterNum;
 		}
-		if(FirstSelectRectNum!=-1){
+		if(FirstSelectRectNum!=-1&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)&&(begin_clickY<ColorYMax)&&(begin_clickY>ColorYMin)){
 			moveSR = true;
+			moveFilter = false;
 		}
 	}
 	window.document.onmousemove = function(event){
@@ -472,8 +477,8 @@ $(function(){
 					cs_moveY = InRectYMin;
 				}
 			}else if(FirstSelectRectNum == (cs_coord.length -1)){
-				if(cs_moveY>InRectYMax - 15){
-					cs_moveY = InRectYMax - 15;
+				if(cs_moveY>InRectYMax){
+					cs_moveY = InRectYMax;
 				}
 				if(cs_moveY<cs_coord[FirstSelectRectNum - 1] + 15){
 					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
@@ -494,11 +499,11 @@ $(function(){
 			.enter()
 			.append("text")
 			.attr("class","select_rect_text")
-			.attr("x",(InRectXMin - 30))
+			.attr("x",(InRectXMin - 23))
 			.attr("y",function(d,i){
-				return cs_coord[i]+8.5;
+				return cs_coord[i]+5.5;
 			})
-			.attr("font-size",9)
+			.attr("font-size",12)
 			.attr("font-family","simsun")
 			.text(function(d){
 				return d;
@@ -508,18 +513,18 @@ $(function(){
 			.append("g")
 			.data(cs_array)
 			.enter()
-			.append("rect")
+			.append("circle")
 			.attr("class","select_rect")
-			.attr("x",(InRectXMin - 35))
-			.attr("y",function(d,i){
+			.attr("cx",(InRectXMin - 15))
+			.attr("cy",function(d,i){
 				return cs_coord[i];
 			})
-			.attr("width",30)
-			.attr("height",10)
+			.attr("r",10)
 			.on("mouseover",function(d,i){
 				d3.select(this)
 				.attr("fill","orange");
 				FirstSelectRectNum = i;
+				FirstSelectFilterNum = -1;
 			})
 			.on("mouseout",function(d){
 				d3.select(this)
@@ -563,6 +568,7 @@ $(function(){
 					d3.select(this)
 					.attr("fill","orange");
 					FirstSelectFilterNum = i;
+					FirstSelectRectNum = -1;
 				})
 				.on("mouseout",function(d){
 					d3.select(this)
@@ -616,7 +622,7 @@ $(function(){
 				}
 			}else if(FirstSelectRectNum == (cs_coord.length -1)){
 				if(cs_moveY>InRectYMax){
-					cs_moveY = InRectYMax - 15;
+					cs_moveY = InRectYMax;
 				}
 				if(cs_moveY<cs_coord[FirstSelectRectNum - 1] + 15){
 					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
@@ -641,7 +647,7 @@ $(function(){
 			moveSR = false;
 			FirstSelectRectNum = -1;
 		}
-		//*****************************************
+		//****************************************************************
 		if(moveFilter){
 			moveSR = false;
 			FocusArray.splice(0,FocusArray.length);
@@ -686,6 +692,7 @@ $(function(){
 					d3.select(this)
 					.attr("fill","orange");
 					FirstSelectFilterNum = i;
+					FirstSelectRectNum = -1;
 				})
 				.on("mouseout",function(d){
 					d3.select(this)
@@ -927,11 +934,11 @@ $(function(){
 			.enter()
 			.append("text")
 			.attr("class","select_rect_text")
-			.attr("x",(InRectXMin - 30))
+			.attr("x",(InRectXMin - 23))
 			.attr("y",function(d,i){
-				return cs_coord[i]+8.5;
+				return cs_coord[i]+5.5;
 			})
-			.attr("font-size",9)
+			.attr("font-size",12)
 			.attr("font-family","simsun")
 			.text(function(d){
 				return d;
@@ -944,18 +951,18 @@ $(function(){
 			.append("g")
 			.data(cs_array)
 			.enter()
-			.append("rect")
+			.append("circle")
 			.attr("class","select_rect")
-			.attr("x",(InRectXMin - 35))
-			.attr("y",function(d,i){
+			.attr("cx",(InRectXMin - 15))
+			.attr("cy",function(d,i){
 				return cs_coord[i];
 			})
-			.attr("width",30)
-			.attr("height",10)
+			.attr("r",10)
 			.on("mouseover",function(d,i){
 				d3.select(this)
 				.attr("fill","orange");
 				FirstSelectRectNum = i;
+				FirstSelectFilterNum = -1;
 			})
 			.on("mouseout",function(d){
 				d3.select(this)
@@ -977,6 +984,7 @@ $(function(){
 				d3.select(this)
 				.attr("fill","orange");
 				FirstSelectFilterNum = i;
+				FirstSelectRectNum = -1;
 			})
 			.on("mouseout",function(d){
 				d3.select(this)
@@ -1024,8 +1032,72 @@ $(function(){
 			return e;
 		}
 	}
+	function SortFunction(){
+		if(sortIndex == 1){
+			if(down_Bat86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 2){
+			if(down_Hit86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.hits86 - b.hits86;
+				});
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.hits86 - a.hits86;
+				});
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 3){
+			if(down_HRuns86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.hRuns86 - b.hRuns86;
+				});
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.hRuns86 - a.hRuns86;
+				});
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 4){
+			if(down_Runs86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.runs86 - b.runs86;
+				});
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.runs86 - a.runs86;
+				});
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 5){
+			if(down_Runbat86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.Runbat86 - b.Runbat86;
+				});
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.Runbat86 - a.Runbat86;
+				});
+			}
+			computeMinMax();
+			computeVarY();
+		}
+	}
 	//**************************************************************
 	function tablelens(render1_baseballdata){
+		//SortFunction();
 		svg = d3.select("#inner")
 		.select("svg")
 		.attr("width",InRectWidth)
@@ -1282,9 +1354,10 @@ $(function(){
 			});
 			down_Name = true;
 		}
+		sortIndex = 0;
 		computeMinMax();
 		computeVarY();
-		svg.selectAll("*").remove();
+		svg.selectAll("*").remove(); 
 		tablelens(render_baseballdata);
 	}
 	function sortBat86(){
@@ -1299,6 +1372,7 @@ $(function(){
 			});
 			down_Bat86 = true;
 		}
+		sortIndex = 1;
 		computeMinMax();
 		computeVarY();
 		svg.selectAll("*").remove();
@@ -1316,6 +1390,7 @@ $(function(){
 			});
 			down_Hit86 = true;
 		}
+		sortIndex = 2;
 		computeMinMax();
 		computeVarY();
 		svg.selectAll("*").remove();
@@ -1333,6 +1408,7 @@ $(function(){
 			});
 			down_HRuns86 = true;
 		}
+		sortIndex = 3;
 		computeMinMax();
 		computeVarY();
 		svg.selectAll("*").remove();
@@ -1350,6 +1426,7 @@ $(function(){
 			});
 			down_Runs86 = true;
 		}
+		sortIndex = 4;
 		computeMinMax();
 		computeVarY();
 		svg.selectAll("*").remove();
@@ -1367,6 +1444,7 @@ $(function(){
 			});
 			down_Runbat86 = true;
 		}
+		sortIndex = 5;
 		computeMinMax();
 		computeVarY();
 		svg.selectAll("*").remove();
@@ -1376,7 +1454,7 @@ $(function(){
 		 focusY_min = 322;
 		 focusY_max = -1;
 		 for(var i=humannum_min;i<humannum_max;i++){
-		 	var num = baseballdata[i].num;
+		 	var num = render_baseballdata[i].num;
 			if(FocusArray.indexOf(num)!=-1){
 				if(i<focusY_min){
 					focusY_min = i;

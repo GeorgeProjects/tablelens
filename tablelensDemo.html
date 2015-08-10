@@ -36,11 +36,17 @@ $(function(){
 			 return checkedItems[0].value;
   		 }
 	});
-	$("select#group").multiselect({
+	$("select#grouping").multiselect({
 		multiple: false,
-		header: "Select an Color-Option",
-		noneSelectedText: "ColorOption",
+		header: "Select an sort-option",
+		noneSelectedText: "SortOption",
 		selectedList: 1
+	});
+	$("select#grouping").multiselect({
+   		selectedText: function(numChecked, numTotal, checkedItems){
+			 ChangeSort(checkedItems);
+			 return checkedItems[0].value;
+  		 }
 	});
 	
 });
@@ -152,7 +158,7 @@ $(function(){
 	</form>
 	<!--*****************************************************************-->
 	<form id = "single">
-		<select name="demo" id="single" style="width:100px; top:5px;">
+		<select name="demo" id="grouping" style="width:100px; top:5px;">
 		<option value="Bat86">Distributed uniformly with 1/5</option>
 		<option value="Hit86">Distributed uniformly with 1/4</option>
 		<option value="HRuns86">Distributed uniformly with 1/3</option>

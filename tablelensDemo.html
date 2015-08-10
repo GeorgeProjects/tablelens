@@ -41,7 +41,7 @@ $(function(){
 		multiple: false,
 		header: "Select an sort-option",
 		noneSelectedText: "SortOption",
-		selectedList: 1
+		selectedList: 2
 	});
 	$("select#grouping").multiselect({
    		selectedText: function(numChecked, numTotal, checkedItems){
@@ -159,7 +159,7 @@ $(function(){
 	</form>
 	<!--*****************************************************************-->
 	<form id = "single">
-		<select name="demo" id="single" style="width:100px; top:5px;">
+		<select name="demo" id="grouping" style="width:100px; top:5px;">
 		<option value="Bat86">Distributed uniformly with 1/5</option>
 		<option value="Hit86">Distributed uniformly with 1/4</option>
 		<option value="HRuns86">Distributed uniformly with 1/3</option>

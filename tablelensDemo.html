@@ -311,8 +311,10 @@ $(function(){
 			var fileDisplayArea = document.getElementById('fileDisplayArea');
 			fileInput.addEventListener('change', function(e) {
 				var file = fileInput.files[0];
+				var size = file.size;
 				var textType = "application/vnd.ms-excel";
 				if (file.type == (textType)) {
+				  if(size<30000){
 					var reader = new FileReader();
 					reader.onload = function(e) {
 						text = reader.result;
@@ -491,7 +493,10 @@ $(function(){
 						svg.selectAll("*").remove();
 						tablelens();
 					}
-					reader.readAsText(file);	
+					reader.readAsText(file);
+					}else{
+						alert("File is too big!");
+					}	
 				} else {
 					alert("File not supported!");
 				}

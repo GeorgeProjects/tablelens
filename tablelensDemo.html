@@ -50,10 +50,14 @@ $(function(){
 });
 </script>
 <style>
+	body{
+		text-align:center;
+	}
 	#outer{
 		background:white;
 		border-top: 5px solid #69c773;
-		margin: 1em auto;
+		margin-left:auto;
+		margin-right:auto;
 	  	box-shadow: 0 2px 10px rgba(0,0,0,0.8);
 	}
 	#color_control{
@@ -498,7 +502,7 @@ $(function(){
 	}
 	
 	d3.select("#outer")
-	.style("margin-left", svgXMin+"px")
+	//.style("margin-left", svgXMin+"px")
 	.style("margin-top", svgYMin+"px")
 	.style("height", (svgHeight + 55)+"px")
 	.style("width", svgWidth+"px");

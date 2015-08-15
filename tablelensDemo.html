@@ -322,6 +322,11 @@ $(function(){
 						stringArray = text.split("\n");
 						ManNum = stringArray.length - 1;
 						AttrName = stringArray[0].split(",");
+						for(var i=0;i<AttrName.length;i++){
+							if(AttrName[i].length>5){
+								AttrName[i] = AttrName[i].substring(0,5);
+							}
+						}
 						AttrNum = AttrName.length;
 						AttrAllNum = AttrName.length;
 						var SampleArray = new Array();

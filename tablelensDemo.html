@@ -1345,6 +1345,8 @@ $(function(){
 						return  color;
 					})
 					.on("mouseover",function(d,i){
+						moveSR = false;
+						moveFilter = false;
 						currentYNum = i;
 						d3.select(this).style("fill","green");
 					})

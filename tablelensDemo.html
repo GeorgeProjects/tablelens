@@ -586,9 +586,6 @@ $(function(){
 		beginY = event.layerY - 120;
 		RectBeginY = event.layerY;
 		beginY_index = computeIndexY(RectBeginY);
-		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
-			select_focus = true;
-		}
 		/*if((FirstSelectFilterNum!=-1)&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)
 			&&(begin_clickY<ColorYMax)&&(begin_clickY>ColorYMin)){
 			moveFilter = true;
@@ -605,6 +602,9 @@ $(function(){
 			moveSR = true;
 			select_focus = false;
 			moveFilter = false;
+		}
+		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
+			select_focus = true;
 		}
 	}
 	window.document.onmousemove = function(event){
@@ -911,6 +911,8 @@ $(function(){
 		moveSR = false;
 		moveFilter = false;
 		select_focus = false;
+		FirstSelectFilterNum = -1;
+		FirstSelectRectNum = -1;
 		svg.select(".focus_rect").remove();
 		computeVarY();
 		svg.selectAll("*").remove();
@@ -992,6 +994,8 @@ $(function(){
 		moveSR = false;
 		moveFilter = false;
 		select_focus = false;
+		FirstSelectFilterNum = -1;
+		FirstSelectRectNum = -1;
 	}
 	//****************************************************************************
 	function computeFilter(){
@@ -1345,8 +1349,8 @@ $(function(){
 						return  color;
 					})
 					.on("mouseover",function(d,i){
-						moveSR = false;
-						moveFilter = false;
+						FirstSelectFilterNum = -1;
+						FirstSelectRectNum = -1;
 						currentYNum = i;
 						d3.select(this).style("fill","green");
 					})

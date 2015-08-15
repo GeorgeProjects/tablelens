@@ -3,57 +3,60 @@
 <html>
 <head>
 <title>Tablelens Demo</title>
-<script type="text/javascript" src="d3/d3.js"></script>
-<link rel="stylesheet" type="text/css" href="d3/jquery.multiselect.css" />
-<link rel="stylesheet" type="text/css" href="d3/style.css" />
-<link rel="stylesheet" type="text/css" href="d3/prettify.css" />
-<link rel="stylesheet" type="text/css" href="d3/jquery-ui.css" />
-<script type="text/javascript" src="d3/jquery.js"></script>
-<script type="text/javascript" src="d3/jquery-ui.min.js"></script>
-<script type="text/javascript" src="d3/jquery.multiselect.js"></script>
-<script type="text/javascript" src="d3/prettify.js"></script>
+<script type="text/javascript" src="../tablelens/d3/d3.js"></script>
+<link rel="stylesheet" type="text/css" href="../tablelens/d3/jquery.multiselect.css" />
+<link rel="stylesheet" type="text/css" href="../tablelens/d3/style.css" />
+<link rel="stylesheet" type="text/css" href="../tablelens/d3/prettify.css" />
+<link rel="stylesheet" type="text/css" href="../tablelens/d3/jquery-ui.css" />
+<script type="text/javascript" src="../tablelens/d3/jquery.js"></script>
+<script type="text/javascript" src="../tablelens/d3/jquery-ui.min.js"></script>
+<script type="text/javascript" src="../tablelens/d3/jquery.multiselect.js"></script>
+<script type="text/javascript" src="../tablelens/d3/prettify.js"></script>
 <script type="text/javascript">
 $(function(){
-	$("select#multiple_select").multiselect({
+	//$("body").css("zoom","80%");
+	$("select#multiple").multiselect({
 		selectedList: 1
 	});
-	$("select#multiple_select").multiselect({
+	$("select#multiple").multiselect({
    		selectedText: function(numChecked, numTotal, checkedItems){
 			 ChangeAttr(numChecked,checkedItems);
      		 return numChecked + ' of ' + numTotal + ' checked';
   		 }
 	});
-	$("select#single_select").multiselect({
+	$("select#single").multiselect({
 		multiple: false,
-		header: "Select an filter-option",
+		header: "Select an sort-option",
 		noneSelectedText: "option",
 		selectedList: 1
 	});
-	$("select#single_select").multiselect({
+	$("select#single").multiselect({
    		selectedText: function(numChecked, numTotal, checkedItems){
 			 ChangeColor(checkedItems);
 			 return checkedItems[0].value;
   		 }
 	});
-	$("select#grouping_select").multiselect({
+	$("select#grouping").multiselect({
 		multiple: false,
 		header: "Select an sort-option",
 		noneSelectedText: "SortOption",
 		selectedList: 2
 	});
-	$("select#grouping_select").multiselect({
+	$("select#grouping").multiselect({
    		selectedText: function(numChecked, numTotal, checkedItems){
 			 ChangeSort(checkedItems);
 			 return checkedItems[0].value;
   		 }
-	});	
+	});
+	
 });
 </script>
 <style>
 	#outer{
 		background:white;
-		border-top: 5px solid #69c773;
-	  	box-shadow: 0 2px 10px rgba(0,0,0,0.8);
+		margin: auto;
+  		position: absolute;
+  		top: 0; left: 0; bottom: 0; right: 0;
 	}
 	#color_control{
 		float:left;
@@ -74,10 +77,7 @@ $(function(){
 		position:relative;
 		background:white;
 	}
-	#AttrButton{
-		background:white;
-	}
-	.attr_button{
+	#attr1,#attr2,#attr3,#attr4,#attr5,#attr6{
 		position:relative;
 	}
 	#control_button{
@@ -117,61 +117,56 @@ $(function(){
 		position:relative;
 	}
 	#resetfilter{
+		/*display:inline;*/
 		margin-top:10px;
 		float:left;
 		padding-left:30px;
 		padding-right:30px;
 		position:relative;
 	}
-	#page-wrapper {
-	  width: 1070px;
-	  background: #FFF;
-	  padding: 1em;
-	  margin: 1em auto;
-	  text-align :center;
-	  min-height: 10px;
-	  border-top: 5px solid #69c773;
-	  box-shadow: 0 2px 10px rgba(0,0,0,0.8);
-	}
-	h1 {
-		margin-top: 0;
-	}
-	#file_select{
-	}
-	img {
-	  max-width: 100%;
-	}
 </style>
 </head>
 <body>
-<div id="page-wrapper">
-		<h1>Tablelens Text File Reader</h1>
-		<div id="file_select">
-			Select a csv file<font color="red" size="2px"><strong>(the file type must be .csv; the attribute must be numerical value)</strong></font>:
-			<input type="file" id="fileInput">
-		</div>
-</div>
 <div id = "outer">
 	<div id="color_control">
 	</div>
-	<div id="AttrButton">
-	</div>
+	<button id="attr1" onClick="sortName();">name</button>
+	<button id="attr2" onClick="sortBat86();">bat86</button>
+	<button id="attr3" onClick="sortHit86();">hits86</button>
+	<button id="attr4" onClick="sortHRuns86();">hRuns86</button>
+	<button id="attr5" onClick="sortRuns86();">runs86</button>
+	<button id="attr6" onClick="sortRunbat86();">Runbat86</button>
   	<div id="inner"> 
     </div>
 	<div id="control_button">
 	<!--***************************************************************-->
 	<form id="multiple">
-	<select multiple="multiple" id="multiple_select" style="width:100px; top:5px;">
+	<select multiple="multiple" id="multiple" style="width:100px; top:5px;">
+	<option value="option1">Bat86</option>
+	<option value="option2">Hit86</option>
+	<option value="option3">HRuns86</option>
+	<option value="option4">Run86</option>
+	<option value="option5">RunBat86</option>
 	</select>
 	</form>
 	<!--****************************************************************-->
 	<form id = "grouping">
-		<select name="demo" id="grouping_select" style="width:100px; top:5px;">
+		<select name="demo" id="grouping" style="width:100px; top:5px;">
+		<option value="Bat86">Bat86</option>
+		<option value="Hit86">Hit86</option>
+		<option value="HRuns86">HRuns86</option>
+		<option value="Run86">Run86</option>
+		<option value="RunBat86">RunBat86</option>
 		</select>
 	</form>
 	<!--*****************************************************************-->
 	<form id = "single">
-		<select name="demo" id="single_select" style="width:100px; top:5px;">
+		<select name="demo" id="single" style="width:100px; top:5px;">
+		<option value="uniformly5">Distributed uniformly with 1/6</option>
+		<option value="uniformly4">Distributed uniformly with 1/5</option>
+		<option value="uniformly3">Distributed uniformly with 1/4</option>
+		<option value="percentile1">Distribute using 10,50,90</option>
+		<option value="percentile2">Distribute using 25,50,75</option>
 		</select>
 	</form>
 	<button id="resetSelect" onClick="resetSelection();">  Reset Selection  </button>
@@ -179,41 +174,46 @@ $(function(){
 	<button id="removeothers" onClick="removeOthers();">  Remove Others  </button>
 	<button id="resetfilter" onClick="resetfilter();">  Reset Filters  </button>
 	</div>
+</div>
 </div>  
+<div id="page-wrapper">
+		<h1>Text File Reader</h1>
+		<div id="file_select">
+			Select a text file:
+			<input type="file" id="fileInput">
+			<button>Visualize</button>
+</div>
 </body>
 <script type="text/javascript">
-	//read data
-	var text = new String();
-	var stringArray;
-	var AttrName = new Array();
-	var SelectAttrName = new Array();
-	var ColorArray =["uniformly5","uniformly4","uniformly3","percentile1","percentile2"];
-	var SortObject = new Object();
-	var ManNum = 0;
 	//outer rect
-	var svgHeight = 550,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
-	var focusXMin = 250, focusXMax = 1205, focusYMin = 100, focusYMax = 700;
+	var svgHeight = 550,svgXMin = 100,svgWidth = 1300 - 2 * svgXMin,svgXMax,svgYMin = 0,scgYMax;
 	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
-	var ColorXMin = 150, ColorXMax = 200, ColorYMin = 10, ColorYMax = 580;
+	var ColorXMin = 120, ColorXMax = 180, ColorYMin = 10, ColorYMax = 580;
 	//inner rect
 	var InRectXMin = tableMarginLeftX;
 	var InRectYMin = tableMarginTopY;
 	var InRectWidth = svgWidth - tableMarginLeftX;
-	var ButtonInRectWidth = InRectWidth - 10;
 	var InRectHeight = svgHeight - tableMarginBottomY - tableMarginTopY;
 	var InRectXMax = InRectXMin + InRectWidth;
 	var InRectYMax = InRectYMin + InRectHeight;
 	var ChangeRectHeight = InRectHeight;
 	//inner svg 
-	var baseballman = new Array();
-	var baseballdata = new Array();
-	var render_baseballdata = new Array();
+	var baseballdata, render_baseballdata;
 	var AttrArray = new Array();
-	var AttrNum = 1, AttrAllNum = 1;
+	var AttrNum = 6, AttrAllNum = 6;
 	var DisplayArray = new Array();
+	DisplayArray.push(0);
+	DisplayArray.push(1);
+	DisplayArray.push(2);
+	DisplayArray.push(3);
+	DisplayArray.push(4);
+	DisplayArray.push(5);
+	
 	var AttrArray = new Array();
 	var AttrAllArray = new Array();
 	var TableArray = new Array();
+	
+
 	var ButtonArray = new Array();
 	ButtonArray.push("attr1");
 	ButtonArray.push("attr2");
@@ -225,8 +225,8 @@ $(function(){
 	var humannum_sum = 322;
 	var humannum = 322;
 	var humannum_min = 0, humannum_max = 322;
-	var svg, svg_color, svg_button;
-	var button_width = ButtonInRectWidth/AttrNum;
+	var svg, svg_color;
+	var button_width = InRectWidth/AttrNum;
 	var XArray = new Array();
 	var YArray = new Array();
 	var ScaleArray = new Array();
@@ -236,7 +236,7 @@ $(function(){
 	var currentYNum = -1;
 	var top_middleY = 0, bottom_middleY = 0;
 	var total_event;
-	var beginY_index = 0, afterY_index, beginY, afterY, upY_index, RectBeginY, RectMoveY, RectEndY;
+	var beginY_index = 0, afterY_index, beginY, afterY, upY_index;
 	var select_focus = false;
 	var baseballman1;
 	var text_paddingX = 5, text_paddingY = 5;
@@ -272,8 +272,9 @@ $(function(){
 	var quarter2Value = new Array();
 	var quarter3Value = new Array();
 	var quarter4Value = new Array();
-	var minValue = [0,0,0,0,0,0,0];
-	var maxValue = [0,0,0,0,0,0,0];
+
+	var minValue = [0,16,1,0,0,0,1]
+	var maxValue = [0,687,238,40,130,121,322];
 	var filter_array = new Array();
 	var filter_name = ["filter1","filter2"];
 	filter_array.push(0.00);
@@ -288,205 +289,84 @@ $(function(){
 	var middleValue = new Array();
 	var NamePArray = new Array();
 	var defs, linearGradient;
-	button_width = ButtonInRectWidth/AttrNum;
-	XArray = new Array();
-	var select_option = new Array();
-	var filter_option = new Array();
-	var former_color, after_color;
-	filter_option[0] = "Distributed uniformly with 1/6";
-	filter_option[1] = "Distributed uniformly with 1/5";
-	filter_option[2] = "Distributed uniformly with 1/4"
-	filter_option[3] = "Distribute using 10,50,90";
-	filter_option[4] = "Distribute using 25,50,75";
-	//*******************************************************************************
-	window.onload = function() {
-			FocusArray.splice(0,FocusArray.length);
-			var fileInput = document.getElementById('fileInput');
-			var fileDisplayArea = document.getElementById('fileDisplayArea');
-			fileInput.addEventListener('change', function(e) {
-				var file = fileInput.files[0];
-				var textType = "application/vnd.ms-excel";
-				if (file.type == (textType)) {
-					var reader = new FileReader();
-					reader.onload = function(e) {
-						text = reader.result;
-						//HandleData(text);
-						render_baseballdata.splice(0,render_baseballdata.length);
-						minValue.splice(0,minValue.length);
-						maxValue.splice(0,maxValue.length);
-						stringArray = text.split("\n");
-						ManNum = stringArray.length - 1;
-						AttrName = stringArray[0].split(",");
-						AttrNum = AttrName.length;
-						AttrAllNum = AttrName.length;
-						var SampleArray = new Array();
-						for(var i=0;i<ManNum-1;i++){
-							SampleArray = stringArray[i+1].split(",");
-							baseballman[i] = new Object();
-							for(var j=0;j<AttrName.length;j++){
-								baseballman[i][AttrName[j]] = SampleArray[j];
-							}
-						}
-						for(var i=0;i<AttrName.length;i++){
-							TableArray[i] = new Array();
-							for(var j=0;j<ManNum-1;j++){
-								if(i==0){
-									TableArray[i][j] = baseballman[j][AttrName[i]];
-								}else{
-									TableArray[i][j] = parseInt(baseballman[j][AttrName[i]]);
-								}
-							}
-						}
-						for(var i=0;i<AttrNum;i++){
-							SortObject[AttrName[i]] = true;
-						}
-						for(var i=0;i<baseballman.length;i++){
-							baseballman[i].num = i+1;
-						}
-						for(var i=0;i<AttrNum;i++){
-							DisplayArray[i] = i;
-						}
-						render_baseballdata = baseballman;
-						baseballdata = render_baseballdata;
-						sortIndex = 1;
-						focus_height = 20;
-						humannum_sum = render_baseballdata.length;
-						humannum = render_baseballdata.length;
-						humannum_min = 0, humannum_max = render_baseballdata.length;
-						SortFunction();
-						button_width = Math.floor(ButtonInRectWidth/AttrNum);
-						for(var i=0;i<humannum_sum;i++){
-							YArray[i] = computeCoordY(i);
-						}
-						for(var i=0;i<=AttrNum;i++){
-							AttrAllArray[i] = i;
-						}
-						for(var i=0;i<AttrAllNum;i++){
-							if(i==0){
-								minValue[i] = 0;
-								maxValue[i] = 0;
-							}else{
-								minValue[i] = Array.min(TableArray[i]);
-								maxValue[i] = Array.max(TableArray[i]);
-							}	
-						}
-						for(var i=0;i<minValue.length;i++){
-							var difference = Math.floor((maxValue[i] - minValue[i]));
-							quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
-							quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
-							quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
-							quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
-							quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
-						}
-						for(var i=0;i<AttrAllNum;i++){
-							XArray[i] = i * button_width;
-						}
-						NamePArray.push(quarter4Value[sortIndex]+"");
-						NamePArray.push(quarter3Value[sortIndex]+"");
-						NamePArray.push(quarter2Value[sortIndex]+"");
-						NamePArray.push(quarter1Value[sortIndex]+"");
-						NamePArray.push(quarter0Value[sortIndex]+"");
-						for(var i=0;i<AttrAllNum;i++){
-							middleValue[i] = minValue[sortIndex] + cs_array[i] * (maxValue[sortIndex] - minValue[sortIndex]);
-						}
-						for(var i=0;i<AttrAllNum;i++){
-							ScaleArray[i] = d3.scale.linear()
-								.range([0,button_width - 10])
-								.domain([0,maxValue[i]]);
-						}
-						d3.selectAll(".attr_button")
-						.append("g")
-						.data(AttrName)
-						.append("button")
-						.text(function(d,i){
-							return AttrName[i]
-						});
-						
-						d3.select("#AttrButton")
-						.selectAll(".attr_button").remove();
-						d3.select("#AttrButton")
-						.selectAll(".attr_button")
-						.append("g")
-						.data(AttrName)
-						.enter()
-						.append("button")
-						.attr("class","attr_button")
-						.style("height",InRectYMin+"px")
-						.style("width", (button_width) +"px")
-						.on("click",function(d,i){
-							sortAttr(d);
-						})
-						.text(function(d,i){
-							return AttrName[i];
-						});
-						select_option.splice(0,select_option.length);
-						for(var i=1;i<AttrName.length;i++){
-							select_option[i-1] = AttrName[i];
-						}
-						//***********************************************
-						d3.select("#multiple_select")
-						.selectAll(".display_attr").remove();
-						d3.select("#multiple_select")
-						.selectAll(".display_attr")
-						.append("g")
-						.data(select_option)
-						.enter()
-						.append("option")
-						.attr("selected","selected")
-						.attr("class","display_attr")
-						.attr("value", function(d){
-							return d;
-						})
-						.text(function(d,i){
-							return d;
-						});
-						$("select#multiple_select").multiselect('refresh');
-						//*************************************************
-						d3.select("#grouping_select")
-						.selectAll(".sort_attr").remove();
-						d3.select("#grouping_select")
-						.selectAll(".sort_attr")
-						.append("g")
-						.data(select_option)
-						.enter()
-						.append("option")
-						.attr("class","sort_attr")
-						.attr("value",function(d){
-							return d;
-						})
-						.text(function(d,i){
-							return d;
-						});
-						$("select#grouping_select").multiselect('refresh');
-						//**************************************************
-						d3.select("#single_select")
-						.selectAll(".color_option").remove();
-						d3.select("#single_select")
-						.selectAll(".color_option")
-						.append("g")
-						.data(filter_option)
-						.enter()
-						.append("option")
-						.attr("class","color_option")
-						.attr("value",function(d,i){
-							return ColorArray[i];
-						})
-						.text(function(d,i){
-							return d;
-						});
-						$("select#single_select").multiselect('refresh');
-						sortIndex = 1;
-						renderCSText();
-						svg.selectAll("*").remove();
-						tablelens();
-					}
-					reader.readAsText(file);	
-				} else {
-					alert("File not supported!");
-				}
-			});
+	NamePArray.push(quarter4Value[sortIndex]+"");
+	NamePArray.push(quarter3Value[sortIndex]+"");
+	NamePArray.push(quarter2Value[sortIndex]+"");
+	NamePArray.push(quarter1Value[sortIndex]+"");
+	NamePArray.push(quarter0Value[sortIndex]+"");
+	for(var i=0;i<5;i++){
+		middleValue[i] = minValue[sortIndex] + cs_array[i] * (maxValue[sortIndex] - minValue[sortIndex]);
 	}
-	//***********************************************************************************
+	for(var i=0;i<AttrAllNum;i++){
+		ScaleArray[i] = d3.scale.linear()
+			.range([0,button_width - 10])
+			.domain([0,maxValue[i]]);
+	}
+	d3.csv("baseballman1.csv",function(baseballman){
+		//keep updating with the data
+		for(var i=0;i<baseballman.length;i++){
+			baseballman[i].num = i+1;
+		}
+		render_baseballdata = baseballman;
+		baseballdata = render_baseballdata;
+		baseballman1 = baseballdata[0];
+		var count = 0;
+		for(attribute in baseballman1){
+			AttrArray.push(attribute);
+			count++;
+		}
+		AttrNum = count - 1, AttrAllNum = count - 1;
+		for(var i=0;i<=AttrAllNum;i++){
+			TableArray[i] = new Array();
+		}
+		var i = 0;
+		for(x in baseballman1){
+			if(i<=AttrAllNum){
+				for(var j=0;j<humannum_sum;j++){
+					TableArray[i][j] = baseballman[j][x];
+				}
+				i++;
+			}
+		}
+		sortIndex = 1;
+		SortFunction();
+		//barheight = InRectHeight/humannum;
+		focus_height = 20;
+		for(var i=0;i<humannum_sum;i++){
+			YArray[i] = computeCoordY(i);
+		}
+		for(var i=0;i<=AttrNum;i++){
+			AttrAllArray[i] = i;
+		}
+		humannum_sum = render_baseballdata.length;
+		humannum = render_baseballdata.length;
+		humannum_min = 0, humannum_max = render_baseballdata.length;
+		button_width = InRectWidth/AttrNum;
+		XArray = new Array();
+		for(var i=0;i<AttrAllNum;i++){
+			XArray[i] = i * button_width;
+		}
+		for(var i=0;i<=AttrAllNum;i++){
+			if(i==0){
+				minValue[i] = 0;
+				maxValue[i] = 0;
+			}else{
+				minValue[i] = Array.min(TableArray[i]);
+				maxValue[i] = Array.max(TableArray[i]);
+			}	
+		}
+		for(var i=0;i<minValue.length;i++){
+			var difference = Math.floor((maxValue[i] - minValue[i]));
+			quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
+			quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
+			quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
+			quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
+			quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+		}
+		
+		tablelens();
+	});
+	
 	Array.min=function(array)
 	{
     	return Math.min.apply(Math,array);
@@ -499,7 +379,7 @@ $(function(){
 	d3.select("#outer")
 	.style("margin-left", svgXMin+"px")
 	.style("margin-top", svgYMin+"px")
-	.style("height", (svgHeight + 55)+"px")
+	.style("height", svgHeight+"px")
 	.style("width", svgWidth+"px");
 	
 	d3.select("#color_control")
@@ -507,13 +387,6 @@ $(function(){
 	.style("top", InRectYMin + "px")
 	.style("height", svgHeight+"px")
 	.style("width", InRectXMin+"px");
-	
-	d3.select("#AttrButton")
-	.style("left", "0px")
-	.style("top", "0px")
-	.style("margin-left",InRectXMin+"px")
-	.style("height", InRectYMin+"px")
-	.style("width", InRectWidth+"px");
 	
 	d3.select("#inner")
 	.style("left", "0px")
@@ -524,12 +397,18 @@ $(function(){
 	
 	d3.select("#control_button")
 	.style("left", "0px")
-	.style("top", (InRectHeight + 160) + "px")
+	.style("top", (InRectHeight + 40) + "px")
 	.style("height", (80) +"px")
 	.style("width", (InRectWidth - 320)+"px");
 	
-	computeButtonWidth();
+	d3.select("#attr1")
+	.style("height",tableMarginTopY+"px")
+	.style("width",button_width +"px")
+	.style("margin-left","0px")
+	.style("margin-right","0px");
 	
+	computeButtonWidth();
+
 	svg = d3.select("#inner")
 	.append("svg")
 	.attr("width",InRectWidth)
@@ -552,7 +431,7 @@ $(function(){
 				.attr("offset",stopNumArray[i]+"%")
 				.style("stop-color",colorArray[i].toString());
 	}
-	
+
 	svg_color.append("g")
 	.attr("class","color_rect")
 	.append("rect")
@@ -562,9 +441,6 @@ $(function(){
 	.attr("height", InRectHeight)
 	.style("fill","url(#" + linearGradient.attr("id") + ")");
 	
-	renderColor();
-	computeColorRect();
-	renderCSText();
 	computeSelectRect();
 	computeFilter();
 	//****************************************************************
@@ -572,10 +448,9 @@ $(function(){
 	window.document.onmousedown = function(event){
 		var begin_clickX = event.clientX;
 		var begin_clickY = event.clientY;
-		beginY = event.layerY - 120;
-		RectBeginY = event.layerY;
-		beginY_index = computeIndexY(RectBeginY);
-		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
+		beginY = event.layerY;
+		beginY_index = computeIndexY(beginY);
+		if((begin_clickX>250)&&(begin_clickX<InRectXMax)&&(begin_clickY>InRectYMin)&&(begin_clickY<InRectYMax)){
 			select_focus = true;
 		}
 		if((FirstSelectFilterNum!=-1)&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)
@@ -591,8 +466,8 @@ $(function(){
 		}
 	}
 	window.document.onmousemove = function(event){
-		var filter_moveY = event.layerY - 120;
-		var cs_moveY = event.layerY - 120;
+		var filter_moveY = event.layerY;
+		var cs_moveY = event.layerY;
 		if(moveSR){
 			moveFilter = false;
 			if(FirstSelectRectNum == 0){
@@ -703,17 +578,16 @@ $(function(){
 		}	
 		//*************************************************************
 		if(select_focus){
-			var moveY = event.layerY - 120;
-			RectMoveY = event.layerY;
+			var moveY = event.layerY;
 			var beginSmall = true;
 			svg.select(".focus_rect").remove();
-			if((RectBeginY - RectMoveY)>0){
+			if((beginY - moveY)>0){
 				svg.append("g")
 				.attr("class","focus_rect")
 				.append("rect")
 				.attr("x",0)
-				.attr("y",RectMoveY)
-				.attr("height",(RectBeginY - RectMoveY))
+				.attr("y",moveY)
+				.attr("height",(beginY - moveY))
 				.attr("width",InRectWidth)
 				.attr("fill-opacity",0.2)
 				.attr("fill","gray")
@@ -724,8 +598,8 @@ $(function(){
 				.attr("class","focus_rect")
 				.append("rect")
 				.attr("x",0)
-				.attr("y",RectBeginY)
-				.attr("height",(RectMoveY - RectBeginY))
+				.attr("y",beginY)
+				.attr("height",(moveY - beginY))
 				.attr("width",InRectWidth)
 				.attr("fill-opacity",0.2)
 				.attr("fill","gray")
@@ -735,10 +609,9 @@ $(function(){
 		}
 	}
 	window.document.onmouseup = function(event){
-		var upY = event.layerY - 120;
-		RectEndY = event.layerY;
-		var filter_moveY = event.layerY - 120;
-		var cs_moveY = event.layerY - 120;
+		var upY = event.layerY;
+		var filter_moveY = event.layerY;
+		var cs_moveY = event.layerY;
 		if(moveSR){
 			moveFilter = false;
 			if(FirstSelectRectNum == 0){
@@ -766,6 +639,9 @@ $(function(){
 			var point_num = Math.floor((InRectYMax - cs_moveY)/InRectHeight * 100);
 			stopNumArray[(4 - FirstSelectRectNum)] = point_num;
 			cs_array[(4 - FirstSelectRectNum)] = point_num/100;
+			//var point_num = Math.floor((cs_moveY - InRectYMin)/InRectHeight * 100);
+			//stopNumArray[(FirstSelectRectNum)] = point_num;
+			//cs_array[(FirstSelectRectNum)] = point_num/100;
 			cs_coord[FirstSelectRectNum] = cs_moveY;
 			renderCSText();
 			renderColor();
@@ -855,7 +731,7 @@ $(function(){
 		if(up_clickY<30){
 			beginY_index = -1;
 		}
-		upY_index = computeIndexY(RectEndY);
+		upY_index = computeIndexY(upY);
 		if(select_focus){
 			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
 				for(var i=beginY_index;i<=upY_index;i++){
@@ -929,7 +805,7 @@ $(function(){
 		//***********************************************
 			select_focus = false;
 			if(select_focus){
-				var upY = event.layerY - 120;
+				var upY = event.layerY;
 				var upY_index = computeIndexY(upY);
 				if(beginY_index <= upY_index ){
 					for(var i=beginY_index;i<=upY_index;i++){
@@ -971,7 +847,7 @@ $(function(){
 			}
 		 }
 	}
-	//****************************************************************************
+	//*******************************************************
 	function computeFilter(){
 		svg_color.selectAll(".filter_circle").remove();
 		svg_color.selectAll(".filter_circle")
@@ -1040,25 +916,7 @@ $(function(){
 	}
 	//*******************************************************
 	function computeButtonWidth(){
-		button_width = ButtonInRectWidth/AttrNum;
-		d3.select("#AttrButton")
-		.selectAll(".attr_button").remove();
-		d3.select("#AttrButton")
-		.selectAll(".attr_button")
-		.append("g")
-		.data(SelectAttrName)
-		.enter()
-		.append("button")
-		.attr("class","attr_button")
-		.style("height",InRectYMin+"px")
-		.style("width", button_width +"px")
-		.on("click",function(d,i){
-			sortAttr(d);
-		})
-		.text(function(d,i){
-			return d;
-		});
-		
+		button_width = InRectWidth/AttrNum;
 		for(var i=0;i<AttrAllNum;i++){
 			XArray[i] = i * button_width;
 		}
@@ -1088,6 +946,7 @@ $(function(){
 	function computeBarHeight(){
 		humannum = humannum_max - humannum_min;
 		render_baseballdata = baseballdata.slice(humannum_min,humannum_max);
+		//barheight = InRectHeight/humannum;
 		focus_height = 20;
 	}
 	//rerender the color of the histogram and the rect
@@ -1128,6 +987,7 @@ $(function(){
 		.attr("width", 30)
 		.attr("height", InRectHeight)
 		.style("fill","url(#" + linearGradient.attr("id") + ")");
+		
 	}
 	//*************************************************************************
 	function renderCSText(){
@@ -1166,6 +1026,7 @@ $(function(){
 	function computeVarY(){
 		top_middleY = focusY_min * barheight;
 		bottom_middleY = (focusY_max + 1 - yfocus_num) * barheight + yfocus_num * focus_height;
+		//ChangeRectHeight = InRectHeight + yfocus_num *(focus_height - barheight);
 		ChangeRectHeight = yfocus_num * focus_height + (humannum_sum - yfocus_num)
 		var coord_y = 0;
 		YArray[0] = 0; 
@@ -1317,27 +1178,35 @@ $(function(){
 					.attr("width",function(d){
 						return scale(d[x]);
 					})
+					//.attr("fill","steelblue")
 					.classed(AttrArray[index],true)
 					.style("fill",function(d,i){
+						//if(index == sortIndex){
 						var color = computeColor(getAttr(d,sortIndex),sortIndex);
 						return  color;
+						//}else{
+						//	return "steelblue";
+						//}
 					})
 					.on("mouseover",function(d,i){
 						currentYNum = i;
-						d3.select(this).style("fill","green");
 					})
 					.on("mouseout",function(d){
 						currentYNum = -1;
-						var color = computeColor(getAttr(d,sortIndex),sortIndex);
-						d3.select(this).style("fill",function(){
-							return color;
-						});
 					});
 					real_index++;
 				}
 			}
 			index++;
 		}
+		/*svg.append("g")
+		.append("line")
+		.attr("x1",0)
+		.attr("x2",0)
+		.attr("y1",0)
+		.attr("y2",ChangeRectHeight)
+		.attr("stroke","gray")
+		.attr("stroke-width",4);*/
 		//*********************************************************
 		for(var i=0;i<FocusArray.length;i++){
 			var indexY = computeRealIndexY(FocusArray[i]);
@@ -1364,10 +1233,6 @@ $(function(){
 			var baseballman = render_baseballdata[indexY];
 			var index = 0;
 			var real_index = 0;
-			var font_size = Math.floor(130/AttrNum);
-			if(font_size>18){
-				font_size = 18;
-			}
 			for(x in baseballman){
 				if(DisplayArray.indexOf(index)!=-1){
 					var attr = baseballman[x];
@@ -1376,7 +1241,7 @@ $(function(){
 					.attr("x",(XArray[real_index] + text_paddingX))
 					.attr("y",focusx_bottom - text_paddingY)
 					.attr("class","person")
-					.attr("font-size",font_size)
+					.attr("font-size",15)
 					.attr("font-family","simsun")
 					.text(baseballman[x]);
 					real_index++;
@@ -1384,7 +1249,54 @@ $(function(){
 				index++;
 			}
 		}
-	}
+		//*********************************************************
+		/*svg.append("g").selectAll("line")
+		.data(AttrAllArray)
+		.enter()
+		.append("line")
+		.attr("x1",function(d,i){
+			return (button_width) * (i);
+		})
+		.attr("x2",function(d,i){
+			return (button_width) * (i);
+		})
+		.attr("y1",0)
+		.attr("y2",ChangeRectHeight)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		svg.append("g")
+		.append("line")
+		.attr("x1",0)
+		.attr("x2",InRectWidth)
+		.attr("y1",InRectHeight)
+		.attr("y2",InRectHeight)
+		.attr("stroke","black")
+		.attr("stroke-width",4);*/
+		//*********************************************************
+/*		if((focusY_min>=0)&&(focusY_max>=0)){
+			for(var i=focusY_min;i<=focusY_max;i++){
+				var num = baseballdata[i].num;
+				if(FocusArray.indexOf(num)!=-1){
+					var baseballman = baseballdata[i];
+					var index = 0;
+					var text_y = computeCoordY(i+1-humannum_min);
+					for(x in baseballman){
+						var attr = baseballman[x];
+						svg.append("g")
+						.append("text")
+						.attr("x",(button_width * index + text_paddingX))
+						.attr("y",text_y - text_paddingY)
+						.attr("class","person")
+						.attr("font-size",15)
+						.attr("font-family","simsun")
+						.text(baseballman[x]);
+						index++;
+					}
+				}
+			}
+		}
+*/	}
 	//*****************************************************************
 	//get the attribute of the baseball man according to the index
 	function getAttr(baseballman, focus_index){
@@ -1416,7 +1328,9 @@ $(function(){
 		return coordY - minY;
 	}
 	function computeCoordY(indexY){
+		//indexY = computeRealIndexY(indexY);
 		var coordY = 0;
+		//alert(index);
 		if(yfocus_num == 0){
 			coordY = indexY * barheight;
 		}else if(indexY <= focusY_min){
@@ -1488,29 +1402,124 @@ $(function(){
 		return doi_height;
 	};
 	//***********************************************************
-	function sortAttr(attr_name){
-		if(SortObject[attr_name]){
+	function sortName(){
+		if(down_Name){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return a[attr_name] - b[attr_name];
+				return a.name - b.name;
 			});
-			SortObject[attr_name] = false;
 			down_all = true;
+			down_Name = false;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return b[attr_name] - a[attr_name];
+				return b.name - a.name;
 			});
-			SortObject[attr_name] = true;
 			down_all = false;
+			down_Name = true;
 		}
-		for(var i=0;i<AttrNum;i++){
-			if(attr_name==AttrName[i]){
-				sortIndex = i;
-				break;
-			}
-		}
+		sortIndex = 0;
 		computeMinMax();
 		computeVarY();
 		svg.selectAll("*").remove(); 
+		tablelens();
+	}
+	function sortBat86(){
+		if(down_Bat86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.bat86 - b.bat86;
+			});
+			down_all = true;
+			down_Bat86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.bat86 - a.bat86;
+			});
+			down_all = false;
+			down_Bat86 = true;
+		}
+		sortIndex = 1;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortHit86(){
+		if(down_Hit86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.hits86 - b.hits86;
+			});
+			down_all = true;
+			down_Hit86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.hits86 - a.hits86;
+			});
+			down_all = false;
+			down_Hit86 = true;
+		}
+		sortIndex = 2;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortHRuns86(){
+		if(down_HRuns86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.hRuns86 - b.hRuns86;
+			});
+			down_all = true;
+			down_HRuns86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.hRuns86 - a.hRuns86;
+			});
+			down_all = false;
+			down_HRuns86 = true;
+		}
+		sortIndex = 3;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortRuns86(){
+		if(down_Runs86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.runs86 - b.runs86;
+			});
+			down_all = true;
+			down_Runs86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.runs86 - a.runs86;
+			});
+			down_all = false;
+			down_Runs86 = true;
+		}
+		sortIndex = 4;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortRunbat86(){
+		if(down_Runbat86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.Runbat86 - b.Runbat86;
+			});
+			down_all = true;
+			down_Runbat86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.Runbat86 - a.Runbat86;
+			});
+			down_all = false;
+			down_Runbat86 = true;
+		}
+		sortIndex = 5;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
 		tablelens();
 	}
 	function computeMinMax(){
@@ -1588,21 +1597,23 @@ $(function(){
 	function ChangeAttr(numChecked,checkedItems){
 		AttrNum = numChecked + 1;
 		DisplayArray = new Array();
-		SelectAttrName = new Array();
 		DisplayArray.push(0);
 		for(var i=0;i<checkedItems.length;i++){
-			for(var j=0;j<AttrAllNum;j++){
-				if(checkedItems[i].value == AttrName[j]){
-					DisplayArray.push(j);
-				}
+			if(checkedItems[i].value=="option1"){
+				DisplayArray.push(i+1);
 			}
-			if(checkedItems[i].value.substring(0,(checkedItems[i].value.length-1))
-			 == AttrName[AttrAllNum - 1].substring(0,AttrName[AttrAllNum-1].length-1)){
-			 	DisplayArray.push(AttrAllNum - 1);
-			 }
-		}
-		for(var i=0;i<DisplayArray.length;i++){
-			SelectAttrName.push(AttrName[DisplayArray[i]]);
+			if(checkedItems[i].value=="option2"){
+				DisplayArray.push(i+1);
+			}
+			if(checkedItems[i].value=="option3"){
+				DisplayArray.push(i+1);
+			}
+			if(checkedItems[i].value=="option4"){
+				DisplayArray.push(i+1);
+			}
+			if(checkedItems[i].value=="option5"){
+				DisplayArray.push(i+1);
+			}
 		}
 		computeButtonWidth();
 		svg.selectAll("*").remove();
@@ -1610,17 +1621,27 @@ $(function(){
 	}
 	//change the sort num
 	function ChangeSort(checkedItems){
-		for(var j=0;j<AttrAllNum;j++){
-			if(checkedItems[0].value == AttrName[j]){
-				sortIndex = j;
-			}
+		if(checkedItems[0].value=="Bat86"){
+			sortIndex = 1;
+			svg.selectAll("*").remove();
+			tablelens();
+		}else if(checkedItems[0].value=="Hit86"){
+			sortIndex = 2;
+			svg.selectAll("*").remove();
+			tablelens();
+		}else if(checkedItems[0].value=="HRuns86"){
+			sortIndex = 3;
+			svg.selectAll("*").remove();
+			tablelens();
+		}else if(checkedItems[0].value=="Run86"){
+			sortIndex = 4;
+			svg.selectAll("*").remove();
+			tablelens();
+		}else if(checkedItems[0].value=="RunBat86"){
+			sortIndex = 5;
+			svg.selectAll("*").remove();
+			tablelens();
 		}
-		if(checkedItems[0].value.substring(0,(checkedItems[0].value.length-1))
-		    == AttrName[AttrAllNum - 1].substring(0,AttrName[AttrAllNum-1].length-1)){
-			sortIndex = AttrAllNum - 1;
-		}
-		svg.selectAll("*").remove();
-		tablelens();
 	}
 	//change the color
 	function ChangeColor(checkedItems){

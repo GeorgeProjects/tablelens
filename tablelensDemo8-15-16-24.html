@@ -14,6 +14,7 @@
 <script type="text/javascript" src="d3/prettify.js"></script>
 <script type="text/javascript">
 $(function(){
+	//$("body").css("zoom","80%");
 	$("select#multiple_select").multiselect({
 		selectedList: 1
 	});
@@ -52,6 +53,9 @@ $(function(){
 <style>
 	#outer{
 		background:white;
+		/*margin: auto;
+  		position: absolute;
+  		left: 0; bottom: 0; right: 0;*/
 		border-top: 5px solid #69c773;
 	  	box-shadow: 0 2px 10px rgba(0,0,0,0.8);
 	}
@@ -117,6 +121,7 @@ $(function(){
 		position:relative;
 	}
 	#resetfilter{
+		/*display:inline;*/
 		margin-top:10px;
 		float:left;
 		padding-left:30px;
@@ -147,7 +152,7 @@ $(function(){
 <div id="page-wrapper">
 		<h1>Tablelens Text File Reader</h1>
 		<div id="file_select">
-			Select a csv file<font color="red" size="2px"><strong>(the file type must be .csv; the attribute must be numerical value)</strong></font>:
+			Select a text file:
 			<input type="file" id="fileInput">
 		</div>
 </div>
@@ -162,16 +167,31 @@ $(function(){
 	<!--***************************************************************-->
 	<form id="multiple">
 	<select multiple="multiple" id="multiple_select" style="width:100px; top:5px;">
+	<!--<option value="option1">Bat86</option>
+	<option value="option2">Hit86</option>
+	<option value="option3">HRuns86</option>
+	<option value="option4">Run86</option>
+	<option value="option5">RunBat86</option>-->
 	</select>
 	</form>
 	<!--****************************************************************-->
 	<form id = "grouping">
 		<select name="demo" id="grouping_select" style="width:100px; top:5px;">
+		<!--<option value="Bat86">Bat86</option>
+		<option value="Hit86">Hit86</option>
+		<option value="HRuns86">HRuns86</option>
+		<option value="Run86">Run86</option>
+		<option value="RunBat86">RunBat86</option>-->
 		</select>
 	</form>
 	<!--*****************************************************************-->
 	<form id = "single">
 		<select name="demo" id="single_select" style="width:100px; top:5px;">
+		<!--<option value="uniformly5">Distributed uniformly with 1/6</option>
+		<option value="uniformly4">Distributed uniformly with 1/5</option>
+		<option value="uniformly3">Distributed uniformly with 1/4</option>
+		<option value="percentile1">Distribute using 10,50,90</option>
+		<option value="percentile2">Distribute using 25,50,75</option>-->
 		</select>
 	</form>
 	<button id="resetSelect" onClick="resetSelection();">  Reset Selection  </button>
@@ -272,6 +292,9 @@ $(function(){
 	var quarter2Value = new Array();
 	var quarter3Value = new Array();
 	var quarter4Value = new Array();
+
+	//var minValue = [0,16,1,0,0,0,1]
+	//var maxValue = [0,687,238,40,130,121,322];
 	var minValue = [0,0,0,0,0,0,0];
 	var maxValue = [0,0,0,0,0,0,0];
 	var filter_array = new Array();
@@ -305,8 +328,8 @@ $(function(){
 			var fileDisplayArea = document.getElementById('fileDisplayArea');
 			fileInput.addEventListener('change', function(e) {
 				var file = fileInput.files[0];
-				var textType = "application/vnd.ms-excel";
-				if (file.type == (textType)) {
+				var textType = /text.*/;
+				if (file.type.match(textType)) {
 					var reader = new FileReader();
 					reader.onload = function(e) {
 						text = reader.result;
@@ -475,6 +498,10 @@ $(function(){
 							return d;
 						});
 						$("select#single_select").multiselect('refresh');
+						//for(var i=0;i<AttrName.length;i++){
+//						   d3.select("#attr"+(i+1))
+//		 				   .text(AttrName[i]);
+//						}
 						sortIndex = 1;
 						renderCSText();
 						svg.selectAll("*").remove();
@@ -482,11 +509,74 @@ $(function(){
 					}
 					reader.readAsText(file);	
 				} else {
-					alert("File not supported!");
+					fileDisplayArea.innerText = "File not supported!"
 				}
 			});
 	}
 	//***********************************************************************************
+	/*d3.csv("baseballman1.csv",function(baseballman){
+		//keep updating with the data
+		for(var i=0;i<baseballman.length;i++){
+			baseballman[i].num = i+1;
+		}
+		render_baseballdata = baseballman;
+		baseballdata = render_baseballdata;
+		baseballman1 = baseballdata[0];
+		var count = 0;
+		for(attribute in baseballman1){
+			AttrArray.push(attribute);
+			count++;
+		}
+		AttrNum = count - 1, AttrAllNum = count - 1;
+		for(var i=0;i<=AttrAllNum;i++){
+			TableArray[i] = new Array();
+		}
+		var i = 0;
+		for(x in baseballman1){
+			if(i<=AttrAllNum){
+				for(var j=0;j<humannum_sum;j++){
+					TableArray[i][j] = baseballman[j][x];
+				}
+				i++;
+			}
+		}
+		sortIndex = 1;
+		SortFunction();
+		//barheight = InRectHeight/humannum;
+		focus_height = 20;
+		for(var i=0;i<humannum_sum;i++){
+			YArray[i] = computeCoordY(i);
+		}
+		for(var i=0;i<=AttrNum;i++){
+			AttrAllArray[i] = i;
+		}
+		humannum_sum = render_baseballdata.length;
+		humannum = render_baseballdata.length;
+		humannum_min = 0, humannum_max = render_baseballdata.length;
+		button_width = ButtonInRectWidth/AttrNum;
+		XArray = new Array();
+		for(var i=0;i<AttrAllNum;i++){
+			XArray[i] = i * button_width;
+		}
+		for(var i=0;i<=AttrAllNum;i++){
+			if(i==0){
+				minValue[i] = 0;
+				maxValue[i] = 0;
+			}else{
+				minValue[i] = Array.min(TableArray[i]);
+				maxValue[i] = Array.max(TableArray[i]);
+			}	
+		}
+		for(var i=0;i<minValue.length;i++){
+			var difference = Math.floor((maxValue[i] - minValue[i]));
+			quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
+			quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
+			quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
+			quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
+			quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+		}
+		tablelens();
+	});*/
 	Array.min=function(array)
 	{
     	return Math.min.apply(Math,array);
@@ -540,6 +630,13 @@ $(function(){
 	.attr("width",InRectWidth/2)
 	.attr("height",svgHeight);
 	
+	/*svg_button = d3.select("#AttrButton")
+				.append("svg")
+				.attr("id","svg_button")
+				.attr("width",InRectWidth)
+				.attr("height",InRectYMin)
+				.style("background","blue");*/
+	
 	defs = svg_color.append("defs");
 	linearGradient = defs.append("linearGradient")
 						.attr("id","linearColor")
@@ -561,6 +658,14 @@ $(function(){
 	.attr("width", 30)
 	.attr("height", InRectHeight)
 	.style("fill","url(#" + linearGradient.attr("id") + ")");
+	
+	/*d3.select("#AttrButton")
+	.append("button")
+	.attr("x",0)
+	.attr("y",0)
+	.attr("width",20)
+	.attr("height",10);*/
+	
 	
 	renderColor();
 	computeColorRect();
@@ -766,6 +871,9 @@ $(function(){
 			var point_num = Math.floor((InRectYMax - cs_moveY)/InRectHeight * 100);
 			stopNumArray[(4 - FirstSelectRectNum)] = point_num;
 			cs_array[(4 - FirstSelectRectNum)] = point_num/100;
+			//var point_num = Math.floor((cs_moveY - InRectYMin)/InRectHeight * 100);
+			//stopNumArray[(FirstSelectRectNum)] = point_num;
+			//cs_array[(FirstSelectRectNum)] = point_num/100;
 			cs_coord[FirstSelectRectNum] = cs_moveY;
 			renderCSText();
 			renderColor();
@@ -1088,6 +1196,7 @@ $(function(){
 	function computeBarHeight(){
 		humannum = humannum_max - humannum_min;
 		render_baseballdata = baseballdata.slice(humannum_min,humannum_max);
+		//barheight = InRectHeight/humannum;
 		focus_height = 20;
 	}
 	//rerender the color of the histogram and the rect
@@ -1166,6 +1275,7 @@ $(function(){
 	function computeVarY(){
 		top_middleY = focusY_min * barheight;
 		bottom_middleY = (focusY_max + 1 - yfocus_num) * barheight + yfocus_num * focus_height;
+		//ChangeRectHeight = InRectHeight + yfocus_num *(focus_height - barheight);
 		ChangeRectHeight = yfocus_num * focus_height + (humannum_sum - yfocus_num)
 		var coord_y = 0;
 		YArray[0] = 0; 
@@ -1317,10 +1427,15 @@ $(function(){
 					.attr("width",function(d){
 						return scale(d[x]);
 					})
+					//.attr("fill","steelblue")
 					.classed(AttrArray[index],true)
 					.style("fill",function(d,i){
+						//if(index == sortIndex){
 						var color = computeColor(getAttr(d,sortIndex),sortIndex);
 						return  color;
+						//}else{
+						//	return "steelblue";
+						//}
 					})
 					.on("mouseover",function(d,i){
 						currentYNum = i;
@@ -1338,6 +1453,14 @@ $(function(){
 			}
 			index++;
 		}
+		/*svg.append("g")
+		.append("line")
+		.attr("x1",0)
+		.attr("x2",0)
+		.attr("y1",0)
+		.attr("y2",ChangeRectHeight)
+		.attr("stroke","gray")
+		.attr("stroke-width",4);*/
 		//*********************************************************
 		for(var i=0;i<FocusArray.length;i++){
 			var indexY = computeRealIndexY(FocusArray[i]);
@@ -1384,7 +1507,54 @@ $(function(){
 				index++;
 			}
 		}
-	}
+		//*********************************************************
+		/*svg.append("g").selectAll("line")
+		.data(AttrAllArray)
+		.enter()
+		.append("line")
+		.attr("x1",function(d,i){
+			return (button_width) * (i);
+		})
+		.attr("x2",function(d,i){
+			return (button_width) * (i);
+		})
+		.attr("y1",0)
+		.attr("y2",ChangeRectHeight)
+		.attr("stroke","black")
+		.attr("stroke-width",2);
+		
+		svg.append("g")
+		.append("line")
+		.attr("x1",0)
+		.attr("x2",InRectWidth)
+		.attr("y1",InRectHeight)
+		.attr("y2",InRectHeight)
+		.attr("stroke","black")
+		.attr("stroke-width",4);*/
+		//*********************************************************
+/*		if((focusY_min>=0)&&(focusY_max>=0)){
+			for(var i=focusY_min;i<=focusY_max;i++){
+				var num = baseballdata[i].num;
+				if(FocusArray.indexOf(num)!=-1){
+					var baseballman = baseballdata[i];
+					var index = 0;
+					var text_y = computeCoordY(i+1-humannum_min);
+					for(x in baseballman){
+						var attr = baseballman[x];
+						svg.append("g")
+						.append("text")
+						.attr("x",(button_width * index + text_paddingX))
+						.attr("y",text_y - text_paddingY)
+						.attr("class","person")
+						.attr("font-size",15)
+						.attr("font-family","simsun")
+						.text(baseballman[x]);
+						index++;
+					}
+				}
+			}
+		}
+*/	}
 	//*****************************************************************
 	//get the attribute of the baseball man according to the index
 	function getAttr(baseballman, focus_index){
@@ -1416,7 +1586,9 @@ $(function(){
 		return coordY - minY;
 	}
 	function computeCoordY(indexY){
+		//indexY = computeRealIndexY(indexY);
 		var coordY = 0;
+		//alert(index);
 		if(yfocus_num == 0){
 			coordY = indexY * barheight;
 		}else if(indexY <= focusY_min){
@@ -1513,6 +1685,126 @@ $(function(){
 		svg.selectAll("*").remove(); 
 		tablelens();
 	}
+/*	function sortName(){
+		if(down_Name){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.name - b.name;
+			});
+			down_all = true;
+			down_Name = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.name - a.name;
+			});
+			down_all = false;
+			down_Name = true;
+		}
+		sortIndex = 0;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove(); 
+		tablelens();
+	}
+	function sortBat86(){
+		if(down_Bat86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.bat86 - b.bat86;
+			});
+			down_all = true;
+			down_Bat86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.bat86 - a.bat86;
+			});
+			down_all = false;
+			down_Bat86 = true;
+		}
+		sortIndex = 1;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortHit86(){
+		if(down_Hit86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.hits86 - b.hits86;
+			});
+			down_all = true;
+			down_Hit86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.hits86 - a.hits86;
+			});
+			down_all = false;
+			down_Hit86 = true;
+		}
+		sortIndex = 2;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortHRuns86(){
+		if(down_HRuns86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.hRuns86 - b.hRuns86;
+			});
+			down_all = true;
+			down_HRuns86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.hRuns86 - a.hRuns86;
+			});
+			down_all = false;
+			down_HRuns86 = true;
+		}
+		sortIndex = 3;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortRuns86(){
+		if(down_Runs86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.runs86 - b.runs86;
+			});
+			down_all = true;
+			down_Runs86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.runs86 - a.runs86;
+			});
+			down_all = false;
+			down_Runs86 = true;
+		}
+		sortIndex = 4;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}
+	function sortRunbat86(){
+		if(down_Runbat86){
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return a.Runbat86 - b.Runbat86;
+			});
+			down_all = true;
+			down_Runbat86 = false;
+		}else{
+			render_baseballdata = render_baseballdata.sort(function(a,b){
+				return b.Runbat86 - a.Runbat86;
+			});
+			down_all = false;
+			down_Runbat86 = true;
+		}
+		sortIndex = 5;
+		computeMinMax();
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+	}*/
 	function computeMinMax(){
 		 focusY_min = humannum_sum;
 		 focusY_max = -1;

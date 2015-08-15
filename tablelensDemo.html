@@ -592,6 +592,9 @@ $(function(){
 			moveSR = false;
 			SelectFilterNum = FirstSelectFilterNum;
 		}*/
+		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
+			select_focus = true;
+		}
 		if((FirstSelectFilterNum!=-1)){
 			moveFilter = true;
 			moveSR = false;
@@ -602,9 +605,6 @@ $(function(){
 			moveSR = true;
 			select_focus = false;
 			moveFilter = false;
-		}
-		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
-			select_focus = true;
 		}
 	}
 	window.document.onmousemove = function(event){

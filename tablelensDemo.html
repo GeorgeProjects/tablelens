@@ -303,6 +303,7 @@ $(function(){
 	filter_option[2] = "Distributed uniformly with 1/4"
 	filter_option[3] = "Distribute using 10,50,90";
 	filter_option[4] = "Distribute using 25,50,75";
+	var screen_width = document.body.clientWidth;
 	//*******************************************************************************
 	window.onload = function() {
 			FocusArray.splice(0,FocusArray.length);
@@ -389,7 +390,7 @@ $(function(){
 							quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
 						}
 						for(var i=0;i<AttrAllNum;i++){
-							XArray[i] = i * button_width;
+							XArray[i] = i * button_width + 6;
 						}
 						NamePArray.push(quarter4Value[sortIndex]+"");
 						NamePArray.push(quarter3Value[sortIndex]+"");
@@ -588,15 +589,21 @@ $(function(){
 		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
 			select_focus = true;
 		}
-		if((FirstSelectFilterNum!=-1)&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)
+		/*if((FirstSelectFilterNum!=-1)&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)
 			&&(begin_clickY<ColorYMax)&&(begin_clickY>ColorYMin)){
 			moveFilter = true;
 			moveSR = false;
 			SelectFilterNum = FirstSelectFilterNum;
+		}*/
+		if((FirstSelectFilterNum!=-1)){
+			moveFilter = true;
+			moveSR = false;
+			select_focus = false;
+			SelectFilterNum = FirstSelectFilterNum;
 		}
-		if((FirstSelectRectNum!=-1)&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)
-			&&(begin_clickY<ColorYMax)&&(begin_clickY>ColorYMin)){
+		if((FirstSelectRectNum!=-1)){
 			moveSR = true;
+			select_focus = false;
 			moveFilter = false;
 		}
 	}
@@ -1070,7 +1077,7 @@ $(function(){
 		});
 		
 		for(var i=0;i<AttrAllNum;i++){
-			XArray[i] = i * button_width;
+			XArray[i] = i * button_width + 6;
 		}
 		for(var i=0;i<AttrAllNum;i++){
 			ScaleArray[i] = d3.scale.linear()

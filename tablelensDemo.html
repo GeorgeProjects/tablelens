@@ -87,7 +87,7 @@ $(function(){
 	}
 	#control_button{
 		margin: auto;
-  		position: absolute;
+  		position: relative;
   		top: 0; left: 0; bottom: 0; right: 0;
 	}
 	#multiple{
@@ -138,6 +138,9 @@ $(function(){
 	  border-top: 5px solid #69c773;
 	  box-shadow: 0 2px 10px rgba(0,0,0,0.8);
 	}
+	#filter_button{
+	  text-align:center;
+	}
 	h1 {
 		margin-top: 0;
 	}
@@ -179,10 +182,12 @@ $(function(){
 		<select name="demo" id="single_select" style="width:100px; top:5px;">
 		</select>
 	</form>
+	<div id="filter_button">
 	<button id="resetSelect" onClick="resetSelection();">  Reset Selection  </button>
 	<button id="removeselected" onClick="removeSelected();">  Remove Selected  </button>
 	<button id="removeothers" onClick="removeOthers();">  Remove Others  </button>
 	<button id="resetfilter" onClick="resetfilter();">  Reset Filters  </button>
+	</div>
 	</div>
 </div>  
 </body>
@@ -540,7 +545,7 @@ $(function(){
 	
 	d3.select("#control_button")
 	.style("left", "0px")
-	.style("top", (InRectHeight + 160) + "px")
+	.style("top", (3) + "px")
 	.style("height", (80) +"px")
 	.style("width", (InRectWidth - 320)+"px");
 	

@@ -318,7 +318,8 @@ $(function(){
 				var file = fileInput.files[0];
 				var size = file.size;
 				var textType = "application/vnd.ms-excel";
-				if (file.type == (textType)) {
+				var textType2 = "text/csv";
+				if ((file.type == (textType))||(file.type == (textType2))) {
 				  if(size<30000){
 					var reader = new FileReader();
 					reader.onload = function(e) {

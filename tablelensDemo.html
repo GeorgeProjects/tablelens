@@ -47,6 +47,18 @@ $(function(){
 			 return checkedItems[0].value;
   		 }
 	});	
+	$("select#embedded_select").multiselect({
+		multiple: false,
+		header: "Select an sample data",
+		noneSelectedText: "option",
+		selectedList: 1
+	});
+	$("select#embedded_select").multiselect({
+   		selectedText: function(numChecked, numTotal, checkedItems){
+			 ChangeData(checkedItems);
+			 return checkedItems[0].value;
+  		 }
+	});
 });
 </script>
 <style>
@@ -167,6 +179,13 @@ $(function(){
 		<div id="file_select">
 			Select a csv file<font color="red" size="2px"><strong>(the file type must be .csv;file size less than 30KB;the attribute must be numerical value)</strong></font>:
 			<input type="file" id="fileInput">
+			<form id = "embedded">
+				Select an embedded data:
+				<select name="embedded_data" id="embedded_select" style="width:100px; top:5px;">
+					<option value="baseballdata">baseballdata</option>
+					<option value="basketballdata">basketballdata</option>
+				</select>
+			</form>
 		</div>
 </div>
 <div id = "outer">
@@ -405,6 +424,7 @@ $(function(){
 							quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
 							quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
 						}
+						
 						for(var i=0;i<AttrAllNum;i++){
 							XArray[i] = i * button_width + 6;
 						}
@@ -516,7 +536,7 @@ $(function(){
 				}
 			});
 	}
-	//***********************************************************************************
+	//*******************************************************************************************
 	Array.min=function(array)
 	{
     	return Math.min.apply(Math,array);
@@ -1542,6 +1562,8 @@ $(function(){
 		}else{
 			IndexY = Math.ceil((CoordY - bottom_middleY)/barheight) + focusY_max;
 		}
+		if(IndexY<0){IndexY = 0;}
+		if(IndexY>(ManNum-1)){IndexY=(ManNum-1);}
 		return IndexY;
 	}
 	//**********************************************************
@@ -1692,6 +1714,17 @@ $(function(){
 		svg.selectAll("*").remove();
 		tablelens();
 	}
+	//chenge the sample data
+	function ChangeData(checkedItems){
+		if(checkedItems[0].value=="baseballdata"){
+			var filename = "baseballman2.csv";
+			ReadData(filename);
+		}
+		if(checkedItems[0].value=="basketballdata"){
+			var filename = "baseballman.csv";
+			ReadData(filename);
+		}
+	}
 	//change the color
 	function ChangeColor(checkedItems){
 		if(checkedItems[0].value=="uniformly5"){
@@ -1796,6 +1829,173 @@ $(function(){
 			svg.selectAll("*").remove();
 			tablelens();
 		}
+	}
+	//***************************************************************************************
+	function ReadData(fileName){
+		d3.csv(fileName,function(baseballman){
+			//keep updating with the data
+			FocusArray.splice(0,FocusArray.length);
+			render_baseballdata.splice(0,render_baseballdata.length);
+			minValue.splice(0,minValue.length);
+			maxValue.splice(0,maxValue.length);
+			AttrName.splice(0,AttrName.length);
+			ManNum = baseballman.length;
+			render_baseballdata = baseballman;
+			baseballdata = render_baseballdata;
+			baseballman1 = baseballdata[0];
+			humannum_sum = render_baseballdata.length;
+			humannum = render_baseballdata.length;
+			humannum_min = 0, humannum_max = render_baseballdata.length;
+			var count = 0;
+			for(attribute in baseballman1){
+				var attr = attribute.substring(0,5);
+				AttrName.push(attr);
+				count++;
+			}
+			AttrNum = count, AttrAllNum = count;
+			for(var i=0;i<ManNum;i++){
+				baseballman[i].num = i+1;
+			}
+			for(var i=0;i<=AttrAllNum;i++){
+				TableArray[i] = new Array();
+			}
+			var i = 0;
+			for(x in baseballman1){
+				if(i<=AttrAllNum){
+					for(var j=0;j<humannum_sum;j++){
+						TableArray[i][j] = baseballman[j][x];
+					}
+					i++;
+				}
+			}
+			for(var i=0;i<AttrNum;i++){
+				SortObject[AttrName[i]] = true;
+			}
+			for(var i=0;i<AttrNum;i++){
+				DisplayArray[i] = i;
+			}
+			sortIndex = 1;
+			SortFunction();
+			button_width = Math.floor(ButtonInRectWidth/AttrNum);
+			focus_height = 20;
+			for(var i=0;i<humannum_sum;i++){
+				YArray[i] = computeCoordY(i);
+			}
+			for(var i=0;i<=AttrNum;i++){
+				AttrAllArray[i] = i;
+			}
+			XArray = new Array();
+			for(var i=0;i<AttrAllNum;i++){
+				XArray[i] = i * button_width + 6;
+			}
+			for(var i=0;i<=AttrAllNum;i++){
+				if(i==0){
+					minValue[i] = 0;
+					maxValue[i] = 0;
+				}else{
+					minValue[i] = Array.min(TableArray[i]);
+					maxValue[i] = Array.max(TableArray[i]);
+				}	
+			}
+			for(var i=0;i<minValue.length;i++){
+				var difference = Math.floor((maxValue[i] - minValue[i]));
+				quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
+				quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
+				quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
+				quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
+				quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+			}
+			NamePArray.push(quarter4Value[sortIndex]+"");
+			NamePArray.push(quarter3Value[sortIndex]+"");
+			NamePArray.push(quarter2Value[sortIndex]+"");
+			NamePArray.push(quarter1Value[sortIndex]+"");
+			NamePArray.push(quarter0Value[sortIndex]+"");
+			for(var i=0;i<AttrAllNum;i++){
+				middleValue[i] = minValue[sortIndex] + cs_array[i] * (maxValue[sortIndex] - minValue[sortIndex]);
+			}
+			for(var i=0;i<AttrAllNum;i++){
+				ScaleArray[i] = d3.scale.linear()
+					.range([0,button_width - 10])
+					.domain([0,maxValue[i]]);
+			}		
+			d3.select("#AttrButton")
+				.selectAll(".attr_button").remove();
+			d3.select("#AttrButton")
+				.selectAll(".attr_button")
+				.append("g")
+				.data(AttrName)
+				.enter()
+				.append("button")
+				.attr("class","attr_button")
+				.style("height",InRectYMin+"px")
+				.style("width", (button_width) +"px")
+				.on("click",function(d,i){
+					sortAttr(d);
+				})
+				.text(function(d,i){
+					return AttrName[i];
+				});
+				select_option.splice(0,select_option.length);
+				for(var i=1;i<AttrName.length;i++){
+					select_option[i-1] = AttrName[i];
+				}
+				//***********************************************
+				d3.select("#multiple_select")
+				 .selectAll(".display_attr").remove();
+				d3.select("#multiple_select")
+				 .selectAll(".display_attr")
+				 .append("g")
+				 .data(select_option)
+				 .enter()
+				 .append("option")
+				 .attr("selected","selected")
+				 .attr("class","display_attr")
+				 .attr("value", function(d){
+					 return d;
+				  })
+				 .text(function(d,i){
+					 return d;
+				  });
+				//$("select#multiple_select").multiselect('refresh');
+				//*************************************************
+				d3.select("#grouping_select")
+				  .selectAll(".sort_attr").remove();
+				d3.select("#grouping_select")
+				  .selectAll(".sort_attr")
+				  .append("g")
+				  .data(select_option)
+				  .enter()
+				  .append("option")
+				  .attr("class","sort_attr")
+				  .attr("value",function(d){
+						return d;
+				  })
+				  .text(function(d,i){
+						 return d;
+				   });
+				//$("select#grouping_select").multiselect('refresh');
+				//**************************************************
+				 d3.select("#single_select")
+				   .selectAll(".color_option").remove();
+				d3.select("#single_select")
+				   .selectAll(".color_option")
+				   .append("g")
+				   .data(filter_option)
+				   .enter()
+				   .append("option")
+				   .attr("class","color_option")
+				   .attr("value",function(d,i){
+						return ColorArray[i];
+					})
+					.text(function(d,i){
+						return d;
+					});
+				//$("select#single_select").multiselect('refresh');
+				sortIndex = 1;
+				renderCSText();
+				svg.selectAll("*").remove();
+			tablelens();
+		});
 	}
 </script>
 </html>

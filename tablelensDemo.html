@@ -89,6 +89,7 @@ $(function(){
 		margin: auto;
   		position: relative;
   		top: 0; left: 0; bottom: 0; right: 0;
+		text-align:center;
 	}
 	#multiple{
 		float:left;
@@ -102,31 +103,43 @@ $(function(){
 		position:relative;
 	}
 	#resetSelect{
+		margin-left:auto;
+		margin-right:auto;
 		margin-top:10px;
 		padding-left:30px;
 		padding-right:30px;
 		float:left;
+		width:170px;
 	}
 	#removeselected{
+		margin-left:auto;
+		margin-right:auto;
 		margin-top:10px;
 		padding-left:30px;
 		padding-right:30px;
 		float:left;
 		position:relative;
+		width:170px;
 	}
 	#removeothers{
+		margin-left:auto;
+		margin-right:auto;
 		margin-top:10px;
 		float:left;
 		padding-left:30px;
 		padding-right:30px;
 		position:relative;
+		width:170px;
 	}
 	#resetfilter{
+		margin-left:auto;
+		margin-right:auto;
 		margin-top:10px;
 		float:left;
 		padding-left:30px;
 		padding-right:30px;
 		position:relative;
+		width:170px;
 	}
 	#page-wrapper {
 	  width: 1070px;
@@ -137,9 +150,6 @@ $(function(){
 	  min-height: 10px;
 	  border-top: 5px solid #69c773;
 	  box-shadow: 0 2px 10px rgba(0,0,0,0.8);
-	}
-	#filter_button{
-	  text-align:center;
 	}
 	h1 {
 		margin-top: 0;
@@ -182,12 +192,10 @@ $(function(){
 		<select name="demo" id="single_select" style="width:100px; top:5px;">
 		</select>
 	</form>
-	<div id="filter_button">
-	<button id="resetSelect" onClick="resetSelection();">  Reset Selection  </button>
-	<button id="removeselected" onClick="removeSelected();">  Remove Selected  </button>
-	<button id="removeothers" onClick="removeOthers();">  Remove Others  </button>
-	<button id="resetfilter" onClick="resetfilter();">  Reset Filters  </button>
-	</div>
+	<button id="resetSelect" onClick="resetSelection();">ResetSelection</button>
+	<button id="removeselected" onClick="removeSelected();">RemoveSelected</button>
+	<button id="removeothers" onClick="removeOthers();">RemoveOthers</button>
+	<button id="resetfilter" onClick="resetfilter();">ResetFilters</button>
 	</div>
 </div>  
 </body>
@@ -549,6 +557,29 @@ $(function(){
 	.style("top", (3) + "px")
 	.style("height", (80) +"px")
 	.style("width", (InRectWidth - 320)+"px");
+	
+	var button_width = Math.floor((InRectWidth - 320)/4);
+	d3.select("#resetSelect")
+	.style("width",button_width+"px");
+	
+	d3.select("#removeselected")
+	.style("width",button_width+"px");
+	
+	d3.select("removeothers")
+	.style("width",button_width+"px");
+	
+	d3.select("resetfilter")
+	.style("width",button_width+"px");
+	
+	var form_width = Math.floor((InRectWidth - 320)/3);
+	d3.select("#multiple")
+	.style("width",form_width+"px");
+	
+	d3.select("#grouping")
+	.style("width",form_width+"px");
+	
+	d3.select("#single")
+	.style("width",form_width+"px");
 	
 	computeButtonWidth();
 	

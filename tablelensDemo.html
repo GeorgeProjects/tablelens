@@ -278,7 +278,7 @@ $(function(){
 	var ManNum = 0;
 	//outer rect
 	var svgHeight = screen_height-190,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
-	var focusXMin = 250, focusXMax = 1205, focusYMin = 100, focusYMax = 700;
+	var focusXMin = 250, focusXMax = 1205, focusYMin = 30, focusYMax = 700;
 	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
 	var ColorXMin = 150, ColorXMax = 200, ColorYMin = 10, ColorYMax = 580;
 	//inner rect
@@ -386,6 +386,15 @@ $(function(){
 	var font_size = 0;
 	var focus_one = false;
 	var detail_num = 0;
+	var DivArray = new Array();
+	var DivObjectArray = new Array();
+	var div_index = 0;
+	var display_divNum = -1;
+	var div_height = 0;
+	var AddSvgIndexNum = 0;
+	var AddSvgHeight = 0;
+	var add_svg;
+	var copy_baseballdata;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -402,7 +411,7 @@ $(function(){
 				var textType = "application/vnd.ms-excel";
 				var textType2 = "text/csv";
 				if ((file.type == (textType))||(file.type == (textType2))) {
-				  if(size<30000){
+				  if(size<80000){
 					var reader = new FileReader();
 					reader.onload = function(e) {
 						text = reader.result;
@@ -447,6 +456,7 @@ $(function(){
 						for(var i=0;i<AttrNum;i++){
 							DisplayArray[i] = i;
 						}
+						copy_baseballdata = baseballman.concat();
 						render_baseballdata = baseballman;
 						baseballdata = render_baseballdata;
 						sortIndex = 1;
@@ -454,11 +464,12 @@ $(function(){
 						humannum_sum = render_baseballdata.length;
 						humannum = render_baseballdata.length;
 						humannum_min = 0, humannum_max = render_baseballdata.length;
+						if(barheight>(InRectHeight-150)/humannum_sum){
+							barheight = Math.floor(((InRectHeight-150)/humannum_sum)*100)/100;
+						}
 						SortFunction();
 						button_width = Math.floor(ButtonInRectWidth/AttrNum);
-						for(var i=0;i<humannum_sum;i++){
-							YArray[i] = computeCoordY(i);
-						}
+						computeVarY();
 						for(var i=0;i<=AttrNum;i++){
 							AttrAllArray[i] = i;
 						}
@@ -632,6 +643,7 @@ $(function(){
 	.style("height", InRectHeight+"px")
 	.style("width", paint_width+"px");
 	
+	div_height = InRectHeight -5 - baseballdata.length * barheight;
 	/*var parent = document.getElementById("inner");
 	//add div
 	var div = document.createElement("div");
@@ -930,6 +942,7 @@ $(function(){
 		var filter_moveY = event.layerY - paddingY;
 		var cs_moveY = event.layerY - paddingY;
 		if(moveSR){
+			display_divNum = -1;
 			moveFilter = false;
 			if(FirstSelectRectNum == 0){
 				if(cs_moveY > cs_coord[1] - 15){
@@ -967,6 +980,7 @@ $(function(){
 		}
 		//****************************************************************
 		if(moveFilter){
+			display_divNum = -1;
 			moveSR = false;
 			FocusArray.splice(0,FocusArray.length);
 			yfocus_num = 0;
@@ -1079,7 +1093,7 @@ $(function(){
 		//******************************************************************************
 		if(select_focus){
 			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
-				for(var i=beginY_index;i<=upY_index;i++){
+				/*for(var i=beginY_index;i<=upY_index;i++){
 					var num = render_baseballdata[i].num;
 					if(FocusArray.indexOf(num)==-1){
 						FocusArray.push(num);
@@ -1095,7 +1109,18 @@ $(function(){
 							}
 						}
 					}
-				}
+				}*/
+				DivArray[div_index] = render_baseballdata[upY_index].num;
+				var div_object = new Object();
+				div_object.beginYIndex = beginY_index;
+				div_object.upYIndex = upY_index;
+				div_object.beginYNum = render_baseballdata[beginY_index].num;
+				div_object.upYNum = render_baseballdata[upY_index].num;
+				DivObjectArray[div_index] = div_object;
+				display_divNum = div_index;
+				AddSvgIndexNum = upY_index - beginY_index;
+				AddSvgHeight = AddSvgIndexNum * focus_height;
+				//div_index++;
 			}else if((beginY_index>=0)&&((beginY_index - upY_index)>3)){
 				for(var i=upY_index;i<=beginY_index;i++){
 					var num = render_baseballdata[i].num;
@@ -1109,6 +1134,15 @@ $(function(){
 							focusY_min = i+1;
 						}
 					}
+				}
+				if(upY_index<DivObjectArray[display_divNum].upYIndex){
+					DivObjectArray[display_divNum].upYIndex = upY_index;
+					DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
+					AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
+					AddSvgHeight = AddSvgIndexNum * focus_height;
+				}
+				if((DivObjectArray[display_divNum].upYIndex)<=(DivObjectArray[display_divNum].beginYIndex)){
+					display_divNum = -1;
 				}
 			}
 		}
@@ -1397,17 +1431,37 @@ $(function(){
 	}
 	//*************************************************************
 	function computeVarY(){
+		var div_num = DivArray.length;
 		top_middleY = focusY_min * barheight;
 		bottom_middleY = (focusY_max + 1 - yfocus_num) * barheight + yfocus_num * focus_height;
-		ChangeRectHeight = yfocus_num * focus_height + (humannum_sum - yfocus_num)
+		ChangeRectHeight = yfocus_num * focus_height + (humannum_sum - yfocus_num) * barheight;
+		if(display_divNum>=0){
+			div_height = InRectHeight -5 - ChangeRectHeight;
+			if(AddSvgHeight<=div_height){
+				div_height = AddSvgHeight;
+			}
+			ChangeRectHeight = InRectHeight - 5;
+		}
 		var coord_y = 0;
 		YArray[0] = 0; 
+		var divNum = -1;
+		if(display_divNum>=0){
+			divNum = DivObjectArray[display_divNum].upYNum;
+		}
 		for(var i=1;i<render_baseballdata.length;i++){
 			var num = render_baseballdata[i-1].num;
 			if(FocusArray.indexOf(num)==-1){
-				YArray[i] = YArray[i-1] + barheight;
+				if(divNum != num){
+					YArray[i] = YArray[i-1] + barheight;
+				}else{
+					YArray[i] = YArray[i-1] + barheight + div_height;
+				}				
 			}else{
-				YArray[i] = YArray[i-1] + focus_height;
+				if(divNum != num){
+					YArray[i] = YArray[i-1] + focus_height;
+				}else{
+					YArray[i] = YArray[i-1] + focus_height + div_height;
+				}
 			}
 		}
 	}
@@ -1452,9 +1506,15 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.bat86 - b.bat86;
 				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
 				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
 					return b.bat86 - a.bat86;
 				});
 				down_all = false;
@@ -1466,10 +1526,16 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.hits86 - b.hits86;
 				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
 				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.hits86 - a.hits86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
 				});
 				down_all = false;
 			}
@@ -1480,10 +1546,16 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.hRuns86 - b.hRuns86;
 				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
 				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.hRuns86 - a.hRuns86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
 				});
 				down_all = false;
 			}
@@ -1494,10 +1566,16 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.runs86 - b.runs86;
 				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
 				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.runs86 - a.runs86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
 				});
 				down_all = false;
 			}
@@ -1508,10 +1586,16 @@ $(function(){
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return a.Runbat86 - b.Runbat86;
 				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
 				down_all = true;
 			}else{
 				render_baseballdata = render_baseballdata.sort(function(a,b){
 					return b.Runbat86 - a.Runbat86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
 				});
 				down_all = false;
 			}
@@ -1526,7 +1610,6 @@ $(function(){
 		.select("svg")
 		.attr("width",InRectWidth)
 		.attr("height",ChangeRectHeight);
-		var minCoordY = computeCoordY(humannum_min);
 		var index = 0;
 		var real_index = 1;
 		var baseball_man = baseballdata[0];
@@ -1551,6 +1634,9 @@ $(function(){
 					.attr("width",function(d){
 						return scale(d[x]);
 					})
+					.attr("id",function(d,i){
+						return "x"+index+"y"+i;
+					})
 					.classed(AttrArray[index],true)
 					.style("fill",function(d,i){
 						color_num = render_baseballdata[i].num;
@@ -1562,7 +1648,17 @@ $(function(){
 								color = "red";
 							}
 						}else{
-							color = computeColor(getAttr(d,sortIndex),sortIndex);
+							if(display_divNum>=0){
+								var beginY_index = DivObjectArray[display_divNum].beginYIndex;
+								var upY_index = DivObjectArray[display_divNum].upYIndex;
+								if((i>=beginY_index)&&(i<=upY_index)){
+									color = "red";
+								}else{
+									color = computeColor(getAttr(d,sortIndex),sortIndex);
+								}
+							}else{
+								color = computeColor(getAttr(d,sortIndex),sortIndex);
+							}
 						}
 						return  color;
 					})
@@ -1572,6 +1668,11 @@ $(function(){
 						if(focus_one){
 							d3.select(this).style("fill","green");
 							currentYNum = i;
+							if(display_divNum>=0){
+								var id = d3.select(this).attr("id");
+								add_svg.select("#"+id)
+								.style("fill","green");
+							}
 						}else{
 							d3.select(this).style("fill","green");
 							currentYNum = -1;
@@ -1581,8 +1682,21 @@ $(function(){
 						currentYNum = -1;
 						var color;
 						color_num = render_baseballdata[i].num;
+						var id = d3.select(this).attr("id");
 						if(focus_one){
-							color = computeColor(getAttr(d,sortIndex),sortIndex);
+							if(display_divNum>=0){
+								var beginY_index = DivObjectArray[display_divNum].beginYIndex;
+								var upY_index = DivObjectArray[display_divNum].upYIndex;
+								if((i>=beginY_index)&&(i<=upY_index)){
+									color = "red";
+								}else{
+									color = computeColor(getAttr(d,sortIndex),sortIndex);
+								}
+								var add_color = computeColor(getAttr(d,sortIndex),sortIndex);
+								add_svg.select("#"+id).style("fill",add_color);
+							}else{
+								color = computeColor(getAttr(d,sortIndex),sortIndex);
+							}
 							d3.select(this).style("fill",function(){
 								return color;
 							});
@@ -1607,9 +1721,60 @@ $(function(){
 			index++;
 		}
 		//*********************************************************
+		//*************************
+		 /*add_svg.append("rect")
+		 	.attr("x",10)
+			.attr("y",10)
+			.attr("height",100)
+			.attr("width",100)
+			.style("fill","black");*/
+		/*var baseball_man = baseballdata[0];
+		real_index = 1;
+		index = 0; 
+		for(x in baseball_man){
+			if(index > 0 && index < AttrAllNum){
+				if(DisplayArray.indexOf(index)!=-1){
+					var scale = ScaleArray[index];
+					add_svg.append("g")
+					.data(append_array)
+					.enter()
+					.append("rect")
+					.attr("x",function(d,i){
+						return XArray[real_index];
+					})
+					.attr("y",function(d,i){				
+						return focus_height * i;
+					})
+					.attr("height",function(d,i){
+						return focus_height;
+					})
+					.attr("width",function(d){
+						return scale(d[x]);
+					})
+					.style("fill",function(d,i){
+						var color = computeColor(getAttr(d,sortIndex),sortIndex);
+						return color;
+					});
+					real_index++;
+				}
+			}
+			index++;
+		}*/
+		//*********************************************************
+		//add div
+		if(display_divNum>=0){
+			d3.selectAll(".add_div").remove();
+			var div_name = "append_div";
+			var up_indexY = DivObjectArray[display_divNum].upYIndex;
+			var div_y = YArray[up_indexY] + 40;
+			addElementDiv(div_name,div_y);
+		}else{
+			d3.selectAll(".add_div").remove();
+		}
+		//*********************************************************
 		for(var i=0;i<FocusArray.length;i++){
 			var indexY = computeRealIndexY(FocusArray[i]);
-			var focusx_top = computeCoordY(indexY);
+			var focusx_top = YArray[indexY];
 			var focusx_bottom = focusx_top + focus_height;
 			svg.append("g")
 			.append("line")
@@ -1675,12 +1840,12 @@ $(function(){
 		return indexY;
 	}
 	//**********************************************************
-	function computeCoordYAll(indexY){
+	/*function computeCoordYAll(indexY){
 		var minY = computeCoordY(humannum_min);
 		var coordY = computeCoordY(indexY + humannum_min);
 		return coordY - minY;
-	}
-	function computeCoordY(indexY){
+	}*/
+/*	function computeCoordY(indexY){
 		var coordY = 0;
 		if(yfocus_num == 0){
 			coordY = indexY * barheight;
@@ -1704,10 +1869,21 @@ $(function(){
 			coordY = bottom_middleY + (indexY - focusY_max - 1) * barheight;
 		}
 		return coordY;
-	}
+	}*/
 	//**********************************************************
 	function computeIndexY(CoordY){
 		var IndexY = 0;
+		if(display_divNum>=0){
+			var upY_index = DivObjectArray[display_divNum].upYIndex;
+			var upY_coordinate = YArray[upY_index];
+			if(CoordY<upY_coordinate){
+				//make no change
+			}else if((CoordY>upY_coordinate)&&(CoordY<(upY_coordinate+div_height))){
+				CoordY = upY_coordinate;
+			}else if((CoordY>=(upY_coordinate+div_height))){
+				CoordY = CoordY - div_height;
+			}
+		}
 		if(yfocus_num == 0){
 			IndexY = Math.floor(CoordY/barheight);
 		}else if(CoordY<=top_middleY){
@@ -1778,6 +1954,7 @@ $(function(){
 //				break;
 //			}
 //		}
+		display_divNum = -1;
 		computeMinMax();
 		computeVarY();
 		svg.selectAll("*").remove(); 
@@ -1802,6 +1979,7 @@ $(function(){
 	//reset the data seleted
 	function resetSelection(){
 		FocusArray.splice(0,FocusArray.length);
+		display_divNum = -1;
 		yfocus_num = 0;
 		focusY_min = -1;
 		focusY_max = -1;
@@ -1811,13 +1989,19 @@ $(function(){
 	}
 	//remove the data seleted
 	function removeSelected(){
+		var beginY_Index = DivObjectArray[display_divNum].beginYIndex;
+		var upY_Index = DivObjectArray[display_divNum].upYIndex
+		for(var i=beginY_Index;i<=upY_Index;i++){
+			FocusArray.push(render_baseballdata[i].num);
+		}
 		for(var i=0;i<render_baseballdata.length;i++){
-			if(FocusArray.indexOf(render_baseballdata[i].num)!=-1){
+			if((FocusArray.indexOf(render_baseballdata[i].num)!=-1)){
 				render_baseballdata.splice(i,1);
 				i--;
 			}
 		}
 		FocusArray.splice(0,FocusArray.length);
+		display_divNum = -1;
 		yfocus_num = 0;
 		focusY_min = -1;
 		focusY_max = -1;
@@ -1827,6 +2011,11 @@ $(function(){
 	}
 	//remove other data
 	function removeOthers(){
+		var beginY_Index = DivObjectArray[display_divNum].beginYIndex;
+		var upY_Index = DivObjectArray[display_divNum].upYIndex
+		for(var i=beginY_Index;i<=upY_Index;i++){
+			FocusArray.push(render_baseballdata[i].num);
+		}
 		for(var i=0;i<render_baseballdata.length;i++){
 			if(FocusArray.indexOf(render_baseballdata[i].num)==-1){
 				render_baseballdata.splice(i,1);
@@ -1835,6 +2024,7 @@ $(function(){
 		}
 		FocusArray.splice(0,FocusArray.length);
 		yfocus_num = 0;
+		display_divNum = -1;
 		focusY_min = -1;
 		focusY_max = -1;
 		computeVarY();
@@ -1843,9 +2033,10 @@ $(function(){
 	}
 	//remove filters
 	function resetfilter(){
-		render_baseballdata = baseballdata.concat();
+		render_baseballdata = copy_baseballdata.concat();
 		FocusArray.splice(0,FocusArray.length);
 		yfocus_num = 0;
+		display_divNum = -1;
 		focusY_min = -1;
 		focusY_max = -1;
 		computeVarY();
@@ -1907,6 +2098,8 @@ $(function(){
 	function ChangeSelect(checkedItems){
 		if(checkedItems[0].value=="Detail"){
 			focus_one = true;
+			DetailArray.splice(0,DetailArray.length);
+			tablelens();
 		}
 		if(checkedItems[0].value=="Color"){
 			focus_one = false;
@@ -2020,14 +2213,144 @@ $(function(){
 	//***************************************************************************************
 	function addElementDiv(div_name,top){
 		d3.select("#paint_control")
-		.append(div_name)
+		.append("div")
+		.attr("id","add_div")
 		.attr("class","add_div")
 		.style("position","absolute")
 		.style("left","0px")
 		.style("top",top+"px")
 		.style("width",paint_width+"px")
-		.style("height","150px")
-		.style("background","orange");
+		.style("height",div_height+"px")
+		.style("overflow-y","auto")
+		.style("overflow-x","hidden")
+		.style("background","white");
+	   add_svg = d3.select("#add_div")
+		.append("svg")
+		.attr("id","add_svg")
+		.attr("width",InRectWidth)
+		.attr("height",AddSvgHeight);
+		//*************************************
+		var beginY_Index = 0;
+		var upY_index = 0;
+		if(display_divNum>=0){
+			beginY_Index = DivObjectArray[display_divNum].beginYIndex;
+			upY_index = DivObjectArray[display_divNum].upYIndex;
+		}
+		var append_array = new Array();
+		for(var i=beginY_Index;i<=upY_index;i++){
+			var index = i - beginY_Index;
+			append_array[index] = render_baseballdata[i];
+		}
+	    var baseball_man = baseballdata[0];
+		var real_index = 1;
+		var index = 0; 
+		for(x in baseball_man){
+			if(index > 0 && index < AttrAllNum){
+				if(DisplayArray.indexOf(index)!=-1){
+					var scale = ScaleArray[index];
+					add_svg.selectAll("."+AttrName[index])
+					.append("g")
+					.data(append_array)
+					.enter()
+					.append("rect")
+					.attr("x",function(d,i){
+						return XArray[real_index];
+					})
+					.attr("y",function(d,i){				
+						return focus_height * i;
+					})
+					.attr("height",function(d,i){
+						return focus_height;
+					})
+					.attr("width",function(d){
+						return scale(d[x]);
+					})
+					.style("fill",function(d,i){
+						var color = computeColor(getAttr(d,sortIndex),sortIndex);
+						return color;
+					})
+					.attr("id",function(d,i){
+						return "x"+index+"y"+(i+beginY_Index);
+					})
+					.classed(AttrName[index],true)	
+					.on("mouseover",function(d,i){
+						FirstSelectFilterNum = -1;
+						FirstSelectRectNum = -1;
+						d3.select(this).style("fill","green");
+						var id = d3.select(this).attr("id");
+						svg.select("#"+id).style("fill","green");
+					})
+					.on("mouseout",function(d,i){
+						var color = computeColor(getAttr(d,sortIndex),sortIndex);
+						d3.select(this).style("fill",color);
+						var id = d3.select(this).attr("id");
+						svg.select("#"+id).style("fill","red");
+					});
+					real_index++;
+				}
+			}
+			index++;
+		}
+		//******************************************
+		var append_top = YArray[upY_index];
+		var append_bottom = append_top + div_height;
+		svg.append("g")
+		.append("line")
+		.attr("x1",0)
+		.attr("x2",InRectWidth)
+		.attr("y1",append_top)
+		.attr("y2",append_top)
+		.attr("stroke","gray")
+		.attr("stroke-width",1);
+		//**************************
+		svg.append("g")
+		.append("line")
+		.attr("x1",0)
+		.attr("x2",InRectWidth)
+		.attr("y1",append_bottom)
+		.attr("y2",append_bottom)
+		.attr("stroke","gray")
+		.attr("stroke-width",1);
+		//******************************************
+		//add line to the add_div
+		for(var i=beginY_Index;i<upY_index;i++){
+			var index = i - beginY_Index +1;
+			var y1 = index * focus_height;
+			add_svg.append("g")
+			.append("line")
+			.attr("x1",0)
+			.attr("x2",InRectWidth)
+			.attr("y1",y1)
+			.attr("y2",y1)
+			.attr("stroke","gray")
+			.attr("stroke-width",1);
+		}
+		//******************************************
+		//add text to the add_div
+		var text_baseballman;
+		for(var i=beginY_Index;i<upY_index;i++){
+			text_baseballman = render_baseballdata[i];
+			var y_index = i - beginY_Index + 1;
+			var text_y = focus_height * y_index - text_paddingY;
+			var index = 0;
+			var real_index = 0;
+			var font_size = 12;
+			for(x in text_baseballman){
+				if(DisplayArray.indexOf(index)!=-1){
+					var attr = baseballman[x];
+					add_svg.append("g")
+					.append("text")
+					.attr("x",(XArray[real_index] + text_paddingX))
+					.attr("y",text_y)
+					.attr("class","person")
+					.attr("font-size",font_size)
+					.attr("font-family","arial")
+					.text(text_baseballman[x]);
+					real_index++;
+				}
+				index++;
+			}
+		}
 	}
 	//***************************************************************************************
 	function ReadData(fileName){
@@ -2039,11 +2362,15 @@ $(function(){
 			maxValue.splice(0,maxValue.length);
 			AttrName.splice(0,AttrName.length);
 			ManNum = baseballman.length;
+			copy_baseballdata = baseballman.concat();
 			render_baseballdata = baseballman;
 			baseballdata = render_baseballdata;
 			baseballman1 = baseballdata[0];
 			humannum_sum = render_baseballdata.length;
 			humannum = render_baseballdata.length;
+			if(barheight>(InRectHeight-150)/humannum_sum){
+				barheight = Math.floor(((InRectHeight-150)/humannum_sum)*100)/100;
+			}
 			humannum_min = 0, humannum_max = render_baseballdata.length;
 			var count = 0;
 			for(attribute in baseballman1){
@@ -2076,9 +2403,7 @@ $(function(){
 			SortFunction();
 			button_width = Math.floor(ButtonInRectWidth/AttrNum);
 			focus_height = 20;
-			for(var i=0;i<humannum_sum;i++){
-				YArray[i] = computeCoordY(i);
-			}
+			computeVarY();
 			for(var i=0;i<=AttrNum;i++){
 				AttrAllArray[i] = i;
 			}

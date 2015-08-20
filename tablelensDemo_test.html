@@ -278,7 +278,7 @@ $(function(){
 	var ManNum = 0;
 	//outer rect
 	var svgHeight = screen_height-190,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
-	var focusXMin = 250, focusXMax = 1205, focusYMin = 100, focusYMax = 700;
+	var focusXMin = 250, focusXMax = 1205, focusYMin = 80, focusYMax = 700;
 	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
 	var ColorXMin = 150, ColorXMax = 200, ColorYMin = 10, ColorYMax = 580;
 	//inner rect
@@ -386,6 +386,10 @@ $(function(){
 	var font_size = 0;
 	var focus_one = false;
 	var detail_num = 0;
+	var DivArray = new Array();
+	var DivObjectArray = new Array();
+	var div_index = 0;
+	var display_divNum = -1;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -456,9 +460,7 @@ $(function(){
 						humannum_min = 0, humannum_max = render_baseballdata.length;
 						SortFunction();
 						button_width = Math.floor(ButtonInRectWidth/AttrNum);
-						for(var i=0;i<humannum_sum;i++){
-							YArray[i] = computeCoordY(i);
-						}
+						computeVarY();
 						for(var i=0;i<=AttrNum;i++){
 							AttrAllArray[i] = i;
 						}
@@ -1079,7 +1081,7 @@ $(function(){
 		//******************************************************************************
 		if(select_focus){
 			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
-				for(var i=beginY_index;i<=upY_index;i++){
+				/*for(var i=beginY_index;i<=upY_index;i++){
 					var num = render_baseballdata[i].num;
 					if(FocusArray.indexOf(num)==-1){
 						FocusArray.push(num);
@@ -1095,7 +1097,16 @@ $(function(){
 							}
 						}
 					}
-				}
+				}*/
+				DivArray[div_index] = render_baseballdata[upY_index].num;
+				var div_object = new Object();
+				div_object.beginYIndex = beginY_index;
+				div_object.upYIndex = upY_index;
+				div_object.beginYNum = render_baseballdata[beginY_index].num;
+				div_object.upYNum = render_baseballdata[upY_index].num;
+				DivObjectArray[div_index] = div_object;
+				display_divNum = div_index;
+				div_index++;
 			}else if((beginY_index>=0)&&((beginY_index - upY_index)>3)){
 				for(var i=upY_index;i<=beginY_index;i++){
 					var num = render_baseballdata[i].num;
@@ -1397,17 +1408,30 @@ $(function(){
 	}
 	//*************************************************************
 	function computeVarY(){
+		var div_num = DivArray.length;
 		top_middleY = focusY_min * barheight;
 		bottom_middleY = (focusY_max + 1 - yfocus_num) * barheight + yfocus_num * focus_height;
-		ChangeRectHeight = yfocus_num * focus_height + (humannum_sum - yfocus_num)
+		ChangeRectHeight = yfocus_num * focus_height + (humannum_sum - yfocus_num) + div_num * 150;
 		var coord_y = 0;
 		YArray[0] = 0; 
+		var divNum = -1;
+		if(display_divNum>=0){
+			divNum = DivObjectArray[display_divNum].upYNum;
+		}
 		for(var i=1;i<render_baseballdata.length;i++){
 			var num = render_baseballdata[i-1].num;
 			if(FocusArray.indexOf(num)==-1){
-				YArray[i] = YArray[i-1] + barheight;
+				if(divNum != num){
+					YArray[i] = YArray[i-1] + barheight;
+				}else{
+					YArray[i] = YArray[i-1] + barheight + 150;
+				}				
 			}else{
-				YArray[i] = YArray[i-1] + focus_height;
+				if(divNum != num){
+					YArray[i] = YArray[i-1] + focus_height;
+				}else{
+					YArray[i] = YArray[i-1] + focus_height + 150;
+				}
 			}
 		}
 	}
@@ -1526,7 +1550,6 @@ $(function(){
 		.select("svg")
 		.attr("width",InRectWidth)
 		.attr("height",ChangeRectHeight);
-		var minCoordY = computeCoordY(humannum_min);
 		var index = 0;
 		var real_index = 1;
 		var baseball_man = baseballdata[0];
@@ -1607,9 +1630,18 @@ $(function(){
 			index++;
 		}
 		//*********************************************************
+		//add div
+		if(display_divNum>=0){
+			d3.selectAll(".add_div").remove();
+			var div_name = "div" + display_divNum;
+			var up_indexY = DivObjectArray[display_divNum].upYIndex;
+			var div_y = YArray[up_indexY] + 40;
+			addElementDiv(div_name,div_y);
+		}
+		//*********************************************************
 		for(var i=0;i<FocusArray.length;i++){
 			var indexY = computeRealIndexY(FocusArray[i]);
-			var focusx_top = computeCoordY(indexY);
+			var focusx_top = YArray[indexY];
 			var focusx_bottom = focusx_top + focus_height;
 			svg.append("g")
 			.append("line")
@@ -1675,12 +1707,12 @@ $(function(){
 		return indexY;
 	}
 	//**********************************************************
-	function computeCoordYAll(indexY){
+	/*function computeCoordYAll(indexY){
 		var minY = computeCoordY(humannum_min);
 		var coordY = computeCoordY(indexY + humannum_min);
 		return coordY - minY;
-	}
-	function computeCoordY(indexY){
+	}*/
+/*	function computeCoordY(indexY){
 		var coordY = 0;
 		if(yfocus_num == 0){
 			coordY = indexY * barheight;
@@ -1704,10 +1736,11 @@ $(function(){
 			coordY = bottom_middleY + (indexY - focusY_max - 1) * barheight;
 		}
 		return coordY;
-	}
+	}*/
 	//**********************************************************
 	function computeIndexY(CoordY){
 		var IndexY = 0;
+		if(CoordY<)
 		if(yfocus_num == 0){
 			IndexY = Math.floor(CoordY/barheight);
 		}else if(CoordY<=top_middleY){
@@ -2020,7 +2053,8 @@ $(function(){
 	//***************************************************************************************
 	function addElementDiv(div_name,top){
 		d3.select("#paint_control")
-		.append(div_name)
+		.append("div")
+		.attr("id",div_name)
 		.attr("class","add_div")
 		.style("position","absolute")
 		.style("left","0px")
@@ -2076,9 +2110,7 @@ $(function(){
 			SortFunction();
 			button_width = Math.floor(ButtonInRectWidth/AttrNum);
 			focus_height = 20;
-			for(var i=0;i<humannum_sum;i++){
-				YArray[i] = computeCoordY(i);
-			}
+			computeVarY();
 			for(var i=0;i<=AttrNum;i++){
 				AttrAllArray[i] = i;
 			}

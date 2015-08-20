@@ -59,54 +59,21 @@ $(function(){
 			 return checkedItems[0].value;
   		 }
 	});
-	$("select#focus_select").multiselect({
-		multiple: false,
-		header: "Select an focus option",
-		noneSelectedText: "option",
-		selectedList: 1
-	});
-	$("select#focus_select").multiselect({
-   		selectedText: function(numChecked, numTotal, checkedItems){
-			 ChangeSelect(checkedItems);
-			 return checkedItems[0].value;
-  		 }
-	});
 });
 </script>
 <style>
+	body{
+		text-align:center;
+	}
 	#outer{
-		margin-left:-7px;
-		margin-right:-7px;
-		margin-bottom:-7px;
-		padding-top:-5px;
+		background:white;
+		border-top: 5px solid #69c773;
+		margin-left:auto;
+		margin-right:auto;
+	  	box-shadow: 0 2px 10px rgba(0,0,0,0.8);
 	}
 	#color_control{
-		display:inline-block;
-		background:#F6F6F6;
-		width:70px;
-		height:500px;
-		margin-top:0px;
-		margin-bottom:0px;
-		margin-left:0px;
-	}
-	#paint_control{
-		position:relative;
-		margin-top:0px;
-		display:inline-block;
-	}
-	#AttrButton{
-		position:absolute;
-		left:0;
-		top:0;
-		margin-top:0px;
-	}
-	#inner{
-		position:absolute;
-		background:yellow;
-		overflow-y:auto;
-		overflow-x:hidden;
-		height:500px;
-		background:white;
+		float:left;
 	}
 	.select_rect{
  		 fill-opacity: 0.3;
@@ -118,71 +85,83 @@ $(function(){
 		 stroke:white;
 		 stroke-width:1.5px;
 	}
+	#inner{
+		overflow-y:auto;
+		overflow-x:hidden;
+		position:relative;
+		background:white;
+	}
+	#AttrButton{
+		background:white;
+	}
 	.attr_button{
-		margin-top:0px;
 		position:relative;
 	}
 	#control_button{
-		background:#F6F6F6;
-		height:55px;
-		top:3px;
-		margin-left:-7px;
-		margin-right:-7px;
-		margin-bottom:-7px;
-		box-shadow: 0 1px 1px rgba(0,0,0,0.8);
+		margin: auto;
   		position: relative;
   		top: 0; left: 0; bottom: 0; right: 0;
 		text-align:center;
 	}
-	#form_control{
-		text-align:center;
-	}
-	#button_control{
-		text-align:center;
-	}
 	#multiple{
-		display:inline-block;
-		width:250px;
+		float:left;
 	}
 	#single{
-		display:inline-block;
-		width:250px;
+		float:left;
+		position:relative;
 	}
 	#grouping{
-		display:inline-block;
-		width:250px;
+		float:left;
+		position:relative;
 	}
 	#resetSelect{
-		margin-top:5px;
-		display:inline-block;
-		width:250px;
+		margin-left:auto;
+		margin-right:auto;
+		margin-top:10px;
+		padding-left:30px;
+		padding-right:30px;
+		float:left;
+		width:170px;
 	}
 	#removeselected{
-		margin-top:5px;
-		display:inline-block;
-		width:250px;
+		margin-left:auto;
+		margin-right:auto;
+		margin-top:10px;
+		padding-left:30px;
+		padding-right:30px;
+		float:left;
+		position:relative;
+		width:170px;
 	}
 	#removeothers{
-		margin-top:5px;
-		display:inline-block;
-		width:250px;
+		margin-left:auto;
+		margin-right:auto;
+		margin-top:10px;
+		float:left;
+		padding-left:30px;
+		padding-right:30px;
+		position:relative;
+		width:170px;
 	}
 	#resetfilter{
-		margin-top:5px;
-		display:inline-block;
-		width:250px;
+		margin-left:auto;
+		margin-right:auto;
+		margin-top:10px;
+		float:left;
+		padding-left:30px;
+		padding-right:30px;
+		position:relative;
+		width:170px;
 	}
 	#page-wrapper {
-	  background:#F6F6F6;
-	  height:20px;
-	  margin-top:-7px;
-	  margin-left:-7px;
-	  margin-right:-7px;
-	  margin-bottom:-5px;
+	  width: 1070px;
+	  background: #FFF;
 	  padding: 1em;
-	  padding-left:77px;
+	  margin: 1em auto;
+	  text-align :center;
 	  min-height: 10px;
-	  box-shadow: 0 1px 1px rgba(0,0,0,0.8);
+	  border-top: 5px solid #69c773;
+	  box-shadow: 0 2px 10px rgba(0,0,0,0.8);
 	}
 	h1 {
 		margin-top: 0;
@@ -192,83 +171,55 @@ $(function(){
 	img {
 	  max-width: 100%;
 	}
-	#fileInput{
-	  display:inline-block;
-	  margin-left:3px;
-	}
-	#embedded{
-	  display:inline-block;
-	  margin-right:3px;
-	}
-	#Focus{
-	  display:inline-block;
-	  margin-left:40px;
-	  margin-right:3px;
-	}
 </style>
 </head>
 <body>
 <div id="page-wrapper">
+		<h1>Tablelens Text File Reader</h1>
 		<div id="file_select">
-			CSV File:
+			Select a csv file<font color="red" size="2px"><strong>(the file type must be .csv;file size less than 30KB;the attribute must be numerical value)</strong></font>:
 			<input type="file" id="fileInput">
 			<form id = "embedded">
-				Embedded Data:
+				Select an embedded data:
 				<select name="embedded_data" id="embedded_select" style="width:100px; top:5px;">
 					<option value="baseballdata">baseballdata</option>
 					<option value="basketballdata">basketballdata</option>
 				</select>
 			</form>
-			<form id = "Focus">
-				Select Options:
-				<select name="Focus_item" id="focus_select" style="width:100px; top:5px;">
-					<option value="Detail">detail</option>
-					<option value="Color">color</option>
-				</select>
-			</form>
 		</div>
 </div>
 	<div id = "outer">
-		<div id="color_control">
-		</div>
-		<div id="paint_control">
-			<div id="AttrButton">
-			</div>
-			<div id="inner"> 
-			</div>
-		</div>
-	</div> 
+	<div id="color_control">
+	</div>
+	<div id="AttrButton">
+	</div>
+  	<div id="inner"> 
+    </div>
 	<div id="control_button">
-		<div id="form_control">
-			<form id="multiple">
-			<select multiple="multiple" id="multiple_select" style="width:100px; top:5px;">
-			</select>
-			</form>
-			<!--****************************************************************-->
-			<form id = "grouping">
-				<select name="demo" id="grouping_select" style="width:100px; top:5px;">
-				</select>
-			</form>
-			<!--*****************************************************************-->
-			<form id = "single">
-				<select name="demo" id="single_select" style="width:100px; top:5px;">
-				</select>
-			</form>
-		</div>
-		<div id="button_control">
-			<button id="resetSelect" onClick="resetSelection();">ResetSelection</button>
-			<button id="removeselected" onClick="removeSelected();">RemoveSelected</button>
-			<button id="removeothers" onClick="removeOthers();">RemoveOthers</button>
-			<button id="resetfilter" onClick="resetfilter();">ResetFilters</button>
-		</div>
-	</div> 
+	<!--***************************************************************-->
+	<form id="multiple">
+	<select multiple="multiple" id="multiple_select" style="width:100px; top:5px;">
+	</select>
+	</form>
+	<!--****************************************************************-->
+	<form id = "grouping">
+		<select name="demo" id="grouping_select" style="width:100px; top:5px;">
+		</select>
+	</form>
+	<!--*****************************************************************-->
+	<form id = "single">
+		<select name="demo" id="single_select" style="width:100px; top:5px;">
+		</select>
+	</form>
+	<button id="resetSelect" onClick="resetSelection();">ResetSelection</button>
+	<button id="removeselected" onClick="removeSelected();">RemoveSelected</button>
+	<button id="removeothers" onClick="removeOthers();">RemoveOthers</button>
+	<button id="resetfilter" onClick="resetfilter();">ResetFilters</button>
+	</div>
+</div>  
 </body>
 <script type="text/javascript">
 	//read data
-	//var screen_width = document.body.clientWidth;
-//	var screen_height = document.body.clientHeight;
-	var screen_width = window.screen.width;
-	var screen_height = window.screen.height;
 	var text = new String();
 	var stringArray;
 	var AttrName = new Array();
@@ -277,20 +228,19 @@ $(function(){
 	var SortObject = new Object();
 	var ManNum = 0;
 	//outer rect
-	var svgHeight = screen_height-190,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
+	var svgHeight = 550,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
 	var focusXMin = 250, focusXMax = 1205, focusYMin = 100, focusYMax = 700;
 	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
 	var ColorXMin = 150, ColorXMax = 200, ColorYMin = 10, ColorYMax = 580;
 	//inner rect
 	var InRectXMin = tableMarginLeftX;
 	var InRectYMin = tableMarginTopY;
-	var InRectWidth = screen_width - InRectXMin; 
+	var InRectWidth = svgWidth - tableMarginLeftX;
 	var ButtonInRectWidth = InRectWidth - 10;
 	var InRectHeight = svgHeight - tableMarginBottomY - tableMarginTopY;
 	var InRectXMax = InRectXMin + InRectWidth;
 	var InRectYMax = InRectYMin + InRectHeight;
 	var ChangeRectHeight = InRectHeight;
-	var paint_width = screen_width - InRectXMin;
 	//inner svg 
 	var baseballman = new Array();
 	var baseballdata = new Array();
@@ -318,15 +268,13 @@ $(function(){
 	var YArray = new Array();
 	var ScaleArray = new Array();
 	var FocusArray = new Array();
-	var DetailArray = new Array();
 	var yfocus_num = 0, focusY_min = -1, focusY_max = -1, top_middleY = 0, bottom_middleY = 0;
 	var barheight = 1, focus_height = 20;
 	var currentYNum = -1;
 	var top_middleY = 0, bottom_middleY = 0;
 	var total_event;
-	var beginY_index = 0, afterY_index, beginX_index, afterX_index, beginY, afterY, upY_index, RectBeginY, RectBeginX, RectMoveY, RectMoveX, RectEndY, RectEndX;
-	var detail_index = 0;
-	var select_focus = false, select_detail = false;
+	var beginY_index = 0, afterY_index, beginY, afterY, upY_index, RectBeginY, RectMoveY, RectEndY;
+	var select_focus = false;
 	var baseballman1;
 	var text_paddingX = 5, text_paddingY = 5;
 	var down_Name = true, down_Bat86 = true, down_Hit86 = true, down_HRuns86 = true, down_Runs86 = true, down_Runbat86 = true, down_all = true;
@@ -382,15 +330,12 @@ $(function(){
 	var select_option = new Array();
 	var filter_option = new Array();
 	var former_color, after_color;
-	var paddingY = 36;
-	var font_size = 0;
-	var focus_one = false;
-	var detail_num = 0;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
 	filter_option[3] = "Distribute using 10,50,90";
 	filter_option[4] = "Distribute using 25,50,75";
+	var screen_width = document.body.clientWidth;
 	//*******************************************************************************
 	window.onload = function() {
 			FocusArray.splice(0,FocusArray.length);
@@ -481,7 +426,7 @@ $(function(){
 						}
 						
 						for(var i=0;i<AttrAllNum;i++){
-							XArray[i] = i * button_width + 3;
+							XArray[i] = i * button_width + 6;
 						}
 						NamePArray.push(quarter4Value[sortIndex]+"");
 						NamePArray.push(quarter3Value[sortIndex]+"");
@@ -515,7 +460,6 @@ $(function(){
 						.attr("class","attr_button")
 						.style("height",InRectYMin+"px")
 						.style("width", (button_width) +"px")
-						.style("y","0px")
 						.on("click",function(d,i){
 							sortAttr(d);
 						})
@@ -603,63 +547,51 @@ $(function(){
 	}
 	
 	d3.select("#outer")
-	.style("margin-left", -7+"px")
-	.style("margin-right","-7px")
-	//.style("padding-top","-7px")
-	.style("margin-top", 0+"px")
-	.style("height", svgHeight+"px")
-	.style("width", (screen_width+14)+"px");
+	//.style("margin-left", svgXMin+"px")
+	.style("margin-top", svgYMin+"px")
+	.style("height", (svgHeight + 55)+"px")
+	.style("width", svgWidth+"px");
 	
 	d3.select("#color_control")
 	.style("left", "0px")
-	.style("top", "0px")
+	.style("top", InRectYMin + "px")
 	.style("height", svgHeight+"px")
 	.style("width", InRectXMin+"px");
 	
-	d3.select("#paint_control")
-	.style("height",svgHeight+"px")
-	.style("width",paint_width+"px");
-	
 	d3.select("#AttrButton")
-	.style("top", "10px")
+	.style("left", "0px")
+	.style("top", "0px")
+	.style("margin-left",InRectXMin+"px")
 	.style("height", InRectYMin+"px")
 	.style("width", InRectWidth+"px");
 	
 	d3.select("#inner")
 	.style("left", "0px")
-	.style("top", "40px")
+	.style("top", "0px")
 	.style("margin-left","0px")
 	.style("height", InRectHeight+"px")
-	.style("width", paint_width+"px");
+	.style("width", InRectWidth+"px");
 	
-	/*var parent = document.getElementById("inner");
-	//add div
-	var div = document.createElement("div");
-	div.setAttribute("id","newDiv");
-	div.setAttribute("position","absolute");
-	div.setAttribute("left","0")
-	div.setAttribute("width","100");
-	div.setAttribute("height","200");
-	div.setAttribute("background","red");
-	div.innerHTML = "js add new Div";
-	parent.appendChild(div); */
+	d3.select("#control_button")
+	.style("left", "0px")
+	.style("top", (3) + "px")
+	.style("height", (80) +"px")
+	.style("width", (InRectWidth - 320)+"px");
 	
-	//var button_width = Math.floor((InRectWidth - 320)/4);
 	var button_width = Math.floor((InRectWidth - 320)/4);
+	d3.select("#resetSelect")
+	.style("width",button_width+"px");
 	
-	/*d3.select("removeothers")
+	d3.select("#removeselected")
+	.style("width",button_width+"px");
+	
+	d3.select("removeothers")
 	.style("width",button_width+"px");
 	
 	d3.select("resetfilter")
 	.style("width",button_width+"px");
 	
-	d3.select("#resetSelect")
-	.style("width",button_width+"px");
-	
-	d3.select("#removeselected")
-	.style("width",button_width+"px");*/
-	
-	/*var form_width = Math.floor((InRectWidth - 320)/3);
+	var form_width = Math.floor((InRectWidth - 320)/3);
 	d3.select("#multiple")
 	.style("width",form_width+"px");
 	
@@ -667,7 +599,7 @@ $(function(){
 	.style("width",form_width+"px");
 	
 	d3.select("#single")
-	.style("width",form_width+"px");*/
+	.style("width",form_width+"px");
 	
 	computeButtonWidth();
 	
@@ -713,11 +645,9 @@ $(function(){
 	window.document.onmousedown = function(event){
 		var begin_clickX = event.clientX;
 		var begin_clickY = event.clientY;
-		beginY = event.layerY - paddingY;
+		beginY = event.layerY - 120;
 		RectBeginY = event.layerY;
-		RectBeginX = event.layerX;
 		beginY_index = computeIndexY(RectBeginY);
-		beginX_index = Math.floor(RectBeginX/button_width);
 		/*if((FirstSelectFilterNum!=-1)&&(begin_clickX<ColorXMax)&&(begin_clickX>ColorXMin)
 			&&(begin_clickY<ColorYMax)&&(begin_clickY>ColorYMin)){
 			moveFilter = true;
@@ -725,31 +655,23 @@ $(function(){
 			SelectFilterNum = FirstSelectFilterNum;
 		}*/
 		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
-			if(focus_one){
-				select_focus = true;
-				select_detail = false;
-			}else{
-				select_detail = true;
-				select_focus = false;
-			}
+			select_focus = true;
 		}
 		if((FirstSelectFilterNum!=-1)){
 			moveFilter = true;
 			moveSR = false;
 			select_focus = false;
-			select_detail = false;
 			SelectFilterNum = FirstSelectFilterNum;
 		}
 		if((FirstSelectRectNum!=-1)){
 			moveSR = true;
 			select_focus = false;
-			select_detail = false;
 			moveFilter = false;
 		}
 	}
 	window.document.onmousemove = function(event){
-		var filter_moveY = event.layerY - paddingY;
-		var cs_moveY = event.layerY - paddingY;
+		var filter_moveY = event.layerY - 120;
+		var cs_moveY = event.layerY - 120;
 		if(moveSR){
 			moveFilter = false;
 			if(FirstSelectRectNum == 0){
@@ -786,8 +708,8 @@ $(function(){
 			.attr("y",function(d,i){
 				return cs_coord[i]+5.5;
 			})
-			.attr("font-size",10)
-			.attr("font-family","arial")
+			.attr("font-size",12)
+			.attr("font-family","simsun")
 			.text(function(d){
 				return d;
 			});
@@ -859,40 +781,8 @@ $(function(){
 				});
 		}	
 		//*************************************************************
-		if(select_detail){
-				RectMoveY = event.layerY;
-				svg.select(".detail_rect").remove();
-				//var begin_x = beginX_index * button_width + 3;
-				var begin_x = 0;
-				if((RectBeginY - RectMoveY)>0){
-					svg.append("g")
-					.attr("class","detail_rect")
-					.append("rect")
-					.attr("x",begin_x)
-					.attr("y",RectMoveY)
-					.attr("height",(RectBeginY - RectMoveY))
-					.attr("width",InRectWidth)
-					.attr("fill-opacity",0.2)
-					.attr("fill","gray")
-					.attr("stroke","gray")
-					.attr("stroke-width",1);
-				}else{
-					svg.append("g")
-					.attr("class","detail_rect")
-					.append("rect")
-					.attr("x",begin_x)
-					.attr("y",RectBeginY)
-					.attr("height",(RectMoveY - RectBeginY))
-					.attr("width",InRectWidth)
-					.attr("fill-opacity",0.2)
-					.attr("fill","gray")
-					.attr("stroke","gray")
-					.attr("stroke-width",1);
-				}
-		}
-		//*************************************************************
 		if(select_focus){
-			var moveY = event.layerY - paddingY;
+			var moveY = event.layerY - 120;
 			RectMoveY = event.layerY;
 			var beginSmall = true;
 			svg.select(".focus_rect").remove();
@@ -924,11 +814,10 @@ $(function(){
 		}
 	}
 	window.document.onmouseup = function(event){
-		var upY = event.layerY - paddingY;
+		var upY = event.layerY - 120;
 		RectEndY = event.layerY;
-		RectEndX = event.layerX;
-		var filter_moveY = event.layerY - paddingY;
-		var cs_moveY = event.layerY - paddingY;
+		var filter_moveY = event.layerY - 120;
+		var cs_moveY = event.layerY - 120;
 		if(moveSR){
 			moveFilter = false;
 			if(FirstSelectRectNum == 0){
@@ -1020,7 +909,7 @@ $(function(){
 		//******************************************************************************
 		var btnNum = event.button;
 		if(btnNum == 0){
-			if((currentYNum > 0)&&(focus_one)){
+			if(currentYNum > 0){
 				//*********************************
 				var num = render_baseballdata[currentYNum].num;
 				if(FocusArray.indexOf(num)==-1){
@@ -1046,37 +935,6 @@ $(function(){
 			beginY_index = -1;
 		}
 		upY_index = computeIndexY(RectEndY);
-		afterX_index = Math.floor(RectEndX/button_width);
-		//******************************************************************************
-		if(beginX_index == afterX_index){
-			if(select_detail){
-				if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
-					if(beginX_index!=detail_index){
-						DetailArray.splice(0,DetailArray.length);
-					}
-					detail_index = beginX_index;
-					for(var i=beginY_index;i<=upY_index;i++){
-						var num = render_baseballdata[i].num;
-						if(DetailArray.indexOf(num)==-1){
-							DetailArray.push(num);
-						}
-					}
-				}else if((beginY_index>=0)&&((beginY_index - upY_index)>3)){
-					if(beginX_index!=detail_index){
-						DetailArray.splice(0,DetailArray.length);
-					}
-					detail_index = beginX_index;
-					for(var i=upY_index;i<=beginY_index;i++){
-						var num = render_baseballdata[i].num;
-						if(DetailArray.indexOf(num)!=-1){
-							var n = DetailArray.indexOf(num);
-							DetailArray.splice(n,1);
-						}
-					}
-				}
-			}
-		}
-		//******************************************************************************
 		if(select_focus){
 			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
 				for(var i=beginY_index;i<=upY_index;i++){
@@ -1115,7 +973,6 @@ $(function(){
 		moveSR = false;
 		moveFilter = false;
 		select_focus = false;
-		select_detail = false;
 		FirstSelectFilterNum = -1;
 		FirstSelectRectNum = -1;
 		svg.select(".focus_rect").remove();
@@ -1154,9 +1011,8 @@ $(function(){
 		}
 		//***********************************************
 			select_focus = false;
-			select_detail = false;
 			if(select_focus){
-				var upY = event.layerY - paddingY;
+				var upY = event.layerY - 120;
 				var upY_index = computeIndexY(upY);
 				if(beginY_index <= upY_index ){
 					for(var i=beginY_index;i<=upY_index;i++){
@@ -1200,7 +1056,6 @@ $(function(){
 		moveSR = false;
 		moveFilter = false;
 		select_focus = false;
-		select_detail = false;
 		FirstSelectFilterNum = -1;
 		FirstSelectRectNum = -1;
 	}
@@ -1242,8 +1097,8 @@ $(function(){
 		.attr("y",function(d,i){
 			return cs_coord[i]+5.5;
 		})
-		.attr("font-size",10)
-		.attr("font-family","arial")
+		.attr("font-size",12)
+		.attr("font-family","simsun")
 		.text(function(d){
 			return d;
 		});
@@ -1293,7 +1148,7 @@ $(function(){
 		});
 		
 		for(var i=0;i<AttrAllNum;i++){
-			XArray[i] = i * button_width + 3;
+			XArray[i] = i * button_width + 6;
 		}
 		for(var i=0;i<AttrAllNum;i++){
 			ScaleArray[i] = d3.scale.linear()
@@ -1389,8 +1244,8 @@ $(function(){
 			.attr("y",function(d,i){
 				return cs_coord[i]+5.5;
 			})
-			.attr("font-size",10)
-			.attr("font-family","arial")
+			.attr("font-size",12)
+			.attr("font-family","simsun")
 			.text(function(d){
 				return d;
 			});
@@ -1530,7 +1385,6 @@ $(function(){
 		var index = 0;
 		var real_index = 1;
 		var baseball_man = baseballdata[0];
-		var color_num = 0;
 		for(x in baseball_man){
 			if(index > 0 && index < AttrAllNum){
 				if(DisplayArray.indexOf(index)!=-1){
@@ -1553,53 +1407,21 @@ $(function(){
 					})
 					.classed(AttrArray[index],true)
 					.style("fill",function(d,i){
-						color_num = render_baseballdata[i].num;
-						var color;
-						if(DetailArray.length!=0){
-							if(DetailArray.indexOf(color_num)==-1){
-								color = "gray";
-							}else{
-								color = "red";
-							}
-						}else{
-							color = computeColor(getAttr(d,sortIndex),sortIndex);
-						}
+						var color = computeColor(getAttr(d,sortIndex),sortIndex);
 						return  color;
 					})
 					.on("mouseover",function(d,i){
 						FirstSelectFilterNum = -1;
 						FirstSelectRectNum = -1;
-						if(focus_one){
-							d3.select(this).style("fill","green");
-							currentYNum = i;
-						}else{
-							d3.select(this).style("fill","green");
-							currentYNum = -1;
-						}
+						currentYNum = i;
+						d3.select(this).style("fill","green");
 					})
-					.on("mouseout",function(d,i){
+					.on("mouseout",function(d){
 						currentYNum = -1;
-						var color;
-						color_num = render_baseballdata[i].num;
-						if(focus_one){
-							color = computeColor(getAttr(d,sortIndex),sortIndex);
-							d3.select(this).style("fill",function(){
-								return color;
-							});
-						}else{
-							if(DetailArray.length!=0){
-								if(DetailArray.indexOf(color_num)==-1){
-									color = "gray";
-								}else{
-									color = "red";
-								}
-							}else{
-								color = computeColor(getAttr(d,sortIndex),sortIndex);
-							}
-							d3.select(this).style("fill",function(){
-								return color;
-							});
-						}
+						var color = computeColor(getAttr(d,sortIndex),sortIndex);
+						d3.select(this).style("fill",function(){
+							return color;
+						});
 					});
 					real_index++;
 				}
@@ -1632,7 +1454,10 @@ $(function(){
 			var baseballman = render_baseballdata[indexY];
 			var index = 0;
 			var real_index = 0;
-			var font_size = 12;
+			var font_size = Math.floor(130/AttrNum);
+			if(font_size>18){
+				font_size = 18;
+			}
 			for(x in baseballman){
 				if(DisplayArray.indexOf(index)!=-1){
 					var attr = baseballman[x];
@@ -1642,7 +1467,7 @@ $(function(){
 					.attr("y",focusx_bottom - text_paddingY)
 					.attr("class","person")
 					.attr("font-size",font_size)
-					.attr("font-family","arial")
+					.attr("font-family","simsun")
 					.text(baseballman[x]);
 					real_index++;
 				}
@@ -1760,9 +1585,6 @@ $(function(){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
 				return a[attr_name] - b[attr_name];
 			});
-			for(var i=0;i<AttrNum;i++){
-				SortObject[AttrName[i]] = true;
-			}
 			SortObject[attr_name] = false;
 			down_all = true;
 		}else{
@@ -1903,15 +1725,6 @@ $(function(){
 			ReadData(filename);
 		}
 	}
-	//Change the Select item
-	function ChangeSelect(checkedItems){
-		if(checkedItems[0].value=="Detail"){
-			focus_one = true;
-		}
-		if(checkedItems[0].value=="Color"){
-			focus_one = false;
-		}
-	}
 	//change the color
 	function ChangeColor(checkedItems){
 		if(checkedItems[0].value=="uniformly5"){
@@ -2018,18 +1831,6 @@ $(function(){
 		}
 	}
 	//***************************************************************************************
-	function addElementDiv(div_name,top){
-		d3.select("#paint_control")
-		.append(div_name)
-		.attr("class","add_div")
-		.style("position","absolute")
-		.style("left","0px")
-		.style("top",top+"px")
-		.style("width",paint_width+"px")
-		.style("height","150px")
-		.style("background","orange");
-	}
-	//***************************************************************************************
 	function ReadData(fileName){
 		d3.csv(fileName,function(baseballman){
 			//keep updating with the data
@@ -2084,7 +1885,7 @@ $(function(){
 			}
 			XArray = new Array();
 			for(var i=0;i<AttrAllNum;i++){
-				XArray[i] = i * button_width + 3;
+				XArray[i] = i * button_width + 6;
 			}
 			for(var i=0;i<=AttrAllNum;i++){
 				if(i==0){

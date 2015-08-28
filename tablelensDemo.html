@@ -279,7 +279,7 @@ $(function(){
 	var ManNum = 0;
 	//outer rect
 	var svgHeight = screen_height-190,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
-	var focusXMin = 250, focusXMax = 1300, focusYMin = 30, focusYMax = 560;
+	var focusXMin = 250, focusXMax = 1300, focusYMin = 30, focusYMax = svgHeight;
 	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
 	var ColorXMin = 150, ColorXMax = 200, ColorYMin = 10, ColorYMax = 580;
 	//inner rect
@@ -749,7 +749,7 @@ $(function(){
 			moveSR = false;
 			SelectFilterNum = FirstSelectFilterNum;
 		}*/
-		if((begin_clickX>focusXMin)&&(begin_clickX<focusXMax)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){
+		if((begin_clickX>focusXMin)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){//(begin_clickX<focusXMax)&&
 			if(focus_one){
 				select_focus = true;
 				select_detail = false;

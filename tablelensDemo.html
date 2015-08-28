@@ -1317,8 +1317,9 @@ $(function(){
 		.attr("class","attr_button")
 		.style("height",InRectYMin+"px")
 		.style("width", button_width +"px")
-		.on("click",function(d,i){
-			sortAttr(d,i);
+		.on("click",function(d){
+			var index = AttrName.indexOf(d);
+			sortAttr(d,index);
 		})
 		.text(function(d,i){
 			return d;

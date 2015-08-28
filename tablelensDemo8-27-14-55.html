@@ -215,7 +215,6 @@ $(function(){
 			<form id = "embedded">
 				Embedded Data:
 				<select name="embedded_data" id="embedded_select" style="width:100px; top:5px;">
-					<option value="filmdata">filmdata</option>
 					<option value="baseballdata">baseballdata</option>
 					<option value="basketballdata">basketballdata</option>
 				</select>
@@ -279,7 +278,7 @@ $(function(){
 	var ManNum = 0;
 	//outer rect
 	var svgHeight = screen_height-190,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
-	var focusXMin = 250, focusXMax = 1300, focusYMin = 30, focusYMax = 560;
+	var focusXMin = 250, focusXMax = 1205, focusYMin = 30, focusYMax = 700;
 	var tableMarginTopY = 30, tableMarginBottomY = 20, tableMarginLeftX = 80, tableMarginRightX = 20;
 	var ColorXMin = 150, ColorXMax = 200, ColorYMin = 10, ColorYMax = 580;
 	//inner rect
@@ -292,7 +291,6 @@ $(function(){
 	var InRectYMax = InRectYMin + InRectHeight;
 	var ChangeRectHeight = InRectHeight;
 	var paint_width = screen_width - InRectXMin;
-	var TypeArray = new Array();
 	//inner svg 
 	var baseballman = new Array();
 	var baseballdata = new Array();
@@ -322,7 +320,7 @@ $(function(){
 	var FocusArray = new Array();
 	var DetailArray = new Array();
 	var yfocus_num = 0, focusY_min = -1, focusY_max = -1, top_middleY = 0, bottom_middleY = 0;
-	var barheight = 3, focus_height = 20;
+	var barheight = 1, focus_height = 20;
 	var currentYNum = -1;
 	var top_middleY = 0, bottom_middleY = 0;
 	var total_event;
@@ -397,7 +395,6 @@ $(function(){
 	var AddSvgHeight = 0;
 	var add_svg;
 	var copy_baseballdata;
-	var type_height = new Array();
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -425,11 +422,11 @@ $(function(){
 						stringArray = text.split("\n");
 						ManNum = stringArray.length - 1;
 						AttrName = stringArray[0].split(",");
-						/*for(var i=0;i<AttrName.length;i++){
+						for(var i=0;i<AttrName.length;i++){
 							if(AttrName[i].length>5){
 								AttrName[i] = AttrName[i].substring(0,5);
 							}
-						}*/
+						}
 						AttrNum = AttrName.length;
 						AttrAllNum = AttrName.length;
 						var SampleArray = new Array();
@@ -437,32 +434,16 @@ $(function(){
 							SampleArray = stringArray[i+1].split(",");
 							baseballman[i] = new Object();
 							for(var j=0;j<AttrName.length;j++){
-								//alert(typeof(SampleArray[j])+j);
 								baseballman[i][AttrName[j]] = SampleArray[j];
 							}
 						}
-						var num;
-						var num_length = 0;
 						for(var i=0;i<AttrName.length;i++){
 							TableArray[i] = new Array();
 							for(var j=0;j<ManNum-1;j++){
 								if(i==0){
 									TableArray[i][j] = baseballman[j][AttrName[i]];
 								}else{
-									num = baseballman[j][AttrName[i]];
-									num_length = num.length;
-									if(isNaN(num)){
-										if(j==ManNum-2){
-											TableArray[i][j] = num.substring(0,num_length-1);
-											baseballman[j][AttrName[i]] = TableArray[i][j];
-										}else{
-											TableArray[i][j] = num;
-											baseballman[j][AttrName[i]] = TableArray[i][j];
-										}
-									}else{
-										TableArray[i][j] = parseFloat(num);
-										baseballman[j][AttrName[i]] = TableArray[i][j];
-									}
+									TableArray[i][j] = parseInt(baseballman[j][AttrName[i]]);
 								}
 							}
 						}
@@ -483,46 +464,22 @@ $(function(){
 						humannum_sum = render_baseballdata.length;
 						humannum = render_baseballdata.length;
 						humannum_min = 0, humannum_max = render_baseballdata.length;
-						barheight = 3;
-						focus_height = 20;
 						if(barheight>(InRectHeight-150)/humannum_sum){
 							barheight = Math.floor(((InRectHeight-150)/humannum_sum)*100)/100;
 						}
+						SortFunction();
 						button_width = Math.floor(ButtonInRectWidth/AttrNum);
 						computeVarY();
 						for(var i=0;i<=AttrNum;i++){
 							AttrAllArray[i] = i;
 						}
-						minValue.splice(0,minValue.length);
-						maxValue.splice(0,maxValue.length);
-						quarter0Value.splice(0,quarter0Value.length);
-						quarter1Value.splice(0,quarter1Value.length);
-						quarter2Value.splice(0,quarter2Value.length);
-						quarter3Value.splice(0,quarter3Value.length);
-						quarter4Value.splice(0,quarter4Value.length);
-						ScaleArray.splice(0,ScaleArray.length);
 						for(var i=0;i<AttrAllNum;i++){
 							if(i==0){
 								minValue[i] = 0;
 								maxValue[i] = 0;
-								TypeArray[i] = true;
 							}else{
 								minValue[i] = Array.min(TableArray[i]);
 								maxValue[i] = Array.max(TableArray[i]);
-								if(isNaN(minValue[i])||isNaN(maxValue[i])){
-									//category type data
-									TypeArray[i] = new Array();
-									for(var j=0;j<humannum_sum;j++){
-										if(TypeArray[i].indexOf(TableArray[i][j])==-1){
-											TypeArray[i].push(TableArray[i][j]);
-										}
-									}
-									minValue[i] = 0;
-									maxValue[i] = TypeArray[i].length;
-								}else{
-									//numerical type data
-									TypeArray[i] = true;
-								}
 							}	
 						}
 						for(var i=0;i<minValue.length;i++){
@@ -533,6 +490,7 @@ $(function(){
 							quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
 							quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
 						}
+						
 						for(var i=0;i<AttrAllNum;i++){
 							XArray[i] = i * button_width + 3;
 						}
@@ -545,19 +503,10 @@ $(function(){
 							middleValue[i] = minValue[sortIndex] + cs_array[i] * (maxValue[sortIndex] - minValue[sortIndex]);
 						}
 						for(var i=0;i<AttrAllNum;i++){
-							if(TypeArray[i]==true){
-								ScaleArray[i] = d3.scale.linear()
+							ScaleArray[i] = d3.scale.linear()
 								.range([0,button_width - 10])
 								.domain([0,maxValue[i]]);
-								type_height[i] = 0;
-							}else{
-								ScaleArray[i] = d3.scale.ordinal()
-								.domain(TypeArray[i])
-								.rangeBands([0,button_width-10]);
-								type_height[i] = (button_width-10)/maxValue[i];
-							}
 						}
-						SortFunction();
 						d3.selectAll(".attr_button")
 						.append("g")
 						.data(AttrName)
@@ -565,6 +514,7 @@ $(function(){
 						.text(function(d,i){
 							return AttrName[i]
 						});
+						
 						d3.select("#AttrButton")
 						.selectAll(".attr_button").remove();
 						d3.select("#AttrButton")
@@ -578,7 +528,7 @@ $(function(){
 						.style("width", (button_width) +"px")
 						.style("y","0px")
 						.on("click",function(d,i){
-							sortAttr(d,i);
+							sortAttr(d);
 						})
 						.text(function(d,i){
 							return AttrName[i];
@@ -662,6 +612,7 @@ $(function(){
 	{
     	return Math.max.apply(Math,array);
 	}
+	
 	d3.select("#outer")
 	.style("margin-left", -7+"px")
 	.style("margin-right","-7px")
@@ -693,7 +644,42 @@ $(function(){
 	.style("width", paint_width+"px");
 	
 	div_height = InRectHeight -5 - baseballdata.length * barheight;
+	/*var parent = document.getElementById("inner");
+	//add div
+	var div = document.createElement("div");
+	div.setAttribute("id","newDiv");
+	div.setAttribute("position","absolute");
+	div.setAttribute("left","0")
+	div.setAttribute("width","100");
+	div.setAttribute("height","200");
+	div.setAttribute("background","red");
+	div.innerHTML = "js add new Div";
+	parent.appendChild(div); */
+	
+	//var button_width = Math.floor((InRectWidth - 320)/4);
 	var button_width = Math.floor((InRectWidth - 320)/4);
+	
+	/*d3.select("removeothers")
+	.style("width",button_width+"px");
+	
+	d3.select("resetfilter")
+	.style("width",button_width+"px");
+	
+	d3.select("#resetSelect")
+	.style("width",button_width+"px");
+	
+	d3.select("#removeselected")
+	.style("width",button_width+"px");*/
+	
+	/*var form_width = Math.floor((InRectWidth - 320)/3);
+	d3.select("#multiple")
+	.style("width",form_width+"px");
+	
+	d3.select("#grouping")
+	.style("width",form_width+"px");
+	
+	d3.select("#single")
+	.style("width",form_width+"px");*/
 	
 	computeButtonWidth();
 	
@@ -718,7 +704,8 @@ $(function(){
 		stopArray[i] = linearGradient.append("stop")
 				.attr("offset",stopNumArray[i]+"%")
 				.style("stop-color",colorArray[i].toString());
-	}	
+	}
+	
 	svg_color.append("g")
 	.attr("class","color_rect")
 	.append("rect")
@@ -1106,6 +1093,23 @@ $(function(){
 		//******************************************************************************
 		if(select_focus){
 			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
+				/*for(var i=beginY_index;i<=upY_index;i++){
+					var num = render_baseballdata[i].num;
+					if(FocusArray.indexOf(num)==-1){
+						FocusArray.push(num);
+						yfocus_num++;
+						if(focusY_max<0){
+							focusY_max = i;
+							focusY_min = i;
+						}else{
+							if(i>focusY_max){
+								focusY_max = i;
+							}else if(i < focusY_min){
+								focusY_min = i;
+							}
+						}
+					}
+				}*/
 				DivArray[div_index] = render_baseballdata[upY_index].num;
 				var div_object = new Object();
 				div_object.beginYIndex = beginY_index;
@@ -1131,16 +1135,14 @@ $(function(){
 						}
 					}
 				}
-				if(display_divNum!=-1){
-					if(upY_index<DivObjectArray[display_divNum].upYIndex){
-						DivObjectArray[display_divNum].upYIndex = upY_index;
-						DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
-						AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
-						AddSvgHeight = AddSvgIndexNum * focus_height;
-					}
-					if((DivObjectArray[display_divNum].upYIndex)<=(DivObjectArray[display_divNum].beginYIndex)){
-						display_divNum = -1;
-					}
+				if(upY_index<DivObjectArray[display_divNum].upYIndex){
+					DivObjectArray[display_divNum].upYIndex = upY_index;
+					DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
+					AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
+					AddSvgHeight = AddSvgIndexNum * focus_height;
+				}
+				if((DivObjectArray[display_divNum].upYIndex)<=(DivObjectArray[display_divNum].beginYIndex)){
+					display_divNum = -1;
 				}
 			}
 		}
@@ -1318,28 +1320,19 @@ $(function(){
 		.style("height",InRectYMin+"px")
 		.style("width", button_width +"px")
 		.on("click",function(d,i){
-			sortAttr(d,i);
+			sortAttr(d);
 		})
 		.text(function(d,i){
 			return d;
 		});
+		
 		for(var i=0;i<AttrAllNum;i++){
 			XArray[i] = i * button_width + 3;
 		}
-		if(TypeArray.length>0){
-			for(var i=0;i<AttrAllNum;i++){
-				if(TypeArray[i]==true){
-					ScaleArray[i] = d3.scale.linear()
-					.range([0,button_width - 10])
-					.domain([0,maxValue[i]]);
-					type_height[i] = 0;
-				}else{
-					ScaleArray[i] = d3.scale.ordinal()
-					.domain(TypeArray[i])
-					.rangeBands([0,button_width-10]);
-					type_height[i] = (button_width-10)/maxValue[i];
-				}
-			}	
+		for(var i=0;i<AttrAllNum;i++){
+			ScaleArray[i] = d3.scale.linear()
+				.range([0,button_width - 10])
+				.domain([0,maxValue[i]]);
 		}
 		for(var i=0;i<AttrAllNum;i++){
 			if(DisplayArray.indexOf(i)!=-1){
@@ -1473,9 +1466,6 @@ $(function(){
 		}
 	}
 	function computeColor(value,index){
-		if(TypeArray[index]!=true){
-			value = TypeArray[index].indexOf(value);
-		}
 		var compute4 = d3.interpolate(a,b);
 		var linear4 = d3.scale.linear()
 				.domain([quarter4Value[index],quarter3Value[index]])
@@ -1511,27 +1501,107 @@ $(function(){
 		}
 	}
 	function SortFunction(){
-		var attr = AttrName[1];
-		var scale = ScaleArray[1];
-		if(down_Bat86){
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return scale(a[attr]) - scale(b[attr]);
-			});
-			copy_baseballdata = copy_baseballdata.sort(function(a,b){
-				return scale(a[attr]) - scale(b[attr]);
-			});
-			down_all = true;
-		}else{
-			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return scale(b[attr]) - scale(a[attr]);
-			});
-			copy_baseballdata = copy_baseballdata.sort(function(a,b){
-				return scale(b[attr]) - scale(a[attr]);
-			});
-			down_all = false;
+		if(sortIndex == 1){
+			if(down_Bat86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
+				down_all = true;
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+				down_all = false;
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 2){
+			if(down_Hit86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.hits86 - b.hits86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
+				down_all = true;
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.hits86 - a.hits86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+				down_all = false;
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 3){
+			if(down_HRuns86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.hRuns86 - b.hRuns86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
+				down_all = true;
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.hRuns86 - a.hRuns86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+				down_all = false;
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 4){
+			if(down_Runs86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.runs86 - b.runs86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
+				down_all = true;
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.runs86 - a.runs86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+				down_all = false;
+			}
+			computeMinMax();
+			computeVarY();
+		}else if(sortIndex == 5){
+			if(down_Runbat86){
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return a.Runbat86 - b.Runbat86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return a.bat86 - b.bat86;
+				});
+				down_all = true;
+			}else{
+				render_baseballdata = render_baseballdata.sort(function(a,b){
+					return b.Runbat86 - a.Runbat86;
+				});
+				copy_baseballdata = copy_baseballdata.sort(function(a,b){
+					return b.bat86 - a.bat86;
+				});
+				down_all = false;
+			}
+			computeMinMax();
+			computeVarY();
 		}
-		computeMinMax();
-		computeVarY();
 	}
 	//**************************************************************
 	function tablelens(){
@@ -1553,11 +1623,7 @@ $(function(){
 					.enter()
 					.append("rect")
 					.attr("x",function(d,i){
-						if(TypeArray[index]==true){
-							return XArray[real_index];
-						}else{
-							return (XArray[real_index] + scale(d[x]));
-						}
+						return XArray[real_index];
 					})
 					.attr("y",function(d,i){				
 						return YArray[i];
@@ -1566,11 +1632,7 @@ $(function(){
 						return DOIHeight(i);
 					})
 					.attr("width",function(d){
-						if(TypeArray[index]==true){
-							return scale(d[x]);
-						}else{
-							return type_height[index];
-						}
+						return scale(d[x]);
 					})
 					.attr("id",function(d,i){
 						return "x"+index+"y"+i;
@@ -1592,10 +1654,10 @@ $(function(){
 								if((i>=beginY_index)&&(i<=upY_index)){
 									color = "red";
 								}else{
-									color = computeColor(d[AttrName[sortIndex]],sortIndex);
+									color = computeColor(getAttr(d,sortIndex),sortIndex);
 								}
 							}else{
-								color = computeColor(d[AttrName[sortIndex]],sortIndex);
+								color = computeColor(getAttr(d,sortIndex),sortIndex);
 							}
 						}
 						return  color;
@@ -1628,12 +1690,12 @@ $(function(){
 								if((i>=beginY_index)&&(i<=upY_index)){
 									color = "red";
 								}else{
-									color = computeColor(d[AttrName[sortIndex]],sortIndex);
+									color = computeColor(getAttr(d,sortIndex),sortIndex);
 								}
-								var add_color = computeColor(d[AttrName[sortIndex]],sortIndex);
+								var add_color = computeColor(getAttr(d,sortIndex),sortIndex);
 								add_svg.select("#"+id).style("fill",add_color);
 							}else{
-								color = computeColor(d[AttrName[sortIndex]],sortIndex);
+								color = computeColor(getAttr(d,sortIndex),sortIndex);
 							}
 							d3.select(this).style("fill",function(){
 								return color;
@@ -1646,7 +1708,7 @@ $(function(){
 									color = "red";
 								}
 							}else{
-								color = computeColor(d[AttrName[sortIndex]],sortIndex);
+								color = computeColor(getAttr(d,sortIndex),sortIndex);
 							}
 							d3.select(this).style("fill",function(){
 								return color;
@@ -1659,6 +1721,45 @@ $(function(){
 			index++;
 		}
 		//*********************************************************
+		//*************************
+		 /*add_svg.append("rect")
+		 	.attr("x",10)
+			.attr("y",10)
+			.attr("height",100)
+			.attr("width",100)
+			.style("fill","black");*/
+		/*var baseball_man = baseballdata[0];
+		real_index = 1;
+		index = 0; 
+		for(x in baseball_man){
+			if(index > 0 && index < AttrAllNum){
+				if(DisplayArray.indexOf(index)!=-1){
+					var scale = ScaleArray[index];
+					add_svg.append("g")
+					.data(append_array)
+					.enter()
+					.append("rect")
+					.attr("x",function(d,i){
+						return XArray[real_index];
+					})
+					.attr("y",function(d,i){				
+						return focus_height * i;
+					})
+					.attr("height",function(d,i){
+						return focus_height;
+					})
+					.attr("width",function(d){
+						return scale(d[x]);
+					})
+					.style("fill",function(d,i){
+						var color = computeColor(getAttr(d,sortIndex),sortIndex);
+						return color;
+					});
+					real_index++;
+				}
+			}
+			index++;
+		}*/
 		//*********************************************************
 		//add div
 		if(display_divNum>=0){
@@ -1739,6 +1840,37 @@ $(function(){
 		return indexY;
 	}
 	//**********************************************************
+	/*function computeCoordYAll(indexY){
+		var minY = computeCoordY(humannum_min);
+		var coordY = computeCoordY(indexY + humannum_min);
+		return coordY - minY;
+	}*/
+/*	function computeCoordY(indexY){
+		var coordY = 0;
+		if(yfocus_num == 0){
+			coordY = indexY * barheight;
+		}else if(indexY <= focusY_min){
+			coordY = indexY * barheight;
+		}else if(indexY <= focusY_max){
+			var temp_coordY = top_middleY;
+			for(var i=focusY_min;i<focusY_max;i++){
+				var num = render_baseballdata[i].num;
+				if(FocusArray.indexOf(num)==-1){
+					temp_coordY = temp_coordY + barheight;
+				}else{
+					temp_coordY = temp_coordY + focus_height;
+				}
+				if(i == (indexY - 1)){
+					coordY = temp_coordY;
+					break;
+				}
+			}
+		}else{
+			coordY = bottom_middleY + (indexY - focusY_max - 1) * barheight;
+		}
+		return coordY;
+	}*/
+	//**********************************************************
 	function computeIndexY(CoordY){
 		var IndexY = 0;
 		if(display_divNum>=0){
@@ -1799,11 +1931,10 @@ $(function(){
 		return doi_height;
 	};
 	//***********************************************************
-	function sortAttr(attr_name,index){
-		var scale = ScaleArray[index];
+	function sortAttr(attr_name){
 		if(SortObject[attr_name]){
 			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return scale(a[attr_name]) - scale(b[attr_name]);
+				return a[attr_name] - b[attr_name];
 			});
 			for(var i=0;i<AttrNum;i++){
 				SortObject[AttrName[i]] = true;
@@ -1812,7 +1943,7 @@ $(function(){
 			down_all = true;
 		}else{
 			render_baseballdata = render_baseballdata.sort(function(a,b){
-				return scale(b[attr_name]) - scale(a[attr_name]);
+				return b[attr_name] - a[attr_name];
 			});
 			SortObject[attr_name] = true;
 			down_all = false;
@@ -1954,10 +2085,6 @@ $(function(){
 	}
 	//chenge the sample data
 	function ChangeData(checkedItems){
-		if(checkedItems[0].value=="filmdata"){
-			var filename = "filmdata.csv";
-			ReadData(filename);
-		}
 		if(checkedItems[0].value=="baseballdata"){
 			var filename = "baseballman2.csv";
 			ReadData(filename);
@@ -2042,9 +2169,9 @@ $(function(){
 			var index2 = Math.floor(render_baseballdata.length * 0.5);
 			var index3 = Math.floor(render_baseballdata.length * 0.9);
 			cs_array[0] = 0.00;
-			cs_array[1] = (render_baseballdata[index1][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
-			cs_array[2] = (render_baseballdata[index2][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
-			cs_array[3] = (render_baseballdata[index3][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[1] = (getAttr(render_baseballdata[index1],sortIndex) - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[2] = (getAttr(render_baseballdata[index2],sortIndex) - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[3] = (getAttr(render_baseballdata[index3],sortIndex) - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			cs_array[4] = 1.00;
 			for(var i=0;i<cs_array.length;i++){
 				cs_coord[i] = InRectYMin + Math.floor(cs_array[i] * InRectHeight);
@@ -2064,9 +2191,9 @@ $(function(){
 			var index2 = Math.floor(render_baseballdata.length * 0.6);
 			var index3 = Math.floor(render_baseballdata.length * 0.9);
 			cs_array[0] = 0.00;
-			cs_array[1] = (render_baseballdata[index1][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
-			cs_array[2] = (render_baseballdata[index2][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
-			cs_array[3] = (render_baseballdata[index3][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[1] = (getAttr(render_baseballdata[index1],sortIndex) - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[2] = (getAttr(render_baseballdata[index2],sortIndex) - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[3] = (getAttr(render_baseballdata[index3],sortIndex) - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			cs_array[4] = 1.00;
 			for(var i=0;i<cs_array.length;i++){
 				cs_coord[i] = InRectYMin + Math.floor(cs_array[i] * InRectHeight);
@@ -2127,11 +2254,7 @@ $(function(){
 					.enter()
 					.append("rect")
 					.attr("x",function(d,i){
-						if(TypeArray[index]==true){
-							return XArray[real_index];
-						}else{
-							return (XArray[real_index] + scale(d[x]));
-						}
+						return XArray[real_index];
 					})
 					.attr("y",function(d,i){				
 						return focus_height * i;
@@ -2140,11 +2263,7 @@ $(function(){
 						return focus_height;
 					})
 					.attr("width",function(d){
-						if(TypeArray[index]==true){
-							return scale(d[x]);
-						}else{
-							return 10;
-						}
+						return scale(d[x]);
 					})
 					.style("fill",function(d,i){
 						var color = computeColor(getAttr(d,sortIndex),sortIndex);
@@ -2280,6 +2399,8 @@ $(function(){
 			for(var i=0;i<AttrNum;i++){
 				DisplayArray[i] = i;
 			}
+			sortIndex = 1;
+			SortFunction();
 			button_width = Math.floor(ButtonInRectWidth/AttrNum);
 			focus_height = 20;
 			computeVarY();
@@ -2294,24 +2415,9 @@ $(function(){
 				if(i==0){
 					minValue[i] = 0;
 					maxValue[i] = 0;
-					TypeArray[i] = true;
 				}else{
 					minValue[i] = Array.min(TableArray[i]);
 					maxValue[i] = Array.max(TableArray[i]);
-					if(isNaN(minValue[i])||isNaN(maxValue[i])){
-						//category type data
-						TypeArray[i] = new Array();
-						for(var j=0;j<humannum_sum;j++){
-							if(TypeArray[i].indexOf(TableArray[i][j])==-1){
-								TypeArray[i].push(TableArray[i][j]);
-							}
-						}
-						minValue[i] = 0;
-						maxValue[i] = TypeArray[i].length;
-					}else{
-						//numerical type data
-						TypeArray[i] = true;
-					}
 				}	
 			}
 			for(var i=0;i<minValue.length;i++){
@@ -2331,20 +2437,10 @@ $(function(){
 				middleValue[i] = minValue[sortIndex] + cs_array[i] * (maxValue[sortIndex] - minValue[sortIndex]);
 			}
 			for(var i=0;i<AttrAllNum;i++){
-				if(TypeArray[i]==true){
-					ScaleArray[i] = d3.scale.linear()
+				ScaleArray[i] = d3.scale.linear()
 					.range([0,button_width - 10])
 					.domain([0,maxValue[i]]);
-					type_height[i] = 0;
-				}else{
-					ScaleArray[i] = d3.scale.ordinal()
-					.domain(TypeArray[i])
-					.rangeBands([0,button_width-10]);
-					type_height[i] = (button_width-10)/maxValue[i];
-				}
-			}	
-			sortIndex = 1;
-			SortFunction();	
+			}		
 			d3.select("#AttrButton")
 				.selectAll(".attr_button").remove();
 			d3.select("#AttrButton")
@@ -2357,7 +2453,7 @@ $(function(){
 				.style("height",InRectYMin+"px")
 				.style("width", (button_width) +"px")
 				.on("click",function(d,i){
-					sortAttr(d,i);
+					sortAttr(d);
 				})
 				.text(function(d,i){
 					return AttrName[i];

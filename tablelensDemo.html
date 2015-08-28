@@ -1639,6 +1639,7 @@ $(function(){
 						for(x in d){
 							data_array.push(d[x]);
 						}
+						data_array.pop();
 						svg_prompt.selectAll(".prompt_text")
 						.append("g")
 						.data(data_array)
@@ -2205,6 +2206,7 @@ $(function(){
 						for(x in d){
 							data_array.push(d[x]);
 						}
+						data_array.pop();
 						svg_prompt.selectAll(".prompt_text")
 						.append("g")
 						.data(data_array)

@@ -102,11 +102,14 @@ $(function(){
 	}
 	#inner{
 		position:absolute;
-		background:yellow;
 		overflow-y:auto;
 		overflow-x:hidden;
 		height:500px;
 		background:white;
+	}
+	#prompt{
+		position:absolute;
+		background:#F6F6F6;
 	}
 	.select_rect{
  		 fill-opacity: 0.3;
@@ -237,6 +240,8 @@ $(function(){
 			</div>
 			<div id="inner"> 
 			</div>
+			<div id="prompt">
+			</div>
 		</div>
 	</div> 
 	<div id="control_button">
@@ -277,6 +282,7 @@ $(function(){
 	var ColorArray =["uniformly5","uniformly4","uniformly3","percentile1","percentile2"];
 	var SortObject = new Object();
 	var ManNum = 0;
+	var promptHeight = 30;
 	//outer rect
 	var svgHeight = screen_height-190,svgXMin = 120,svgWidth = 1300 - 207,svgXMax,svgYMin = 0,scgYMax;
 	var focusXMin = 250, focusXMax = 1300, focusYMin = 30, focusYMax = svgHeight;
@@ -287,7 +293,7 @@ $(function(){
 	var InRectYMin = tableMarginTopY;
 	var InRectWidth = screen_width - InRectXMin; 
 	var ButtonInRectWidth = InRectWidth - 10;
-	var InRectHeight = svgHeight - tableMarginBottomY - tableMarginTopY;
+	var InRectHeight = svgHeight - tableMarginBottomY - tableMarginTopY - promptHeight;
 	var InRectXMax = InRectXMin + InRectWidth;
 	var InRectYMax = InRectYMin + InRectHeight;
 	var ChangeRectHeight = InRectHeight;
@@ -314,7 +320,7 @@ $(function(){
 	var humannum_sum = 322;
 	var humannum = 322;
 	var humannum_min = 0, humannum_max = 322;
-	var svg, svg_color, svg_button;
+	var svg, svg_color, svg_button, svg_prompt;
 	var button_width = ButtonInRectWidth/AttrNum;
 	var XArray = new Array();
 	var YArray = new Array();
@@ -692,6 +698,13 @@ $(function(){
 	.style("height", InRectHeight+"px")
 	.style("width", paint_width+"px");
 	
+	d3.select("#prompt")
+	.style("left","0px")
+	.style("top",(InRectHeight+40)+"px")
+	.style("margin-left","0px")
+	.style("height",promptHeight+"px")
+	.style("width",paint_width+"px");
+	
 	div_height = InRectHeight -5 - baseballdata.length * barheight;
 	var button_width = Math.floor((InRectWidth - 320)/4);
 	
@@ -706,6 +719,11 @@ $(function(){
 	.append("svg")
 	.attr("width",InRectWidth/2)
 	.attr("height",svgHeight);
+	
+	svg_prompt = d3.select("#prompt")
+	.append("svg")
+	.attr("width",paint_width)
+	.attr("height",promptHeight);
 	
 	defs = svg_color.append("defs");
 	linearGradient = defs.append("linearGradient")
@@ -1077,7 +1095,7 @@ $(function(){
 		//******************************************************************************
 		if(beginX_index == afterX_index){
 			if(select_detail){
-				if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
+				if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>2){
 					if(beginX_index!=detail_index){
 						DetailArray.splice(0,DetailArray.length);
 					}
@@ -1088,7 +1106,7 @@ $(function(){
 							DetailArray.push(num);
 						}
 					}
-				}else if((beginY_index>=0)&&((beginY_index - upY_index)>3)){
+				}else if((beginY_index>=0)&&((beginY_index - upY_index)>2)){
 					if(beginX_index!=detail_index){
 						DetailArray.splice(0,DetailArray.length);
 					}
@@ -1105,7 +1123,7 @@ $(function(){
 		}
 		//******************************************************************************
 		if(select_focus){
-			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>3){
+			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>2){
 				DivArray[div_index] = render_baseballdata[upY_index].num;
 				var div_object = new Object();
 				div_object.beginYIndex = beginY_index;
@@ -1117,7 +1135,7 @@ $(function(){
 				AddSvgIndexNum = upY_index - beginY_index;
 				AddSvgHeight = AddSvgIndexNum * focus_height;
 				//div_index++;
-			}else if((beginY_index>=0)&&((beginY_index - upY_index)>3)){
+			}else if((beginY_index>=0)&&((beginY_index - upY_index)>2)){
 				for(var i=upY_index;i<=beginY_index;i++){
 					var num = render_baseballdata[i].num;
 					if(FocusArray.indexOf(num)!=-1){
@@ -1545,6 +1563,7 @@ $(function(){
 		var real_index = 1;
 		var baseball_man = baseballdata[0];
 		var color_num = 0;
+		var data_array = new Array();
 		for(x in baseball_man){
 			if(index > 0 && index < AttrAllNum){
 				if(DisplayArray.indexOf(index)!=-1){
@@ -1616,11 +1635,31 @@ $(function(){
 							d3.select(this).style("fill","green");
 							currentYNum = -1;
 						}
+						data_array.splice(0,data_array.length);
+						for(x in d){
+							data_array.push(d[x]);
+						}
+						svg_prompt.selectAll(".prompt_text")
+						.append("g")
+						.data(data_array)
+						.enter()
+						.append("text")
+						.attr("class","prompt_text")
+						.attr("x",function(d,i){
+							return button_width * i;
+						})
+						.attr("y",20)
+						.attr("font-size",font_size)
+						.attr("font-family","arial")
+						.text(function(d){
+							return d;
+						});
 					})
 					.on("mouseout",function(d,i){
 						currentYNum = -1;
 						var color;
 						color_num = render_baseballdata[i].num;
+						svg_prompt.selectAll(".prompt_text").remove();
 						var id = d3.select(this).attr("id");
 						if(focus_one){
 							if(display_divNum>=0){
@@ -2118,6 +2157,7 @@ $(function(){
 	    var baseball_man = baseballdata[0];
 		var real_index = 1;
 		var index = 0; 
+		var data_array = new Array();
 		for(x in baseball_man){
 			if(index > 0 && index < AttrAllNum){
 				if(DisplayArray.indexOf(index)!=-1){
@@ -2161,8 +2201,28 @@ $(function(){
 						d3.select(this).style("fill","green");
 						var id = d3.select(this).attr("id");
 						svg.select("#"+id).style("fill","green");
+						data_array.splice(0,data_array.length);
+						for(x in d){
+							data_array.push(d[x]);
+						}
+						svg_prompt.selectAll(".prompt_text")
+						.append("g")
+						.data(data_array)
+						.enter()
+						.append("text")
+						.attr("class","prompt_text")
+						.attr("x",function(d,i){
+							return button_width * i;
+						})
+						.attr("y",20)
+						.attr("font-size",font_size)
+						.attr("font-family","arial")
+						.text(function(d){
+							return d;
+						});
 					})
 					.on("mouseout",function(d,i){
+						svg_prompt.selectAll(".prompt_text").remove();
 						var color = computeColor(getAttr(d,sortIndex),sortIndex);
 						d3.select(this).style("fill",color);
 						var id = d3.select(this).attr("id");

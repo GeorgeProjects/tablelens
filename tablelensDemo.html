@@ -201,12 +201,28 @@ $(function(){
 	}
 	#embedded{
 	  display:inline-block;
+	  margin-left:10px;
 	  margin-right:3px;
 	}
 	#Focus{
 	  display:inline-block;
-	  margin-left:40px;
+	  margin-left:10px;
 	  margin-right:3px;
+	}
+	#submit{
+	  display:inline-block;
+	}
+	#search_input{
+	  display:inline-block;
+	  margin-top:0px;
+	  height:20px;
+	  margin-left:10px;
+	}
+	#search_submit{
+	  display:inline-block;
+	  margin-top:0px;
+	  height:25px;
+	  margin-left:5px;
 	}
 </style>
 </head>
@@ -219,6 +235,7 @@ $(function(){
 				Embedded Data:
 				<select name="embedded_data" id="embedded_select" style="width:100px; top:5px;">
 					<option value="clouddata">clouddata</option>
+					<option value="collegedata">collegedata</option>
 					<option value="filmdata">filmdata</option>
 					<option value="baseballdata">baseballdata</option>
 					<option value="basketballdata">basketballdata</option>
@@ -230,6 +247,10 @@ $(function(){
 					<option value="Detail">detail</option>
 					<option value="Color">color</option>
 				</select>
+			</form>
+			<form id = "submit" name="submit">
+			<p id = "search_input">Search: <input id ="search_input" type="text" name="fname" placeholder="输入关键字搜索"/></p>
+			<input id = "search_submit" type="button" onclick="submit_search()" value="search"/>
 			</form>
 		</div>
 </div>
@@ -405,6 +426,7 @@ $(function(){
 	var add_svg;
 	var copy_baseballdata;
 	var type_height = new Array();
+	var match_obj;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -2001,6 +2023,10 @@ $(function(){
 			var filename = "filmdata.csv";
 			ReadData(filename);
 		}
+		if(checkedItems[0].value=="collegedata"){
+			var filename = "collegedata.csv";
+			ReadData(filename);
+		}
 		if(checkedItems[0].value=="clouddata"){
 			var filename = "clouddata.csv";
 			ReadData(filename);
@@ -2129,6 +2155,32 @@ $(function(){
 			svg.selectAll("*").remove();
 			tablelens();
 		}
+	}
+	function submit_search(){
+		var value = submit.fname.value;
+		match_obj = new RegExp("^[A-Za-z1-9_ .]*"+value+"[A-Za-z1-9_ .]*$");
+		for(var i=0;i<render_baseballdata.length;i++){
+			var name = render_baseballdata[i][AttrName[0]];
+			var num =  render_baseballdata[i].num;
+			if(match_obj.test(name)&&(FocusArray.indexOf(num)==-1)){
+				FocusArray.push(num);
+				yfocus_num++;
+				if(focusY_max<0){
+					focusY_max = i;
+					focusY_min = i;
+				}else{
+					if(i>focusY_max){
+						focusY_max = i;
+					}else if(i < focusY_min){
+						focusY_min = i;
+					}
+				}
+			}
+		}
+		computeVarY();
+		svg.selectAll("*").remove();
+		tablelens();
+		submit.fname.value = "";
 	}
 	//***************************************************************************************
 	function addElementDiv(div_name,top){

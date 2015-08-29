@@ -7,9 +7,13 @@
 
 <body>
 <script type="text/javascript">
-	var num = "10.22";
-	var real_num = parseFloat(num);
-	alert(real_num+20);
+	var re =new RegExp("^[A-Za-z1-9_]*[A-Za-z1-9_]*$");
+	var aaaa = "Eve 123rything";
+	if(re.test(aaaa)){
+		alert("格式正确");
+	}else{
+		alert("格式错误");
+	}
 </script>
 </body>
 </html>

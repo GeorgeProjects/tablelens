@@ -218,6 +218,7 @@ $(function(){
 			<form id = "embedded">
 				Embedded Data:
 				<select name="embedded_data" id="embedded_select" style="width:100px; top:5px;">
+					<option value="clouddata">clouddata</option>
 					<option value="filmdata">filmdata</option>
 					<option value="baseballdata">baseballdata</option>
 					<option value="basketballdata">basketballdata</option>
@@ -459,7 +460,8 @@ $(function(){
 									num_length = num.length;
 									if(isNaN(num)){
 										if(j==ManNum-2){
-											TableArray[i][j] = num.substring(0,num_length-1);
+											//TableArray[i][j] = num.substring(0,num_length-1);
+											TableArray[i][j] = num;
 											baseballman[j][AttrName[i]] = TableArray[i][j];
 										}else{
 											TableArray[i][j] = num;
@@ -1997,6 +1999,10 @@ $(function(){
 	function ChangeData(checkedItems){
 		if(checkedItems[0].value=="filmdata"){
 			var filename = "filmdata.csv";
+			ReadData(filename);
+		}
+		if(checkedItems[0].value=="clouddata"){
+			var filename = "clouddata.csv";
 			ReadData(filename);
 		}
 		if(checkedItems[0].value=="baseballdata"){

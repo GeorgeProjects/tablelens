@@ -2165,28 +2165,30 @@ $(function(){
 	function submit_search(){
 		var value = submit.fname.value;
 		match_obj = new RegExp("^[A-Za-z1-9_ .]*"+value+"[A-Za-z1-9_ .]*$");
-		for(var i=0;i<render_baseballdata.length;i++){
-			var name = render_baseballdata[i][AttrName[0]];
-			var num =  render_baseballdata[i].num;
-			if(match_obj.test(name)&&(FocusArray.indexOf(num)==-1)){
-				FocusArray.push(num);
-				yfocus_num++;
-				if(focusY_max<0){
-					focusY_max = i;
-					focusY_min = i;
-				}else{
-					if(i>focusY_max){
+		if(value!=""){
+			for(var i=0;i<render_baseballdata.length;i++){
+				var name = render_baseballdata[i][AttrName[0]];
+				var num =  render_baseballdata[i].num;
+				if(match_obj.test(name)&&(FocusArray.indexOf(num)==-1)){
+					FocusArray.push(num);
+					yfocus_num++;
+					if(focusY_max<0){
 						focusY_max = i;
-					}else if(i < focusY_min){
 						focusY_min = i;
+					}else{
+						if(i>focusY_max){
+							focusY_max = i;
+						}else if(i < focusY_min){
+							focusY_min = i;
+						}
 					}
 				}
 			}
+			computeVarY();
+			svg.selectAll("*").remove();
+			tablelens();
+			submit.fname.value = "";
 		}
-		computeVarY();
-		svg.selectAll("*").remove();
-		tablelens();
-		submit.fname.value = "";
 	}
 	//***************************************************************************************
 	function addElementDiv(div_name,top){

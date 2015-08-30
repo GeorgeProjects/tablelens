@@ -202,12 +202,12 @@ $(function(){
 	#embedded{
 	  display:inline-block;
 	  margin-left:10px;
-	  margin-right:3px;
+	  margin-right:8px;
 	}
 	#Focus{
 	  display:inline-block;
 	  margin-left:10px;
-	  margin-right:3px;
+	  margin-right:8px;
 	}
 	#submit{
 	  display:inline-block;
@@ -222,17 +222,35 @@ $(function(){
 	  display:inline-block;
 	  margin-top:0px;
 	  height:25px;
-	  margin-left:5px;
+	  margin-left:1px;
+	}
+	#save{
+	  display:inline-block;
+	}
+	#save_input{
+	  display:inline-block;
+	  margin-top:0px;
+	  height:20px;
+	  margin-left:-10px;
+	}
+	#save_submit{
+	  display:inline-block;
+	  margin-top:0px;
+	  height:25px;
+	  margin-left:1px;
+	  margin-right:8px;
 	}
 </style>
 </head>
 <body>
 <div id="page-wrapper">
 		<div id="file_select">
-			CSV File:
 			<input type="file" id="fileInput">
+			<form id = "save" name="save">
+			<p id = "save_input"><input id ="filename_input" type="text" name="fname" placeholder="输入导出文件名(格式.csv)"/></p>
+			<input id = "save_submit" type="button" onClick="submit_save()" value="save"/>
+			</form>
 			<form id = "embedded">
-				Embedded Data:
 				<select name="embedded_data" id="embedded_select" style="width:100px; top:5px;">
 					<option value="collegedata">collegedata</option>
 					<option value="clouddata">clouddata</option>
@@ -242,14 +260,13 @@ $(function(){
 				</select>
 			</form>
 			<form id = "Focus">
-				Select Options:
 				<select name="Focus_item" id="focus_select" style="width:100px; top:5px;">
 					<option value="Detail">detail</option>
 					<option value="Color">color</option>
 				</select>
 			</form>
 			<form id = "submit" name="submit">
-			<p id = "search_input">Search: <input id ="search_input" type="text" name="fname" placeholder="输入关键字搜索"/></p>
+			<p id = "search_input"><input id ="search_input" type="text" name="fname" placeholder="输入关键字搜索"/></p>
 			<input id = "search_submit" type="button" onClick="submit_search()" value="search"/>
 			</form>
 		</div>
@@ -427,6 +444,7 @@ $(function(){
 	var copy_baseballdata;
 	var type_height = new Array();
 	var match_obj;
+	var focus_beginIndexY = 0, focus_endIndexY = 0;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -1164,6 +1182,8 @@ $(function(){
 				display_divNum = div_index;
 				AddSvgIndexNum = upY_index - beginY_index;
 				AddSvgHeight = AddSvgIndexNum * focus_height;
+				focus_beginIndexY = beginY_index;
+				focus_endIndexY = upY_index;
 				//div_index++;
 			}else if((beginY_index>=0)&&((beginY_index - upY_index)>2)){
 				for(var i=upY_index;i<=beginY_index;i++){
@@ -1179,6 +1199,8 @@ $(function(){
 						}
 					}
 				}
+				focus_beginIndexY = beginY_index;
+				focus_endIndexY = upY_index;
 				if(display_divNum!=-1){
 					if(upY_index<DivObjectArray[display_divNum].upYIndex){
 						DivObjectArray[display_divNum].upYIndex = upY_index;
@@ -1988,19 +2010,21 @@ $(function(){
 	//change the AttrNum
 	function ChangeAttr(numChecked,checkedItems){
 		AttrNum = numChecked + 1;
-		DisplayArray = new Array();
+		DisplayArray.splice(0,DisplayArray.length);
 		SelectAttrName = new Array();
 		DisplayArray.push(0);
 		for(var i=0;i<checkedItems.length;i++){
-			for(var j=0;j<AttrAllNum;j++){
-				if(checkedItems[i].value == AttrName[j]){
+			for(var j=1;j<AttrAllNum;j++){
+				if(checkedItems[i].value == AttrName[j]&&(DisplayArray.indexOf(AttrName[j])==-1)){
 					DisplayArray.push(j);
 				}
 			}
-			if(checkedItems[i].value.substring(0,(checkedItems[i].value.length-1))
+			/*if(checkedItems[i].value.substring(0,(checkedItems[i].value.length-1))
 			 == AttrName[AttrAllNum - 1].substring(0,AttrName[AttrAllNum-1].length-1)){
-			 	DisplayArray.push(AttrAllNum - 1);
-			 }
+			 	if(DisplayArray.indexOf(AttrName[AttrAllNum - 1])==-1){
+					DisplayArray.push(AttrAllNum - 1);
+				}
+			 }*/
 		}
 		for(var i=0;i<DisplayArray.length;i++){
 			SelectAttrName.push(AttrName[DisplayArray[i]]);
@@ -2363,6 +2387,62 @@ $(function(){
 		}
 	}
 	//***************************************************************************************
+	function submit_save()
+	{
+		//var textToWrite = document.getElementById("inputTextToSave").value;
+		var textWrite = new Array();
+		for(var j=0;j<DisplayArray.length;j++){
+			if(j!=(DisplayArray.length-1)){
+				textWrite.push(AttrName[j]+",");
+			}else{
+				textWrite.push(AttrName[j]);
+			}
+		}
+		textWrite.push("\r\n");
+		for(var i=0;i<render_baseballdata.length;i++){
+			var num = render_baseballdata[i].num;
+			if((FocusArray.indexOf(num)!=-1)||((i>=focus_beginIndexY)&&(i<focus_endIndexY)&&(display_divNum>=0))){
+				for(var j=0;j<DisplayArray.length;j++){
+					if(j!=(DisplayArray.length-1)){
+						textWrite.push(render_baseballdata[i][AttrName[j]]+",");
+					}else{
+						textWrite.push(render_baseballdata[i][AttrName[j]]);
+					}
+				}
+				textWrite.push("\r\n");
+			}
+		}
+		var textFileAsBlob = new Blob(textWrite, {type:'text/plain'});
+		var fileNameToSaveAs = document.getElementById("filename_input").value;
+		if(fileNameToSaveAs!=""){
+			var fileNameFormat = fileNameToSaveAs+".csv";
+			var downloadLink = document.createElement("a");
+			downloadLink.download = fileNameFormat;
+			downloadLink.innerHTML = "Download File";
+			if (window.webkitURL != null)
+			{
+				// Chrome allows the link to be clicked
+				// without actually adding it to the DOM.
+				downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+			}
+			else
+			{
+				// Firefox requires the link to be added to the DOM
+				// before it can be clicked.
+				downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+				downloadLink.onclick = destroyClickedElement;
+				downloadLink.style.display = "none";
+				document.body.appendChild(downloadLink);
+			}
+			downloadLink.click();
+		}
+		document.getElementById("filename_input").value ="";
+	}
+	function destroyClickedElement(event)
+	{
+		document.body.removeChild(event.target);
+	}
+	//***************************************************************************************
 	function ReadData(fileName){
 		d3.csv(fileName,function(baseballman){
 			//keep updating with the data
@@ -2378,6 +2458,8 @@ $(function(){
 			baseballman1 = baseballdata[0];
 			humannum_sum = render_baseballdata.length;
 			humannum = render_baseballdata.length;
+			barheight = 3;
+			focus_height = 20;
 			if(barheight>(InRectHeight-150)/humannum_sum){
 				barheight = Math.floor(((InRectHeight-150)/humannum_sum)*100)/100;
 			}
@@ -2406,6 +2488,7 @@ $(function(){
 			for(var i=0;i<AttrNum;i++){
 				SortObject[AttrName[i]] = true;
 			}
+			DisplayArray.splice(0,DisplayArray.length);
 			for(var i=0;i<AttrNum;i++){
 				DisplayArray[i] = i;
 			}

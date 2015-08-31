@@ -455,8 +455,8 @@ $(function(){
 	var type_height = new Array();
 	var match_obj;
 	var color_array = new Array();
-	color_array = ["#FFC0CB","#C71585","#FFA500","#FF6347","#BDB76B","#FF4500","#808000",
-	"#00FFFF","FFD700","#800080","#483D8B","#008080","#008B8B","#BC8F8F","#B8860B","#D2691E",
+	color_array = ["#FFC0CB","#C71585","#008B8B","#0000CD","#BDB76B","#FF4500","#808000",
+	"#00FFFF","FFD700","#800080","#483D8B","#008080","#FFA500","#BC8F8F","#B8860B","#D2691E",
 	"#A0522D","#808080","#4B0082","#00FF7F"];
 	var color_length = 0;
 	var focus_beginIndexY = 0, focus_endIndexY = 0;
@@ -780,9 +780,7 @@ $(function(){
 	
 	div_height = InRectHeight -5 - baseballdata.length * barheight;
 	var button_width = Math.floor((InRectWidth - 320)/4);
-	
 	computeButtonWidth();
-	
 	svg = d3.select("#inner")
 	.append("svg")
 	.attr("width",InRectWidth)
@@ -2078,6 +2076,7 @@ $(function(){
 		    == AttrName[AttrAllNum - 1].substring(0,AttrName[AttrAllNum-1].length-1)){
 			sortIndex = AttrAllNum - 1;
 		}
+		renderCSText();
 		svg.selectAll("*").remove();
 		tablelens();
 	}

@@ -378,21 +378,30 @@ $(function(){
 	var baseballman1;
 	var text_paddingX = 5, text_paddingY = 5;
 	var down_Name = true, down_Bat86 = true, down_Hit86 = true, down_HRuns86 = true, down_Runs86 = true, down_Runbat86 = true, down_all = true;
-	var e = d3.rgb(28,4,240);		//red
-	var d = d3.rgb(114,99,252);		
-	var c = d3.rgb(192,192,192);	//white
+	var minimum = d3.rgb(0,0,160);
+	var e = d3.rgb(0,128,255);
+	var d = d3.rgb(99,154,90);
+	var c = d3.rgb(192,192,192);
 	var b = d3.rgb(217,205,62);	
 	var a = d3.rgb(220,115,58);		//blue
+	var maximum = d3.rgb(198,45,28);
+	//var e = d3.rgb(28,4,240);		//deep blue minimum
+//	var d = d3.rgb(114,99,252);		
+//	var c = d3.rgb(192,192,192);	//white
+//	var b = d3.rgb(217,205,62);	
+//	var a = d3.rgb(220,115,58);		//blue
 	var blue = d3.rgb(255,0,0);
 	var green = d3.rgb(0,255,0);
 	var cs_array = new Array();
 	var cs_name = ["cs1","cs2","cs3","cs4","cs5"];
 	var cs_coord = new Array();
-	cs_array[0] = 0.17;
-	cs_array[1] = 0.33;
-	cs_array[2] = 0.50;
-	cs_array[3] = 0.66;
-	cs_array[4] = 0.83;
+	cs_array[0] = 0;
+	cs_array[1] = 0.17;
+	cs_array[2] = 0.33;
+	cs_array[3] = 0.50;
+	cs_array[4] = 0.66;
+	cs_array[5] = 0.83;
+	cs_array[6] = 1.00;
 	for(var i=0;i<cs_array.length;i++){
 		cs_coord[i] = InRectYMin + cs_array[i] * InRectHeight;
 	}
@@ -401,7 +410,7 @@ $(function(){
 		stopNumArray[i] = cs_array[i] * 100;
 	}
 	var stopArray = new Array();
-	var colorArray = [a,b,c,d,e];
+	var colorArray = [maximum,a,b,c,d,e,minimum];
 	var minValue = new Array();
 	var maxValue = new Array();
 	var quarter0Value = new Array();
@@ -445,6 +454,11 @@ $(function(){
 	var copy_baseballdata;
 	var type_height = new Array();
 	var match_obj;
+	var color_array = new Array();
+	color_array = ["#FFC0CB","#C71585","#FFA500","#FF6347","#BDB76B","#FF4500","#808000",
+	"#00FFFF","FFD700","#800080","#483D8B","#008080","#008B8B","#BC8F8F","#B8860B","#D2691E",
+	"#A0522D","#808080","#4B0082","#00FF7F"];
+	var color_length = 0;
 	var focus_beginIndexY = 0, focus_endIndexY = 0;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
@@ -574,13 +588,23 @@ $(function(){
 								}
 							}	
 						}
+						for(var i=0;i<AttrAllNum;i++){
+							if(TypeArray[i]!=true){
+								if(maxValue[i]>color_length){
+									color_length = maxValue[i];
+								}
+							}
+						}
+						for(var i=20;i<color_length;i++){
+							color_array.push("#"+randomColor());
+						}
 						for(var i=0;i<minValue.length;i++){
 							var difference = Math.floor((maxValue[i] - minValue[i]));
-							quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
-							quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
-							quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
-							quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
-							quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+							quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
+							quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
+							quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
+							quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+							quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[5]);
 						}
 						for(var i=0;i<AttrAllNum;i++){
 							XArray[i] = i * button_width + 3;
@@ -781,7 +805,7 @@ $(function(){
 						.attr("y1","0%")
 						.attr("x2","0%")
 						.attr("y2","100%");
-	for(var i=0;i<5;i++){
+	for(var i=0;i<stopNumArray.length;i++){
 		stopArray[i] = linearGradient.append("stop")
 				.attr("offset",stopNumArray[i]+"%")
 				.style("stop-color",colorArray[i].toString());
@@ -832,7 +856,7 @@ $(function(){
 			select_detail = false;
 			SelectFilterNum = FirstSelectFilterNum;
 		}
-		if((FirstSelectRectNum!=-1)){
+		if((FirstSelectRectNum!=-1)&&(TypeArray[sortIndex]==true)){
 			moveSR = true;
 			select_focus = false;
 			select_detail = false;
@@ -845,28 +869,28 @@ $(function(){
 		if(moveSR){
 			moveFilter = false;
 			if(FirstSelectRectNum == 0){
-				if(cs_moveY > cs_coord[1] - 15){
-					cs_moveY = cs_coord[1] - 15;
+				if(cs_moveY > cs_coord[2] - 15){
+					cs_moveY = cs_coord[2] - 15;
 				}
 				if(cs_moveY<InRectYMin){
 					cs_moveY = InRectYMin;
 				}
-			}else if(FirstSelectRectNum == (cs_coord.length - 1)){
+			}else if(FirstSelectRectNum == 4){
 				if(cs_moveY>InRectYMax){
 					cs_moveY = InRectYMax;
 				}
-				if(cs_moveY<cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
+				if(cs_moveY<cs_coord[FirstSelectRectNum] + 15){
+					cs_moveY = cs_coord[FirstSelectRectNum] + 15;
 				}
 			}else{
-				if(cs_moveY > cs_coord[FirstSelectRectNum + 1] - 15){
-					cs_moveY = cs_coord[FirstSelectRectNum + 1] - 15;
+				if(cs_moveY > cs_coord[FirstSelectRectNum + 2] - 15){
+					cs_moveY = cs_coord[FirstSelectRectNum + 2] - 15;
 				}
-				if(cs_moveY < cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
+				if(cs_moveY < cs_coord[FirstSelectRectNum] + 15){
+					cs_moveY = cs_coord[FirstSelectRectNum] + 15;
 				}
 			}
-			cs_coord[FirstSelectRectNum] = cs_moveY;
+			cs_coord[FirstSelectRectNum + 1] = cs_moveY;
 			svg_color.selectAll(".select_rect_text").remove();
 			svg_color.selectAll(".select_rect_text")
 			.append("g")
@@ -876,7 +900,7 @@ $(function(){
 			.attr("class","select_rect_text")
 			.attr("x",(InRectXMin - 23))
 			.attr("y",function(d,i){
-				return cs_coord[i]+5.5;
+				return cs_coord[i + 1]+5.5;
 			})
 			.attr("font-size",10)
 			.attr("font-family","arial")
@@ -886,13 +910,13 @@ $(function(){
 			svg_color.selectAll(".select_rect").remove();
 			svg_color.selectAll(".select_rect")
 			.append("g")
-			.data(cs_array)
+			.data(NamePArray)
 			.enter()
 			.append("circle")
 			.attr("class","select_rect")
 			.attr("cx",(InRectXMin - 15))
 			.attr("cy",function(d,i){
-				return cs_coord[i];
+				return cs_coord[i + 1];
 			})
 			.attr("r",10)
 			.on("mouseover",function(d,i){
@@ -1025,31 +1049,31 @@ $(function(){
 			display_divNum = -1;
 			moveFilter = false;
 			if(FirstSelectRectNum == 0){
-				if(cs_moveY > cs_coord[1] - 15){
-					cs_moveY = cs_coord[1] - 15;
+				if(cs_moveY > cs_coord[2] - 15){
+					cs_moveY = cs_coord[2] - 15;
 				}
 				if(cs_moveY<InRectYMin){
 					cs_moveY = InRectYMin;
 				}
-			}else if(FirstSelectRectNum == (cs_coord.length -1)){
+			}else if(FirstSelectRectNum == 4){
 				if(cs_moveY>InRectYMax){
 					cs_moveY = InRectYMax;
 				}
-				if(cs_moveY<cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
+				if(cs_moveY<cs_coord[FirstSelectRectNum] + 15){
+					cs_moveY = cs_coord[FirstSelectRectNum] + 15;
 				}
 			}else{
-				if(cs_moveY > cs_coord[FirstSelectRectNum + 1] - 15){
-					cs_moveY = cs_coord[FirstSelectRectNum + 1] - 15;
+				if(cs_moveY > cs_coord[FirstSelectRectNum + 2] - 15){
+					cs_moveY = cs_coord[FirstSelectRectNum + 2] - 15;
 				}
-				if(cs_moveY < cs_coord[FirstSelectRectNum - 1] + 15){
-					cs_moveY = cs_coord[FirstSelectRectNum - 1] + 15;
+				if(cs_moveY < cs_coord[FirstSelectRectNum] + 15){
+					cs_moveY = cs_coord[FirstSelectRectNum] + 15;
 				}
 			}
 			var point_num = Math.floor((InRectYMax - cs_moveY)/InRectHeight * 100);
-			stopNumArray[(4 - FirstSelectRectNum)] = point_num;
-			cs_array[(4 - FirstSelectRectNum)] = point_num/100;
-			cs_coord[FirstSelectRectNum] = cs_moveY;
+			stopNumArray[(5 - FirstSelectRectNum)] = point_num;
+			cs_array[(5 - FirstSelectRectNum)] = point_num/100;
+			cs_coord[FirstSelectRectNum + 1] = cs_moveY;
 			renderCSText();
 			renderColor();
 			computeColorRect();
@@ -1343,7 +1367,7 @@ $(function(){
 		.attr("class","select_rect_text")
 		.attr("x",(InRectXMin - 23))
 		.attr("y",function(d,i){
-			return cs_coord[i]+5.5;
+			return cs_coord[i + 1]+5.5;
 		})
 		.attr("font-size",10)
 		.attr("font-family","arial")
@@ -1354,13 +1378,13 @@ $(function(){
 		svg_color.selectAll(".select_rect").remove();
 		svg_color.selectAll(".select_rect")
 		.append("g")
-		.data(cs_array)
+		.data(NamePArray)
 		.enter()
 		.append("circle")
 		.attr("class","select_rect")
 		.attr("cx",(InRectXMin - 15))
 		.attr("cy",function(d,i){
-			return cs_coord[i];
+			return cs_coord[i + 1];
 		})
 		.attr("r",10)
 		.on("mouseover",function(d,i){
@@ -1449,18 +1473,18 @@ $(function(){
 						.attr("y1","100%")
 						.attr("x2","0%")
 						.attr("y2","0%");
-			for(var i=0;i<5;i++){
+			for(var i=0;i<stopNumArray.length;i++){
 				stopArray[i] = linearGradient.append("stop")
 				.attr("offset",stopNumArray[i]+"%")
-				.style("stop-color",colorArray[4-i].toString());
+				.style("stop-color",colorArray[6-i].toString());
 			}
 			for(var i=0;i<minValue.length;i++){
 				var difference = Math.floor((maxValue[i] - minValue[i]));
-				quarter0Value[i] = Math.floor(minValue[i] + difference * stopNumArray[0]/100);
-				quarter1Value[i] = Math.floor(minValue[i] + difference * stopNumArray[1]/100);
-				quarter2Value[i] = Math.floor(minValue[i] + difference * stopNumArray[2]/100);
-				quarter3Value[i] = Math.floor(minValue[i] + difference * stopNumArray[3]/100);
-				quarter4Value[i] = Math.floor(minValue[i] + difference * stopNumArray[4]/100);
+				quarter0Value[i] = Math.floor(minValue[i] + difference * stopNumArray[1]/100);
+				quarter1Value[i] = Math.floor(minValue[i] + difference * stopNumArray[2]/100);
+				quarter2Value[i] = Math.floor(minValue[i] + difference * stopNumArray[3]/100);
+				quarter3Value[i] = Math.floor(minValue[i] + difference * stopNumArray[4]/100);
+				quarter4Value[i] = Math.floor(minValue[i] + difference * stopNumArray[5]/100);
 			}
 	}
 	//*************************************************************************
@@ -1479,11 +1503,11 @@ $(function(){
 	function renderCSText(){
 		for(var i=0;i<minValue.length;i++){
 			var difference = Math.floor((maxValue[i] - minValue[i]));
-			quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
-			quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
-			quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
-			quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
-			quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+			quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
+			quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
+			quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
+			quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+			quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[5]);
 		}
 		NamePArray.splice(0,NamePArray.length);
 		NamePArray.push(quarter4Value[sortIndex]+"");
@@ -1500,7 +1524,7 @@ $(function(){
 			.attr("class","select_rect_text")
 			.attr("x",(InRectXMin - 23))
 			.attr("y",function(d,i){
-				return cs_coord[i]+5.5;
+				return cs_coord[i + 1]+5.5;
 			})
 			.attr("font-size",10)
 			.attr("font-family","arial")
@@ -1547,7 +1571,12 @@ $(function(){
 	function computeColor(value,index){
 		if(TypeArray[index]!=true){
 			value = TypeArray[index].indexOf(value);
+			return color_array[value];
 		}
+		var compute5 = d3.interpolate(maximum,a);
+		var linear5 = d3.scale.linear()
+				.domain([maxValue[index],quarter4Value[index]])
+				.range([0,1]);
 		var compute4 = d3.interpolate(a,b);
 		var linear4 = d3.scale.linear()
 				.domain([quarter4Value[index],quarter3Value[index]])
@@ -1564,8 +1593,12 @@ $(function(){
 		var linear1 = d3.scale.linear()
 				.domain([quarter1Value[index],quarter0Value[index]])
 				.range([0,1]);
+		var compute0 = d3.interpolate(e,minimum);
+		var linear0 = d3.scale.linear()
+				.domain([quarter0Value[index],minValue[index]])
+				.range([0,1]);
 		if(value>=quarter4Value[index]){
-			return a;
+			return compute5(linear5(value));
 		}
 		if((value>=quarter3Value[index])&&(value<=quarter4Value[index])){
 			return compute4(linear4(value));
@@ -1579,7 +1612,7 @@ $(function(){
 		else if((value>quarter0Value[index])&&(value<=quarter1Value[index])){
 			return compute1(linear1(value));
 		}else{
-			return e;
+			return compute0(linear0(value));
 		}
 	}
 	function SortFunction(){
@@ -2076,22 +2109,35 @@ $(function(){
 		if(checkedItems[0].value=="Detail"){
 			focus_one = true;
 			DetailArray.splice(0,DetailArray.length);
+			svg.selectAll("*").remove();
 			tablelens();
 		}
 		if(checkedItems[0].value=="Color"){
 			focus_one = false;
+			FocusArray.splice(0,FocusArray.length);
+			yfocus_num = 0;
+			focusY_min = -1;
+			focusY_max = -1;
+			beginY_index = 0;
+			upY_index = 0;
+			focus_beginIndexY = 0;
+			focus_endIndexY = 0;
+			display_divNum = -1;
+			computeVarY();
+			svg.selectAll("*").remove();
+			tablelens();
 		}
 	}
 	//change the color
 	function ChangeColor(checkedItems){
 		if(checkedItems[0].value=="uniformly5"){
-			cs_array[0] = 0.17;
-			cs_array[1] = 0.33;
-			cs_array[2] = 0.50;
-			cs_array[3] = 0.66;
-			cs_array[4] = 0.83;
+			cs_array[1] = 0.17;
+			cs_array[2] = 0.33;
+			cs_array[3] = 0.50;
+			cs_array[4] = 0.66;
+			cs_array[5] = 0.83;
 			for(var i=0;i<cs_array.length;i++){
-				cs_coord[i] = InRectYMin + cs_array[i]* InRectHeight;
+				cs_coord[i] = Math.floor(InRectYMin + cs_array[i]* InRectHeight);
 			}
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
@@ -2104,13 +2150,13 @@ $(function(){
 			svg.selectAll("*").remove();
 			tablelens();
 		}else if(checkedItems[0].value=="uniformly4"){
-			cs_array[0] = 0.00;
-			cs_array[1] = 0.20;
-			cs_array[2] = 0.40;
-			cs_array[3] = 0.60;
-			cs_array[4] = 0.80;
+			cs_array[1] = 0.10;
+			cs_array[2] = 0.30;
+			cs_array[3] = 0.50;
+			cs_array[4] = 0.70;
+			cs_array[5] = 0.90;
 			for(var i=0;i<cs_array.length;i++){
-				cs_coord[i] = InRectYMin + cs_array[i]* InRectHeight;
+				cs_coord[i] = Math.floor(InRectYMin + cs_array[i]* InRectHeight);
 			}
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
@@ -2123,13 +2169,13 @@ $(function(){
 			svg.selectAll("*").remove();
 			tablelens();
 		}else if(checkedItems[0].value=="uniformly3"){
-			cs_array[0] = 0.00;
-			cs_array[1] = 0.25;
-			cs_array[2] = 0.50;
-			cs_array[3] = 0.75;
-			cs_array[4] = 1.00;
+			cs_array[1] = 0.30;
+			cs_array[2] = 0.40;
+			cs_array[3] = 0.50;
+			cs_array[4] = 0.60;
+			cs_array[5] = 0.70;
 			for(var i=0;i<cs_array.length;i++){
-				cs_coord[i] = InRectYMin + cs_array[i] * InRectHeight;
+				cs_coord[i] = Math.floor(InRectYMin + cs_array[i] * InRectHeight);
 			}
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = cs_array[i] * 100;
@@ -2143,15 +2189,17 @@ $(function(){
 			tablelens();
 		}else if(checkedItems[0].value=="percentile1"){
 			var index1 = Math.floor(render_baseballdata.length * 0.1);
-			var index2 = Math.floor(render_baseballdata.length * 0.5);
-			var index3 = Math.floor(render_baseballdata.length * 0.9);
-			cs_array[0] = 0.00;
+			var index2 = Math.floor(render_baseballdata.length * 0.3);
+			var index3 = Math.floor(render_baseballdata.length * 0.5);
+			var index4 = Math.floor(render_baseballdata.length * 0.7);
+			var index5 = Math.floor(render_baseballdata.length * 0.9);
 			cs_array[1] = (render_baseballdata[index1][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			cs_array[2] = (render_baseballdata[index2][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			cs_array[3] = (render_baseballdata[index3][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
-			cs_array[4] = 1.00;
+			cs_array[4] = (render_baseballdata[index4][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[5] = (render_baseballdata[index5][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			for(var i=0;i<cs_array.length;i++){
-				cs_coord[i] = InRectYMin + Math.floor(cs_array[i] * InRectHeight);
+				cs_coord[i] = Math.floor(InRectYMin + Math.floor(cs_array[i] * InRectHeight));
 			}
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = Math.floor(cs_array[i] * 100);
@@ -2165,15 +2213,17 @@ $(function(){
 			tablelens();
 		}else if(checkedItems[0].value=="percentile2"){
 			var index1 = Math.floor(render_baseballdata.length * 0.3);
-			var index2 = Math.floor(render_baseballdata.length * 0.6);
-			var index3 = Math.floor(render_baseballdata.length * 0.9);
-			cs_array[0] = 0.00;
+			var index2 = Math.floor(render_baseballdata.length * 0.4);
+			var index3 = Math.floor(render_baseballdata.length * 0.5);
+			var index4 = Math.floor(render_baseballdata.length * 0.6);
+			var index5 = Math.floor(render_baseballdata.length * 0.7);
 			cs_array[1] = (render_baseballdata[index1][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			cs_array[2] = (render_baseballdata[index2][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			cs_array[3] = (render_baseballdata[index3][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
-			cs_array[4] = 1.00;
+			cs_array[4] = (render_baseballdata[index4][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
+			cs_array[5] = (render_baseballdata[index5][AttrName[sortIndex]] - minValue[sortIndex])/(maxValue[sortIndex] - minValue[sortIndex]);
 			for(var i=0;i<cs_array.length;i++){
-				cs_coord[i] = InRectYMin + Math.floor(cs_array[i] * InRectHeight);
+				cs_coord[i] = Math.floor(InRectYMin + Math.floor(cs_array[i] * InRectHeight));
 			}
 			for(var i=0;i<cs_array.length;i++){
 				stopNumArray[i] = Math.floor(cs_array[i] * 100);
@@ -2402,7 +2452,7 @@ $(function(){
 		textWrite.push("\r\n");
 		for(var i=0;i<render_baseballdata.length;i++){
 			var num = render_baseballdata[i].num;
-			if((FocusArray.indexOf(num)!=-1)||((i>=focus_beginIndexY)&&(i<focus_endIndexY)&&(display_divNum>=0))){
+			if((FocusArray.indexOf(num)!=-1)||((i>=focus_beginIndexY)&&(i<focus_endIndexY)&&(display_divNum>=0))||(DetailArray.indexOf(i)!=-1)){
 				for(var j=0;j<DisplayArray.length;j++){
 					if(j!=(DisplayArray.length-1)){
 						textWrite.push(render_baseballdata[i][AttrName[j]]+",");
@@ -2527,13 +2577,23 @@ $(function(){
 					}
 				}	
 			}
+			for(var i=0;i<AttrAllNum;i++){
+				if(TypeArray[i]!=true){
+					if(maxValue[i]>color_length){
+						color_length = maxValue[i];
+					}
+				}
+			}
+			for(var i=20;i<color_length;i++){
+				color_array.push("#"+randomColor());
+			}
 			for(var i=0;i<minValue.length;i++){
 				var difference = Math.floor((maxValue[i] - minValue[i]));
-				quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[0]);
-				quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
-				quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
-				quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
-				quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+				quarter0Value[i] = Math.floor(minValue[i] + difference * cs_array[1]);
+				quarter1Value[i] = Math.floor(minValue[i] + difference * cs_array[2]);
+				quarter2Value[i] = Math.floor(minValue[i] + difference * cs_array[3]);
+				quarter3Value[i] = Math.floor(minValue[i] + difference * cs_array[4]);
+				quarter4Value[i] = Math.floor(minValue[i] + difference * cs_array[5]);
 			}
 			NamePArray.push(quarter4Value[sortIndex]+"");
 			NamePArray.push(quarter3Value[sortIndex]+"");
@@ -2636,6 +2696,15 @@ $(function(){
 				svg.selectAll("*").remove();
 			tablelens();
 		});
+	}
+	//*****************************************************************
+	function randomColor(){
+		var rand = Math.floor(Math.random() * 0xFFFFFF).toString(16);
+		if(rand.length == 6){
+			return rand;
+		}else{
+			return randomColor();
+		}
 	}
 </script>
 </html>

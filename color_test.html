@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title>无标题文档</title>
+<script type="text/javascript" src="d3/d3.js"></script>
+<style>
+	#color_test{
+		height:500px;
+		width:500px;
+	}
+</style>
+</head>
+
+<body>
+<div id="color_test">
+</div>
+<script type="text/javascript">
+var svg = d3.select("#color_test")
+	.append("svg")
+	.attr("width",500)
+	.attr("height",500);
+var color;
+svg.append("rect")
+.attr("width",500)
+.attr("height",500)
+//.attr("fill","#0000FF");
+.attr("fill",function(){
+	return "#"+randomColor();
+});
+function randomColor(){
+    var rand = Math.floor(Math.random() * 0xFFFFFF).toString(16);
+    if(rand.length == 6){
+        return rand;
+    }else{
+        return randomColor();
+    }
+}
+</script>
+</body>
+</html>

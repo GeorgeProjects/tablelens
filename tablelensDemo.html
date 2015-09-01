@@ -455,11 +455,13 @@ $(function(){
 	var type_height = new Array();
 	var match_obj;
 	var color_array = new Array();
+	var maxText_length = 0;
 	color_array = ["#FFC0CB","#C71585","#0000CD","#FFA500","#BDB76B","#FF4500","#808000",
-	"#00FFFF","FFD700","#800080","#483D8B","#008080","#008B8B","#BC8F8F","#B8860B","#D2691E",
+	"#00FFFF","#FFD700","#800080","#483D8B","#008080","#008B8B","#BC8F8F","#B8860B","#D2691E",
 	"#A0522D","#808080","#4B0082","#00FF7F"];
 	var color_length = 0;
 	var focus_beginIndexY = 0, focus_endIndexY = 0;
+	var is_exceed = false;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -552,6 +554,7 @@ $(function(){
 							barheight = Math.floor(((InRectHeight-150)/humannum_sum)*100)/100;
 						}
 						button_width = Math.floor(ButtonInRectWidth/AttrNum);
+						maxText_length = Math.round(button_width/8);
 						computeVarY();
 						for(var i=0;i<=AttrNum;i++){
 							AttrAllArray[i] = i;
@@ -1399,6 +1402,7 @@ $(function(){
 	//*******************************************************
 	function computeButtonWidth(){
 		button_width = ButtonInRectWidth/AttrNum;
+		maxText_length = Math.round(button_width/8);
 		d3.select("#AttrButton")
 		.selectAll(".attr_button").remove();
 		d3.select("#AttrButton")
@@ -1730,6 +1734,9 @@ $(function(){
 						.enter()
 						.append("text")
 						.attr("class","prompt_text")
+						.attr("id",function(d,i){
+							return "p"+i;
+						})
 						.attr("x",function(d,i){
 							return button_width * i;
 						})
@@ -1737,7 +1744,29 @@ $(function(){
 						.attr("font-size",font_size)
 						.attr("font-family","arial")
 						.text(function(d){
-							return d;
+							var real_text = d;
+							if(d.length>maxText_length){
+								real_text = d.substring(0,maxText_length)+"..";
+							}
+							return real_text;
+						})
+						.on("mouseover",function(d,i){
+							if(d.length>maxText_length){
+								var num_id = (i + 1) + "";
+								d3.select("#p"+(num_id)).attr("font-size",0);
+								d3.select(this).text(d);
+							}
+						})
+						.on("mouseout",function(d,i){
+							if(d.length>maxText_length){
+								var real_text = d;
+								if(d.length>maxText_length){
+									real_text = d.substring(0,maxText_length)+"..";
+								}
+								d3.select(this).text(real_text);
+								var num_id = (i + 1) + "";
+								d3.select("#p"+(num_id)).attr("font-size",font_size);
+							}
 						});
 					})
 					.on("mouseout",function(d,i){
@@ -1820,23 +1849,59 @@ $(function(){
 		//*************************************************
 			var baseballman = render_baseballdata[indexY];
 			var index = 0;
-			var real_index = 0;
 			var font_size = 12;
+			var temp_array = new Array();
 			for(x in baseballman){
 				if(DisplayArray.indexOf(index)!=-1){
 					var attr = baseballman[x];
-					svg.append("g")
-					.append("text")
-					.attr("x",(XArray[real_index] + text_paddingX))
-					.attr("y",focusx_bottom - text_paddingY)
-					.attr("class","person")
-					.attr("font-size",font_size)
-					.attr("font-family","arial")
-					.text(baseballman[x]);
-					real_index++;
+					temp_array.push(attr);
 				}
 				index++;
 			}
+			svg.selectAll(".dText"+indexY)
+			.append("g")
+			.data(temp_array)
+			.enter()
+			.append("text")
+			.attr("x",function(d,i){
+				return XArray[i] + text_paddingX;
+			})
+			.attr("y",focusx_bottom - text_paddingY)
+			.attr("class","person")
+			.attr("font-size",font_size)
+			.attr("font-family","arial")
+			.attr("class","dText"+indexY)
+			.attr("id",function(d,i){
+				return "T"+indexY+i;
+			})
+			.text(function(d,i){
+				var real_text = d;
+				if(d.length>maxText_length){
+					real_text = d.substring(0,maxText_length)+"..";
+				}
+				return real_text;
+			})
+			.on("mouseover",function(d,i){
+				if(d.length>maxText_length){
+					var pre_text_id = d3.select(this).attr("id");
+					var text_id = pre_text_id.substring(1,pre_text_id.length);
+					var num_id = parseInt(text_id) + 1 + "";
+					d3.select("#T"+(num_id)).attr("font-size",0);
+					d3.select(this).text(d);
+				}
+			})
+			.on("mouseout",function(d,i){
+				var real_text = d;
+				if(d.length>maxText_length){
+					real_text = d.substring(0,maxText_length)+"..";
+					d3.select(this).text(real_text);
+					var pre_text_id = d3.select(this).attr("id");
+					var text_id = pre_text_id.substring(1,pre_text_id.length);
+					var num_id = parseInt(text_id) + 1 + "";
+					d3.select("#T"+(num_id)).attr("font-size",font_size);
+				}
+			});
+			
 		}
 	}
 	//*****************************************************************
@@ -2238,7 +2303,8 @@ $(function(){
 	}
 	function submit_search(){
 		var value = submit.fname.value;
-		match_obj = new RegExp("^[A-Za-z1-9_ .]*"+value+"[A-Za-z1-9_ .]*$");
+		var match_num = 0;
+		match_obj = new RegExp("^[A-Za-z1-9_ .-]*"+value+"[A-Za-z1-9_ .-]*$");
 		if(value!=""){
 			for(var i=0;i<render_baseballdata.length;i++){
 				var name = render_baseballdata[i][AttrName[0]];
@@ -2256,11 +2322,16 @@ $(function(){
 							focusY_min = i;
 						}
 					}
+					match_num++;
 				}
 			}
-			computeVarY();
-			svg.selectAll("*").remove();
-			tablelens();
+			if(match_num>0){
+				computeVarY();
+				svg.selectAll("*").remove();
+				tablelens();
+			}else{
+				alert("找不到匹配项！");
+			}
 			submit.fname.value = "";
 		}else{
 			alert("请输入搜索的关键字！");
@@ -2355,6 +2426,9 @@ $(function(){
 						.enter()
 						.append("text")
 						.attr("class","prompt_text")
+						.attr("id",function(d,i){
+							return "p"+i;
+						})
 						.attr("x",function(d,i){
 							return button_width * i;
 						})
@@ -2362,7 +2436,11 @@ $(function(){
 						.attr("font-size",font_size)
 						.attr("font-family","arial")
 						.text(function(d){
-							return d;
+							var real_text = d;
+							if(d.length>maxText_length){
+								real_text = d.substring(0,maxText_length)+"..";
+							}
+							return real_text;
 						});
 					})
 					.on("mouseout",function(d,i){
@@ -2414,28 +2492,63 @@ $(function(){
 		//******************************************
 		//add text to the add_div
 		var text_baseballman;
-		for(var i=beginY_Index;i<upY_index;i++){
-			text_baseballman = render_baseballdata[i];
-			var y_index = i - beginY_Index + 1;
+		for(var indexY=beginY_Index;indexY<upY_index;indexY++){
+			text_baseballman = render_baseballdata[indexY];
+			var y_index = indexY - beginY_Index + 1;
 			var text_y = focus_height * y_index - text_paddingY;
 			var index = 0;
 			var real_index = 0;
 			var font_size = 12;
+			var temp_array = new Array();
 			for(x in text_baseballman){
 				if(DisplayArray.indexOf(index)!=-1){
-					var attr = baseballman[x];
-					add_svg.append("g")
-					.append("text")
-					.attr("x",(XArray[real_index] + text_paddingX))
-					.attr("y",text_y)
-					.attr("class","person")
-					.attr("font-size",font_size)
-					.attr("font-family","arial")
-					.text(text_baseballman[x]);
-					real_index++;
+					var attr = text_baseballman[x];
+					temp_array.push(attr);
 				}
 				index++;
 			}
+			add_svg.selectAll(".pText"+indexY)
+			.append("g")
+			.data(temp_array)
+			.enter()
+			.append("text")
+			.attr("x",function(d,i){
+				return XArray[i] + text_paddingX;
+			})
+			.attr("y",text_y)
+			.attr("font-size",font_size)
+			.attr("font-family","arial")
+			.attr("class","pText"+indexY)
+			.attr("id",function(d,i){
+				return "p"+indexY+i;
+			})
+			.text(function(d,i){
+				var real_text = d;
+				if(real_text.length>maxText_length){
+					real_text = d.substring(0,maxText_length)+"..";
+				}
+				return real_text;
+			})
+			.on("mouseover",function(d,i){
+				if(d.length>maxText_length){
+					var pre_text_id = d3.select(this).attr("id");
+					var text_id = pre_text_id.substring(1,pre_text_id.length);
+					var num_id = parseInt(text_id) + 1 + "";
+					d3.select("#p"+(num_id)).attr("font-size",0);
+					d3.select(this).text(d);
+				}
+			})
+			.on("mouseout",function(d,i){
+				var real_text = d;
+				if(d.length>maxText_length){
+					real_text = d.substring(0,maxText_length)+"..";
+					d3.select(this).text(real_text);
+					var pre_text_id = d3.select(this).attr("id");
+					var text_id = pre_text_id.substring(1,pre_text_id.length);
+					var num_id = parseInt(text_id) + 1 + "";
+					d3.select("#p"+(num_id)).attr("font-size",font_size);
+				}
+			});
 		}
 	}
 	//***************************************************************************************
@@ -2547,6 +2660,7 @@ $(function(){
 				DisplayArray[i] = i;
 			}
 			button_width = Math.floor(ButtonInRectWidth/AttrNum);
+			maxText_length = Math.round(button_width/8);
 			focus_height = 20;
 			computeVarY();
 			for(var i=0;i<=AttrNum;i++){

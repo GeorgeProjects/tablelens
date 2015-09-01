@@ -4,6 +4,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
 <title>无标题文档</title>
 <script type="text/javascript" src="d3/d3.js"></script>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.imgareaselect.pack.js"></script>
 <style>
 	#color_test{
 		height:500px;
@@ -11,10 +13,10 @@
 	}
 </style>
 </head>
-
 <body>
 <div id="color_test">
 </div>
+<p>hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh</p>
 <script type="text/javascript">
 var svg = d3.select("#color_test")
 	.append("svg")
@@ -27,6 +29,12 @@ svg.append("rect")
 //.attr("fill","#0000FF");
 .attr("fill",function(){
 	return "#"+randomColor();
+});
+//html2canvas(document.body).then(function(canvas) {
+//    document.body.appendChild(canvas);
+//});
+$(function () {
+    $('#color_test').imgAreaSelect({ maxWidth: 200, maxHeight: 150, handles: true });
 });
 function randomColor(){
     var rand = Math.floor(Math.random() * 0xFFFFFF).toString(16);

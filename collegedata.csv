@@ -1,4 +1,4 @@
-college,state,type,avgSaFP,avgSaOP,avgSa1P,avgSaAR,avgCoFP,avgCoOP,avgCo1P,avgCoAR,numFP,numOP,num1P,num1N,numFA
+college,state,type,avgSaFP,avgSaOP,avgSaIP,avgSaAR,avgCoFP,avgCoOP,avgCoIP,avgCoAR,numFP,numOP,numIP,numIN,numFA
 Alaska Pacific University,AK,2B,454,382,362,382,567,485,471,487,6,11,9,4,32
 Univ.Alaska-Fairbanks,AK,1,686,560,432,508,914,753,572,677,74,125,118,40,404
 Univ.Alaska-Southeast,AK,2A,533,494,329,415,716,663,442,559,9,26,20,9,70

@@ -225,6 +225,11 @@ $(function(){
 	  height:25px;
 	  margin-left:1px;
 	}
+	#select_num{
+	  display:inline-block;
+	  margin-top:0px;
+	  margin-left:3px;
+	}
 	#save{
 	  display:inline-block;
 	}
@@ -269,6 +274,7 @@ $(function(){
 			<form id = "submit" name="submit">
 			<p id = "search_input"><input id ="search_input" type="text" name="fname" placeholder="输入关键字搜索"/></p>
 			<input id = "search_submit" type="button" onClick="submit_search()" value="search"/>
+			<p id = "select_num">Selected Num: 0</p>
 			</form>
 		</div>
 </div>
@@ -319,7 +325,7 @@ $(function(){
 	var stringArray;
 	var AttrName = new Array();
 	var SelectAttrName = new Array();
-	var ColorArray =["uniformly5","uniformly4","uniformly3","percentile1","percentile2"];
+	var ColorArray =["uniformly5","uniformly4","uniformly3"];//,"percentile1","percentile2"
 	var SortObject = new Object();
 	var ManNum = 0;
 	var promptHeight = 30;
@@ -781,6 +787,9 @@ $(function(){
 	d3.select("#control_button")
 	.style("width",(screen_width+14)+"px");
 	
+	d3.select("#select_num")
+	.text("Selected Num: 0");
+	
 	div_height = InRectHeight -5 - baseballdata.length * barheight;
 	var button_width = Math.floor((InRectWidth - 320)/4);
 	computeButtonWidth();
@@ -1158,22 +1167,27 @@ $(function(){
 					}
 				}
 				computeVarY();
-		}	
+			}else if((currentYNum > 0)&&(!focus_one)){
+				var num = render_baseballdata[currentYNum].num;
+				if(DetailArray.indexOf(num)==-1){
+					DetailArray.push(num);
+				}
+			}
+			//******************************************************************************
+			var up_clickY = event.clientY;
+			if(up_clickY<30){
+				beginY_index = -1;
+			}
+			upY_index = computeIndexY(RectEndY);
+			afterX_index = Math.floor(RectEndX/button_width);
 		//******************************************************************************
-		var up_clickY = event.clientY;
-		if(up_clickY<30){
-			beginY_index = -1;
-		}
-		upY_index = computeIndexY(RectEndY);
-		afterX_index = Math.floor(RectEndX/button_width);
-		//******************************************************************************
-		if(beginX_index == afterX_index){
+		//if(beginX_index == afterX_index){
 			if(select_detail){
 				if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>2){
-					if(beginX_index!=detail_index){
-						DetailArray.splice(0,DetailArray.length);
-					}
-					detail_index = beginX_index;
+					//if(beginX_index!=detail_index){
+//						DetailArray.splice(0,DetailArray.length);
+//					}
+					//detail_index = beginX_index;
 					for(var i=beginY_index;i<=upY_index;i++){
 						var num = render_baseballdata[i].num;
 						if(DetailArray.indexOf(num)==-1){
@@ -1181,10 +1195,10 @@ $(function(){
 						}
 					}
 				}else if((beginY_index>=0)&&((beginY_index - upY_index)>2)){
-					if(beginX_index!=detail_index){
-						DetailArray.splice(0,DetailArray.length);
-					}
-					detail_index = beginX_index;
+					//if(beginX_index!=detail_index){
+//						DetailArray.splice(0,DetailArray.length);
+//					}
+//					detail_index = beginX_index;
 					for(var i=upY_index;i<=beginY_index;i++){
 						var num = render_baseballdata[i].num;
 						if(DetailArray.indexOf(num)!=-1){
@@ -1194,7 +1208,7 @@ $(function(){
 					}
 				}
 			}
-		}
+		//}
 		//******************************************************************************
 		if(select_focus){
 			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>2){
@@ -1228,14 +1242,24 @@ $(function(){
 				focus_beginIndexY = beginY_index;
 				focus_endIndexY = upY_index;
 				if(display_divNum!=-1){
-					if(upY_index<DivObjectArray[display_divNum].upYIndex){
-						DivObjectArray[display_divNum].upYIndex = upY_index;
-						DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
-						AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
-						AddSvgHeight = AddSvgIndexNum * focus_height;
-					}
-					if((DivObjectArray[display_divNum].upYIndex)<=(DivObjectArray[display_divNum].beginYIndex)){
-						display_divNum = -1;
+					if((beginY_index>=DivObjectArray[display_divNum].beginYIndex)&&(beginY_index<=DivObjectArray[display_divNum].upYIndex)){
+						if((upY_index<DivObjectArray[display_divNum].upYIndex)&&((upY_index)>(DivObjectArray[display_divNum].beginYIndex))){
+							DivObjectArray[display_divNum].upYIndex = upY_index;
+							DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
+							AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
+							AddSvgHeight = AddSvgIndexNum * focus_height;
+						}
+						if((upY_index)<=(DivObjectArray[display_divNum].beginYIndex)){
+							DivObjectArray[display_divNum].beginYIndex = beginY_index;
+							DivObjectArray[display_divNum].beginYNum = render_baseballdata[beginY_index].num;
+							AddSvgIndexNum = DivObjectArray[display_divNum].upYIndex - DivObjectArray[display_divNum].beginYIndex;
+							AddSvgHeight = AddSvgIndexNum * focus_height;
+						}
+					}else if(beginY_index>DivObjectArray[display_divNum].upYIndex){
+						if(upY_index<DivObjectArray[display_divNum].beginYIndex){
+							DivObjectArray.splice(0,DivObjectArray.length);
+							display_divNum=-1;
+						}
 					}
 				}
 			}
@@ -1257,7 +1281,7 @@ $(function(){
 		svg.select(".focus_rect").remove();
 		var btnNum = event.button;
 		if(btnNum == 0){
-			if(currentYNum > 0){
+			if((currentYNum>0)&&(focus_one)){
 				//*********************************
 				var num = render_baseballdata[currentYNum].num;
 				if(FocusArray.indexOf(num)==-1){
@@ -1278,6 +1302,13 @@ $(function(){
 				computeVarY();
 				svg.selectAll("*").remove();
 				tablelens();
+			}else{
+				if((currentYNum>0)&&(!focus_one)){
+					var num = render_baseballdata[currentYNum].num;
+					if(DetailArray.indexOf(num)==-1){
+						DetailArray.push(num);
+					}
+				}
 			}
 		}
 		//***********************************************
@@ -1721,7 +1752,7 @@ $(function(){
 							}
 						}else{
 							d3.select(this).style("fill","green");
-							currentYNum = -1;
+							currentYNum = i;
 						}
 						data_array.splice(0,data_array.length);
 						for(x in d){
@@ -1813,6 +1844,26 @@ $(function(){
 			index++;
 		}
 		//*********************************************************
+		d3.select("#select_num")
+		.text(function(){
+			var num = 0;
+			if(focus_one){
+				if(display_divNum>=0){
+					num = DivObjectArray[0].upYIndex - DivObjectArray[0].beginYIndex + 1;
+					if(num>0){
+						num += FocusArray.length;
+					}else{
+						num = 0;
+						num += FocusArray.length;
+					}
+				}else{
+					num += FocusArray.length;
+				}
+			}else{
+				num += DetailArray.length;
+			}
+			return "Selected Num: "+ num;
+		});
 		//*********************************************************
 		//add div
 		if(display_divNum>=0){
@@ -2310,17 +2361,21 @@ $(function(){
 				var name = render_baseballdata[i][AttrName[0]];
 				var num =  render_baseballdata[i].num;
 				if(match_obj.test(name)&&(FocusArray.indexOf(num)==-1)){
-					FocusArray.push(num);
-					yfocus_num++;
-					if(focusY_max<0){
-						focusY_max = i;
-						focusY_min = i;
-					}else{
-						if(i>focusY_max){
+					if(focus_one){
+						FocusArray.push(num);
+						yfocus_num++;
+						if(focusY_max<0){
 							focusY_max = i;
-						}else if(i < focusY_min){
 							focusY_min = i;
+						}else{
+							if(i>focusY_max){
+								focusY_max = i;
+							}else if(i < focusY_min){
+								focusY_min = i;
+							}
 						}
+					}else{
+						DetailArray.push(num);
 					}
 					match_num++;
 				}
@@ -2412,13 +2467,7 @@ $(function(){
 					.on("mouseover",function(d,i){
 						FirstSelectFilterNum = -1;
 						FirstSelectRectNum = -1;
-						//*************************************
-						if(focus_one){
-							currentYNum = i;
-						}else{
-							currentYNum = -1;
-						}
-						//*************************************
+						currentYNum = i;
 						d3.select(this).style("fill","green");
 						var id = d3.select(this).attr("id");
 						svg.select("#"+id).style("fill","green");

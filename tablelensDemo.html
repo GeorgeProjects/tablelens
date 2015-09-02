@@ -468,6 +468,7 @@ $(function(){
 	var color_length = 0;
 	var focus_beginIndexY = 0, focus_endIndexY = 0;
 	var is_exceed = false;
+	var addDiv_y = 0;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -837,6 +838,7 @@ $(function(){
 	window.document.onmousedown = function(event){
 		var begin_clickX = event.clientX;
 		var begin_clickY = event.clientY;
+		var event_svg = event.originalTarget.id;
 		beginY = event.layerY - paddingY;
 		RectBeginY = event.layerY;
 		RectBeginX = event.layerX;
@@ -849,10 +851,10 @@ $(function(){
 			SelectFilterNum = FirstSelectFilterNum;
 		}*/
 		if((begin_clickX<focusXMax)&&(begin_clickX>focusXMin)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){//
-			if(focus_one){
+			if(focus_one&&(event_svg!="add_svg")){
 				select_focus = true;
 				select_detail = false;
-			}else{
+			}else if(!focus_one&&(event_svg!="add_svg")){
 				select_detail = true;
 				select_focus = false;
 			}
@@ -2397,6 +2399,7 @@ $(function(){
 	}
 	//***************************************************************************************
 	function addElementDiv(div_name,top){
+		addDiv_y = top;
 		d3.select("#paint_control")
 		.append("div")
 		.attr("id","add_div")

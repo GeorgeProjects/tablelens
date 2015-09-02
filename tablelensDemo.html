@@ -471,8 +471,6 @@ $(function(){
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
-	filter_option[3] = "Distribute using 10,50,90";
-	filter_option[4] = "Distribute using 25,50,75";
 	//*******************************************************************************
 	window.onload = function() {
 			FocusArray.splice(0,FocusArray.length);
@@ -1256,9 +1254,14 @@ $(function(){
 							AddSvgHeight = AddSvgIndexNum * focus_height;
 						}
 					}else if(beginY_index>DivObjectArray[display_divNum].upYIndex){
-						if(upY_index<DivObjectArray[display_divNum].beginYIndex){
+						if(upY_index<=DivObjectArray[display_divNum].beginYIndex){
 							DivObjectArray.splice(0,DivObjectArray.length);
 							display_divNum=-1;
+						}else if((upY_index>DivObjectArray[display_divNum].beginYIndex)&&(upY_index<DivObjectArray[display_divNum].upYIndex)){
+							DivObjectArray[display_divNum].upYIndex = upY_index;
+							DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
+							AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
+							AddSvgHeight = AddSvgIndexNum * focus_height;
 						}
 					}
 				}

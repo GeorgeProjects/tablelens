@@ -367,11 +367,11 @@ $(function(){
 	var humannum = 322;
 	var humannum_min = 0, humannum_max = 322;
 	var svg, svg_color, svg_button, svg_prompt;
-	var button_width = ButtonInRectWidth/AttrNum;
 	var XArray = new Array();
 	var YArray = new Array();
 	var ScaleArray = new Array();
 	var FocusArray = new Array();
+	var FocusXArray = new Array();
 	var DetailArray = new Array();
 	var yfocus_num = 0, focusY_min = -1, focusY_max = -1, top_middleY = 0, bottom_middleY = 0;
 	var barheight = 3, focus_height = 20;
@@ -379,6 +379,7 @@ $(function(){
 	var top_middleY = 0, bottom_middleY = 0;
 	var total_event;
 	var beginY_index = 0, afterY_index, beginX_index, afterX_index, beginY, afterY, upY_index, RectBeginY, RectBeginX, RectMoveY, RectMoveX, RectEndY, RectEndX;
+	var moveOrienY = true;
 	var detail_index = 0;
 	var select_focus = false, select_detail = false;
 	var baseballman1;
@@ -440,7 +441,8 @@ $(function(){
 	var middleValue = new Array();
 	var NamePArray = new Array();
 	var defs, linearGradient;
-	button_width = ButtonInRectWidth/AttrNum;
+	var button_width = ButtonInRectWidth/AttrNum;
+	var fbutton_width = 0;
 	XArray = new Array();
 	var select_option = new Array();
 	var filter_option = new Array();
@@ -558,7 +560,8 @@ $(function(){
 						if(barheight>(InRectHeight-150)/humannum_sum){
 							barheight = Math.floor(((InRectHeight-150)/humannum_sum)*100)/100;
 						}
-						button_width = Math.floor(ButtonInRectWidth/AttrNum);
+						button_width = Math.floor(ButtonInRectWidth/(AttrNum + FocusXArray.length));
+						fbutton_width = button_width * 2;
 						maxText_length = Math.round(button_width/8);
 						computeVarY();
 						for(var i=0;i<=AttrNum;i++){
@@ -628,13 +631,25 @@ $(function(){
 						for(var i=0;i<AttrAllNum;i++){
 							if(TypeArray[i]==true){
 								ScaleArray[i] = d3.scale.linear()
-								.range([0,button_width - 10])
+								.range(function(){
+									if(FocusXArray.indexOf(i)==-1){
+										return [0,button_width - 10];
+									}else{
+										return [0,fbutton_width - 10];
+									}
+								})
 								.domain([0,maxValue[i]]);
 								type_height[i] = 0;
 							}else{
 								ScaleArray[i] = d3.scale.ordinal()
 								.domain(TypeArray[i])
-								.rangeBands([0,button_width-10]);
+								.rangeBands(function(){
+									if(FocusXArray.indexOf(i)==-1){
+										return [0,button_width - 10];
+									}else{
+										return [0,fbutton_width - 10];
+									}
+								});
 								type_height[i] = (button_width-10)/maxValue[i];
 							}
 						}
@@ -656,7 +671,14 @@ $(function(){
 						.append("button")
 						.attr("class","attr_button")
 						.style("height",InRectYMin+"px")
-						.style("width", (button_width) +"px")
+						.style("width", function(d,i){
+							var index = AttrName.indexOf(d);
+							if(FocusXArray.indexOf(index)==-1){
+								return button_width +"px";
+							}else{
+								return fbutton_width +"px";
+							}
+						})
 						.style("y","0px")
 						.on("click",function(d,i){
 							sortAttr(d,i);
@@ -792,8 +814,10 @@ $(function(){
 	div_height = InRectHeight -5 - baseballdata.length * barheight;
 	var button_width = Math.floor((InRectWidth - 320)/4);
 	computeButtonWidth();
+	
 	svg = d3.select("#inner")
 	.append("svg")
+	.attr("id","main_svg")
 	.attr("width",InRectWidth)
 	.attr("height",InRectHeight);
 	
@@ -838,7 +862,6 @@ $(function(){
 	window.document.onmousedown = function(event){
 		var begin_clickX = event.clientX;
 		var begin_clickY = event.clientY;
-		var event_svg = event.originalTarget.id;
 		beginY = event.layerY - paddingY;
 		RectBeginY = event.layerY;
 		RectBeginX = event.layerX;
@@ -851,10 +874,11 @@ $(function(){
 			SelectFilterNum = FirstSelectFilterNum;
 		}*/
 		if((begin_clickX<focusXMax)&&(begin_clickX>focusXMin)&&(begin_clickY>focusYMin)&&(begin_clickY<focusYMax)){//
-			if(focus_one&&(event_svg!="add_svg")){
+			var event_svg = event.originalTarget.id;
+			if(focus_one&&(event_svg=="main_svg")){
 				select_focus = true;
 				select_detail = false;
-			}else if(!focus_one&&(event_svg!="add_svg")){
+			}else if(!focus_one&&(event_svg=="main_svg")){
 				select_detail = true;
 				select_focus = false;
 			}
@@ -1020,33 +1044,69 @@ $(function(){
 		if(select_focus){
 			var moveY = event.layerY - paddingY;
 			RectMoveY = event.layerY;
+			RectMoveX = event.layerX;
+			var dMoveX = Math.abs(RectMoveX - RectBeginX);
+			var dMoveY = Math.abs(RectMoveY - RectBeginY);
+			if(dMoveY > dMoveX){
+				moveOrienY = true; 
+			}else{
+				moveOrienY = false;
+			}
 			var beginSmall = true;
 			svg.select(".focus_rect").remove();
-			if((RectBeginY - RectMoveY)>0){
-				svg.append("g")
-				.attr("class","focus_rect")
-				.append("rect")
-				.attr("x",0)
-				.attr("y",RectMoveY)
-				.attr("height",(RectBeginY - RectMoveY))
-				.attr("width",InRectWidth)
-				.attr("fill-opacity",0.2)
-				.attr("fill","gray")
-				.attr("stroke","gray")
-				.attr("stroke-width",1);
-			}else{
-				svg.append("g")
-				.attr("class","focus_rect")
-				.append("rect")
-				.attr("x",0)
-				.attr("y",RectBeginY)
-				.attr("height",(RectMoveY - RectBeginY))
-				.attr("width",InRectWidth)
-				.attr("fill-opacity",0.2)
-				.attr("fill","gray")
-				.attr("stroke","gray")
-				.attr("stroke-width",1);
-			}
+				if(moveOrienY){
+					if((RectBeginY - RectMoveY)>0){
+						svg.append("g")
+						.attr("class","focus_rect")
+						.append("rect")
+						.attr("x",0)
+						.attr("y",RectMoveY)
+						.attr("height",(RectBeginY - RectMoveY))
+						.attr("width",InRectWidth)
+						.attr("fill-opacity",0.2)
+						.attr("fill","gray")
+						.attr("stroke","gray")
+						.attr("stroke-width",1);
+					}else{
+						svg.append("g")
+						.attr("class","focus_rect")
+						.append("rect")
+						.attr("x",0)
+						.attr("y",RectBeginY)
+						.attr("height",(RectMoveY - RectBeginY))
+						.attr("width",InRectWidth)
+						.attr("fill-opacity",0.2)
+						.attr("fill","gray")
+						.attr("stroke","gray")
+						.attr("stroke-width",1);
+					}
+				}else{
+					if((RectBeginX - RectMoveX)>0){
+						svg.append("g")
+						.attr("class","focus_rect")
+						.append("rect")
+						.attr("x",RectMoveX)
+						.attr("y",0)
+						.attr("height",InRectHeight)
+						.attr("width",(RectBeginX - RectMoveX))
+						.attr("fill-opacity",0.2)
+						.attr("fill","gray")
+						.attr("stroke","gray")
+						.attr("stroke-width",1);
+					}else{
+						svg.append("g")
+						.attr("class","focus_rect")
+						.append("rect")
+						.attr("x",RectBeginX)
+						.attr("y",0)
+						.attr("height",InRectHeight)
+						.attr("width",(RectMoveX - RectBeginX))
+						.attr("fill-opacity",0.2)
+						.attr("fill","gray")
+						.attr("stroke","gray")
+						.attr("stroke-width",1);
+					}
+				}
 		}
 	}
 	window.document.onmouseup = function(event){
@@ -1211,59 +1271,88 @@ $(function(){
 		//}
 		//******************************************************************************
 		if(select_focus){
-			if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>2){
-				DivArray[div_index] = render_baseballdata[upY_index].num;
-				var div_object = new Object();
-				div_object.beginYIndex = beginY_index;
-				div_object.upYIndex = upY_index;
-				div_object.beginYNum = render_baseballdata[beginY_index].num;
-				div_object.upYNum = render_baseballdata[upY_index].num;
-				DivObjectArray[div_index] = div_object;
-				display_divNum = div_index;
-				AddSvgIndexNum = upY_index - beginY_index;
-				AddSvgHeight = AddSvgIndexNum * focus_height;
-				focus_beginIndexY = beginY_index;
-				focus_endIndexY = upY_index;
-				//div_index++;
-			}else if((beginY_index>=0)&&((beginY_index - upY_index)>2)){
-				for(var i=upY_index;i<=beginY_index;i++){
-					var num = render_baseballdata[i].num;
-					if(FocusArray.indexOf(num)!=-1){
-						var n = FocusArray.indexOf(num);
-						FocusArray.splice(n,1);
-						yfocus_num--;
-						if(i==focusY_max){
-							focusY_max = i-1;
-						}else if(i==focusY_min){
-							focusY_min = i+1;
+			//focus orientation is y
+			if(moveOrienY){
+				if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>2){
+					DivArray[div_index] = render_baseballdata[upY_index].num;
+					var div_object = new Object();
+					div_object.beginYIndex = beginY_index;
+					div_object.upYIndex = upY_index;
+					div_object.beginYNum = render_baseballdata[beginY_index].num;
+					div_object.upYNum = render_baseballdata[upY_index].num;
+					DivObjectArray[div_index] = div_object;
+					display_divNum = div_index;
+					AddSvgIndexNum = upY_index - beginY_index;
+					AddSvgHeight = AddSvgIndexNum * focus_height;
+					focus_beginIndexY = beginY_index;
+					focus_endIndexY = upY_index;
+					//div_index++;
+				}else if((beginY_index>=0)&&((beginY_index - upY_index)>2)){
+					for(var i=upY_index;i<=beginY_index;i++){
+						var num = render_baseballdata[i].num;
+						if(FocusArray.indexOf(num)!=-1){
+							var n = FocusArray.indexOf(num);
+							FocusArray.splice(n,1);
+							yfocus_num--;
+							if(i==focusY_max){
+								focusY_max = i-1;
+							}else if(i==focusY_min){
+								focusY_min = i+1;
+							}
+						}
+					}
+					focus_beginIndexY = beginY_index;
+					focus_endIndexY = upY_index;
+					if(display_divNum!=-1){
+						if((beginY_index>=DivObjectArray[display_divNum].beginYIndex)&&(beginY_index<=DivObjectArray[display_divNum].upYIndex)){
+							if((upY_index<DivObjectArray[display_divNum].upYIndex)&&((upY_index)>(DivObjectArray[display_divNum].beginYIndex))){
+								DivObjectArray[display_divNum].upYIndex = upY_index;
+								DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
+								AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
+								AddSvgHeight = AddSvgIndexNum * focus_height;
+							}
+							if((upY_index)<=(DivObjectArray[display_divNum].beginYIndex)){
+								DivObjectArray[display_divNum].beginYIndex = beginY_index;
+								DivObjectArray[display_divNum].beginYNum = render_baseballdata[beginY_index].num;
+								AddSvgIndexNum = DivObjectArray[display_divNum].upYIndex - DivObjectArray[display_divNum].beginYIndex;
+								AddSvgHeight = AddSvgIndexNum * focus_height;
+							}
+						}else if(beginY_index>DivObjectArray[display_divNum].upYIndex){
+							if(upY_index<=DivObjectArray[display_divNum].beginYIndex){
+								DivObjectArray.splice(0,DivObjectArray.length);
+								display_divNum=-1;
+							}else if((upY_index>DivObjectArray[display_divNum].beginYIndex)&&(upY_index<DivObjectArray[display_divNum].upYIndex)){
+								DivObjectArray[display_divNum].upYIndex = upY_index;
+								DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
+								AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
+								AddSvgHeight = AddSvgIndexNum * focus_height;
+							}
 						}
 					}
 				}
-				focus_beginIndexY = beginY_index;
-				focus_endIndexY = upY_index;
-				if(display_divNum!=-1){
-					if((beginY_index>=DivObjectArray[display_divNum].beginYIndex)&&(beginY_index<=DivObjectArray[display_divNum].upYIndex)){
-						if((upY_index<DivObjectArray[display_divNum].upYIndex)&&((upY_index)>(DivObjectArray[display_divNum].beginYIndex))){
-							DivObjectArray[display_divNum].upYIndex = upY_index;
-							DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
-							AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
-							AddSvgHeight = AddSvgIndexNum * focus_height;
+			}else{
+				//focus orientation is x
+				var beginXIndex = computeIndexX(RectBeginX);
+				var endXIndex = computeIndexX(RectEndX);
+				var dMoveX = Math.abs(RectBeginX - RectEndX);
+				if((RectBeginX<RectEndX)&&(dMoveX>10)){
+					for(var i = beginXIndex;i<=endXIndex;i++){
+						if(DisplayArray.indexOf(i)!=-1){
+							if(FocusXArray.indexOf(i)==-1){
+								FocusXArray.push(i);
+							}
 						}
-						if((upY_index)<=(DivObjectArray[display_divNum].beginYIndex)){
-							DivObjectArray[display_divNum].beginYIndex = beginY_index;
-							DivObjectArray[display_divNum].beginYNum = render_baseballdata[beginY_index].num;
-							AddSvgIndexNum = DivObjectArray[display_divNum].upYIndex - DivObjectArray[display_divNum].beginYIndex;
-							AddSvgHeight = AddSvgIndexNum * focus_height;
-						}
-					}else if(beginY_index>DivObjectArray[display_divNum].upYIndex){
-						if(upY_index<=DivObjectArray[display_divNum].beginYIndex){
-							DivObjectArray.splice(0,DivObjectArray.length);
-							display_divNum=-1;
-						}else if((upY_index>DivObjectArray[display_divNum].beginYIndex)&&(upY_index<DivObjectArray[display_divNum].upYIndex)){
-							DivObjectArray[display_divNum].upYIndex = upY_index;
-							DivObjectArray[display_divNum].upYNum = render_baseballdata[upY_index].num;
-							AddSvgIndexNum = upY_index - DivObjectArray[display_divNum].beginYIndex;
-							AddSvgHeight = AddSvgIndexNum * focus_height;
+					}
+					if(FocusXArray.length==AttrAllNum){
+						FocusXArray.splice(0,FocusXArray.length);
+					}
+				}else if((RectBeginX>=RectEndX)&&(dMoveX>10)){
+					for(var i = endXIndex;i<=beginXIndex;i++){
+						if(DisplayArray.indexOf(i)!=-1){
+							var index = FocusXArray.indexOf(i);
+							if(index!=-1){
+								FocusXArray.splice(index,1); 
+							}
 						}
 					}
 				}
@@ -1277,6 +1366,7 @@ $(function(){
 		FirstSelectRectNum = -1;
 		svg.select(".focus_rect").remove();
 		computeVarY();
+		computeButtonWidth();
 		svg.selectAll("*").remove();
 		tablelens();
 	}
@@ -1437,7 +1527,8 @@ $(function(){
 	}
 	//*******************************************************
 	function computeButtonWidth(){
-		button_width = ButtonInRectWidth/AttrNum;
+		button_width = Math.floor(ButtonInRectWidth/(AttrNum + FocusXArray.length));
+		fbutton_width = button_width * 2;
 		maxText_length = Math.round(button_width/8);
 		d3.select("#AttrButton")
 		.selectAll(".attr_button").remove();
@@ -1449,7 +1540,14 @@ $(function(){
 		.append("button")
 		.attr("class","attr_button")
 		.style("height",InRectYMin+"px")
-		.style("width", button_width +"px")
+		.style("width", function(d,i){
+			var index = AttrName.indexOf(d);
+			if(FocusXArray.indexOf(index)==-1){
+				return button_width +"px";
+			}else{
+				return fbutton_width +"px";
+			}
+		})
 		.on("click",function(d){
 			var index = AttrName.indexOf(d);
 			sortAttr(d,index);
@@ -1457,21 +1555,44 @@ $(function(){
 		.text(function(d,i){
 			return d;
 		});
+		var beginCoordX = 3;
 		for(var i=0;i<AttrAllNum;i++){
-			XArray[i] = i * button_width + 3;
+			if(DisplayArray.indexOf(i)!=-1){
+				XArray[i] = beginCoordX;
+				if(FocusXArray.indexOf(i)==-1){
+					beginCoordX += button_width;
+				}else{
+					beginCoordX += fbutton_width;
+				}
+			}else{
+				XArray[i] = -1;
+			}
 		}
 		if(TypeArray.length>0){
 			for(var i=0;i<AttrAllNum;i++){
 				if(TypeArray[i]==true){
-					ScaleArray[i] = d3.scale.linear()
-					.range([0,button_width - 10])
-					.domain([0,maxValue[i]]);
+					if(FocusXArray.indexOf(i)==-1){
+						ScaleArray[i] = d3.scale.linear()
+						.range([0,button_width - 10])
+						.domain([0,maxValue[i]]);
+					}else{
+						ScaleArray[i] = d3.scale.linear()
+						.range([0,fbutton_width - 10])
+						.domain([0,maxValue[i]]);
+					}
 					type_height[i] = 0;
 				}else{
-					ScaleArray[i] = d3.scale.ordinal()
-					.domain(TypeArray[i])
-					.rangeBands([0,button_width-10]);
-					type_height[i] = (button_width-10)/maxValue[i];
+					if(FocusXArray.indexOf(i)==-1){
+						ScaleArray[i] = d3.scale.ordinal()
+						.domain(TypeArray[i])
+						.rangeBands([0,button_width-10]);
+						type_height[i] = (button_width-10)/maxValue[i];
+					}else{
+						ScaleArray[i] = d3.scale.ordinal()
+						.domain(TypeArray[i])
+						.rangeBands([0,fbutton_width-10]);
+						type_height[i] = (fbutton_width-10)/maxValue[i];
+					}
 				}
 			}	
 		}
@@ -1681,10 +1802,10 @@ $(function(){
 		//SortFunction();
 		svg = d3.select("#inner")
 		.select("svg")
+		.attr("id","main_svg")
 		.attr("width",InRectWidth)
 		.attr("height",ChangeRectHeight);
 		var index = 0;
-		var real_index = 1;
 		var baseball_man = baseballdata[0];
 		var color_num = 0;
 		var data_array = new Array();
@@ -1698,9 +1819,9 @@ $(function(){
 					.append("rect")
 					.attr("x",function(d,i){
 						if(TypeArray[index]==true){
-							return XArray[real_index];
+							return XArray[index];
 						}else{
-							return (XArray[real_index] + scale(d[x]));
+							return (XArray[index] + scale(d[x]));
 						}
 					})
 					.attr("y",function(d,i){				
@@ -1774,7 +1895,7 @@ $(function(){
 							return "p"+i;
 						})
 						.attr("x",function(d,i){
-							return button_width * i;
+							return XArray[i];
 						})
 						.attr("y",20)
 						.attr("font-size",font_size)
@@ -1843,7 +1964,6 @@ $(function(){
 							});
 						}
 					});
-					real_index++;
 				}
 			}
 			index++;
@@ -1906,21 +2026,23 @@ $(function(){
 			var baseballman = render_baseballdata[indexY];
 			var index = 0;
 			var font_size = 12;
-			var temp_array = new Array();
+			var temp_text_array = new Array();
+			var temp_x_array = new Array();
 			for(x in baseballman){
-				if(DisplayArray.indexOf(index)!=-1){
+				if((DisplayArray.indexOf(index)!=-1)&&(FocusXArray.indexOf(index)!=-1||index==0)){
 					var attr = baseballman[x];
-					temp_array.push(attr);
+					temp_text_array.push(attr);
+					temp_x_array.push(XArray[index] + text_paddingX);
 				}
 				index++;
 			}
 			svg.selectAll(".dText"+indexY)
 			.append("g")
-			.data(temp_array)
+			.data(temp_text_array)
 			.enter()
 			.append("text")
 			.attr("x",function(d,i){
-				return XArray[i] + text_paddingX;
+				return temp_x_array[i];
 			})
 			.attr("y",focusx_bottom - text_paddingY)
 			.attr("class","person")
@@ -1983,6 +2105,31 @@ $(function(){
 			}
 		}
 		return indexY;
+	}
+	//**********************************************************
+	function computeIndexX(CoordX){
+		var beginCoordX = 0;
+		var endCoordX = 0;
+		for(var i=0;i<AttrAllNum;i++){
+			if(DisplayArray.indexOf(i)!=-1){
+				if(FocusXArray.indexOf(i)==-1){
+					endCoordX = beginCoordX + button_width;
+				}else{
+					endCoordX = beginCoordX + fbutton_width;
+				}
+				//*********************************************
+				if((CoordX>=beginCoordX)&&(CoordX<=endCoordX)){
+					return i;
+				}
+				//*********************************************
+				if(FocusXArray.indexOf(i)==-1){
+					beginCoordX = beginCoordX + button_width;
+				}else{
+					beginCoordX = beginCoordX + fbutton_width;
+				}
+			}
+		}
+		return -1;
 	}
 	//**********************************************************
 	function computeIndexY(CoordY){
@@ -2430,7 +2577,6 @@ $(function(){
 			append_array[index] = render_baseballdata[i];
 		}
 	    var baseball_man = baseballdata[0];
-		var real_index = 1;
 		var index = 0; 
 		var data_array = new Array();
 		for(x in baseball_man){
@@ -2444,9 +2590,9 @@ $(function(){
 					.append("rect")
 					.attr("x",function(d,i){
 						if(TypeArray[index]==true){
-							return XArray[real_index];
+							return XArray[index];
 						}else{
-							return (XArray[real_index] + scale(d[x]));
+							return (XArray[index] + scale(d[x]));
 						}
 					})
 					.attr("y",function(d,i){				
@@ -2492,7 +2638,7 @@ $(function(){
 							return "p"+i;
 						})
 						.attr("x",function(d,i){
-							return button_width * i;
+							return XArray[i];
 						})
 						.attr("y",20)
 						.attr("font-size",font_size)
@@ -2513,7 +2659,6 @@ $(function(){
 						var id = d3.select(this).attr("id");
 						svg.select("#"+id).style("fill","red");
 					});
-					real_index++;
 				}
 			}
 			index++;
@@ -2560,23 +2705,24 @@ $(function(){
 			var y_index = indexY - beginY_Index + 1;
 			var text_y = focus_height * y_index - text_paddingY;
 			var index = 0;
-			var real_index = 0;
 			var font_size = 12;
-			var temp_array = new Array();
+			var temp_text_array = new Array();
+			var temp_x_array = new Array();
 			for(x in text_baseballman){
-				if(DisplayArray.indexOf(index)!=-1){
+				if((DisplayArray.indexOf(index)!=-1)&&(FocusXArray.indexOf(index)!=-1||index==0)){
 					var attr = text_baseballman[x];
-					temp_array.push(attr);
+					temp_text_array.push(attr);
+					temp_x_array.push(XArray[index] + text_paddingX);
 				}
 				index++;
 			}
 			add_svg.selectAll(".pText"+indexY)
 			.append("g")
-			.data(temp_array)
+			.data(temp_text_array)
 			.enter()
 			.append("text")
 			.attr("x",function(d,i){
-				return XArray[i] + text_paddingX;
+				return temp_x_array[i];
 			})
 			.attr("y",text_y)
 			.attr("font-size",font_size)
@@ -2722,7 +2868,8 @@ $(function(){
 			for(var i=0;i<AttrNum;i++){
 				DisplayArray[i] = i;
 			}
-			button_width = Math.floor(ButtonInRectWidth/AttrNum);
+			button_width = Math.floor(ButtonInRectWidth/(AttrNum + FocusXArray.length));
+			fbutton_width = button_width * 2;
 			maxText_length = Math.round(button_width/8);
 			focus_height = 20;
 			computeVarY();
@@ -2786,13 +2933,25 @@ $(function(){
 			for(var i=0;i<AttrAllNum;i++){
 				if(TypeArray[i]==true){
 					ScaleArray[i] = d3.scale.linear()
-					.range([0,button_width - 10])
+					.range(function(){
+						if(FocusXArray.indexOf(i)==-1){
+							return [0,button_width - 10];
+						}else{
+							return [0,fbutton_width - 10];
+						}
+					})
 					.domain([0,maxValue[i]]);
 					type_height[i] = 0;
 				}else{
 					ScaleArray[i] = d3.scale.ordinal()
 					.domain(TypeArray[i])
-					.rangeBands([0,button_width-10]);
+					.rangeBands(function(){
+						if(FocusXArray.indexOf(i)==-1){
+							return [0,button_width - 10];
+						}else{
+							return [0,fbutton_width - 10];
+						}
+					});
 					type_height[i] = (button_width-10)/maxValue[i];
 				}
 			}	
@@ -2808,7 +2967,14 @@ $(function(){
 				.append("button")
 				.attr("class","attr_button")
 				.style("height",InRectYMin+"px")
-				.style("width", (button_width) +"px")
+				.style("width", function(d,i){
+					var index = AttrName.indexOf(d);
+					if(FocusXArray.indexOf(index)==-1){
+						return button_width +"px";
+					}else{
+						return fbutton_width +"px";
+					}
+				})
 				.on("click",function(d,i){
 					sortAttr(d,i);
 				})

@@ -471,6 +471,7 @@ $(function(){
 	var focus_beginIndexY = 0, focus_endIndexY = 0;
 	var is_exceed = false;
 	var addDiv_y = 0;
+	var first_sort = false;
 	filter_option[0] = "Distributed uniformly with 1/6";
 	filter_option[1] = "Distributed uniformly with 1/5";
 	filter_option[2] = "Distributed uniformly with 1/4"
@@ -1360,6 +1361,7 @@ $(function(){
 						}
 					}
 				}
+				first_sort = true;
 			}
 		}
 		moveSR = false;
@@ -1534,7 +1536,10 @@ $(function(){
 		button_width = Math.floor(ButtonInRectWidth/(AttrNum + FocusXArray.length));
 		fbutton_width = button_width * 2;
 		maxText_length = Math.round(button_width/8);
-		d3.selectAll(".attr_button").remove();
+		if(first_sort){
+			d3.selectAll(".attr_button").remove();
+			first_sort = false;
+		}
 		d3.select("#AttrButton")
 		.selectAll(".attr_button")
 		.append("g")
@@ -1542,6 +1547,17 @@ $(function(){
 		.enter()
 		.append("button")
 		.attr("class","attr_button")
+		.attr("id",function(d,i){
+			var index = AttrName.indexOf(d);
+			return "button"+index;
+		})
+		.on("click",function(d){
+			var index = AttrName.indexOf(d);
+			sortAttr(index);
+		})
+		.text(function(d,i){
+			return d;
+		})
 		.style("height",InRectYMin+"px")
 		.style("width", function(d,i){
 			var index = AttrName.indexOf(d);
@@ -1550,13 +1566,6 @@ $(function(){
 			}else{
 				return fbutton_width +"px";
 			}
-		})
-		.on("click",function(d){
-			var index = AttrName.indexOf(d);
-			sortAttr(index);
-		})
-		.text(function(d,i){
-			return d;
 		});
 		var beginCoordX = 3;
 		for(var i=0;i<AttrAllNum;i++){
@@ -2206,7 +2215,7 @@ $(function(){
 	};
 	//***********************************************************
 	function sortAttr(index){
-		alert("sort");
+		//first_sort = true;
 		var scale = ScaleArray[index];
 		var attr_name = AttrName[index];
 		if(SortObject[attr_name]){
@@ -2983,16 +2992,17 @@ $(function(){
 			}	
 			sortIndex = 1;
 			SortFunction();	
-			d3.selectAll(".attr_button")
-			.append("g")
-		    .data(AttrName)
-			.append("button")
-			.text(function(d,i){
-				return AttrName[i]
-			});	
-			d3.select("#AttrButton")
-			.selectAll(".attr_button").remove();
-			d3.select("#AttrButton")
+			/*d3.selectAll(".attr_button")
+						.append("g")
+						.data(AttrName)
+						.append("button")
+						.text(function(d,i){
+							return AttrName[i]
+						});*/
+						
+						/*d3.select("#AttrButton")
+						.selectAll(".attr_button").remove();*/
+			/*d3.select("#AttrButton")
 				.selectAll(".attr_button")
 				.append("g")
 				.data(AttrName)
@@ -3006,7 +3016,7 @@ $(function(){
 				})
 				.text(function(d,i){
 					return AttrName[i];
-				});
+				});*/
 				/*.style("width", function(d,i){
 					var index = AttrName.indexOf(d);
 					if(FocusXArray.indexOf(index)==-1){

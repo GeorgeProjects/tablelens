@@ -2644,7 +2644,6 @@ $(function(){
 					.on("mouseover",function(d,i){
 						FirstSelectFilterNum = -1;
 						FirstSelectRectNum = -1;
-						currentYNum = i;
 						d3.select(this).style("fill","green");
 						var id = d3.select(this).attr("id");
 						svg.select("#"+id).style("fill","green");

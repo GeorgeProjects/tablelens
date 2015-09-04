@@ -1046,7 +1046,8 @@ $(function(){
 				}
 		}
 		//*************************************************************
-		if(select_focus){
+		var event_svg = event.originalTarget.id;
+		if(select_focus&&(event_svg!="add_svg")){
 			var moveY = event.layerY - paddingY;
 			RectMoveY = event.layerY;
 			RectMoveX = event.layerX;

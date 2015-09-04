@@ -1705,6 +1705,10 @@ $(function(){
 	}
 	//*************************************************************
 	function computeVarY(){
+		if(display_divNum>=0){
+			var index = FocusArray.indexOf(render_baseballdata[DivObjectArray[0].upYIndex].num);
+			FocusArray.splice(index,1);
+		}
 		var div_num = DivArray.length;
 		top_middleY = focusY_min * barheight;
 		bottom_middleY = (focusY_max + 1 - yfocus_num) * barheight + yfocus_num * focus_height;

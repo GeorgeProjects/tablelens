@@ -2860,6 +2860,8 @@ $(function(){
 		d3.csv(fileName,function(baseballman){
 			//keep updating with the data
 			FocusArray.splice(0,FocusArray.length);
+			display_divNum = -1;
+			DivObjectArray.splice(0,DivObjectArray.length);
 			render_baseballdata.splice(0,render_baseballdata.length);
 			minValue.splice(0,minValue.length);
 			maxValue.splice(0,maxValue.length);

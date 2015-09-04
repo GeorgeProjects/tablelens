@@ -2772,10 +2772,10 @@ $(function(){
 					var text_x1 = d3.select(this).attr("x") + button_width;
 					var text_x2 = 0;
 					if((i + 1)<temp_length){
-						text_x2 = d3.select("#T"+(num_id)).attr("x");
+						text_x2 = d3.select("#p"+(num_id)).attr("x");
 					}
 					if((text_x2 - text_x1)>20){
-						d3.select("#T"+(num_id)).attr("font-size",0);
+						d3.select("#p"+(num_id)).attr("font-size",0);
 						d3.select(this).text(d);
 					}else{
 						d3.select(this).text(d);

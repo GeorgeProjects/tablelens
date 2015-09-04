@@ -32,7 +32,7 @@ $(function(){
 	$("select#single_select").multiselect({
    		selectedText: function(numChecked, numTotal, checkedItems){
 			 ChangeColor(checkedItems);
-			 return "Color Attr: " + checkedItems[0].value;
+			 return "Interval: " + checkedItems[0].value;
   		 }
 	});
 	$("select#grouping_select").multiselect({
@@ -44,7 +44,7 @@ $(function(){
 	$("select#grouping_select").multiselect({
    		selectedText: function(numChecked, numTotal, checkedItems){
 			 ChangeSort(checkedItems);
-			 return "Color Attr: " + checkedItems[0].value;
+			 return "Color Scheme: " + checkedItems[0].value;
   		 }
 	});	
 	$("select#embedded_select").multiselect({

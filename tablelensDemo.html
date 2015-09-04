@@ -2082,7 +2082,8 @@ $(function(){
 					if((i + 1)<temp_length){
 						text_x2 = parseInt(d3.select("#T"+(num_id)).attr("x"));
 					}
-					if(text_x2!=0&&((text_x2 - text_x1)<2||(text_x2 - text_x1)>-2)){
+					//alert("text_x1:"+text_x1+"text_x2:"+text_x2);
+					if(text_x2!=0&&((text_x2 - text_x1)<2&&(text_x2 - text_x1)>-2)){
 						d3.select("#T"+(num_id)).attr("font-size",0);
 						d3.select(this).text(d);
 					}else{
@@ -2775,7 +2776,7 @@ $(function(){
 						text_x2 = parseInt(d3.select("#p"+(num_id)).attr("x"));
 					}
 					//alert("text_x1:"+text_x1+"text_x2:"+text_x2);
-					if(text_x2!=0&&((text_x2 - text_x1)<2||(text_x2 - text_x1)>-2)){
+					if(text_x2!=0&&((text_x2 - text_x1)<2&&(text_x2 - text_x1)>-2)){
 						d3.select("#p"+(num_id)).attr("font-size",0);
 						d3.select(this).text(d);
 					}else{

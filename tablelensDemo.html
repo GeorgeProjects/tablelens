@@ -1276,8 +1276,9 @@ $(function(){
 		//}
 		//******************************************************************************
 		if(select_focus){
+			var event_svg = event.originalTarget.id;
 			//focus orientation is y
-			if(moveOrienY){
+			if(moveOrienY&&(event_svg!="add_svg")){
 				if((beginY_index<=upY_index)&&(beginY_index>=0)&&(upY_index - beginY_index)>2){
 					DivArray[div_index] = render_baseballdata[upY_index].num;
 					var div_object = new Object();

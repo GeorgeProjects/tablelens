@@ -1046,8 +1046,16 @@ $(function(){
 				}
 		}
 		//*************************************************************
-		var event_svg = event.originalTarget.id;
-		if(select_focus&&(event_svg!="add_svg")){
+		
+		var event_svg = "sample";
+		if(event.originalTarget!=undefined){
+			if(event.originalTarget.id!=undefined){
+				event_svg = event.originalTarget.id;
+			}else{
+				event_svg = "null_id";
+			}
+		}
+		if(select_focus&&(event_svg!="add_svg"&&event_svg!="null_id")){
 			var moveY = event.layerY - paddingY;
 			RectMoveY = event.layerY;
 			RectMoveX = event.layerX;

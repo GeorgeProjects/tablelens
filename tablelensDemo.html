@@ -1049,9 +1049,9 @@ $(function(){
 		
 		var event_svg = "sample";
 		if(event.originalTarget!=undefined){ 
-			if(event.originalTarget.id!=undefined){
+			try{//(event.originalTarget.id!=undefined)
 				event_svg = event.originalTarget.id;
-			}else{
+			}catch(err){
 				event_svg = "null_id";
 			}
 		}
